@@ -43,8 +43,13 @@ export class LeaveService {
       throw new ValidationError('Leave start date must be before or equal to end date');
     }
 
-    let duration = Number(data.duration);
-    if (!duration || isNaN(duration) || duration <= 0) {
+    let duration: number;
+    if (data.duration !== undefined && data.duration !== null && data.duration !== '') {
+      duration = Number(data.duration);
+      if (isNaN(duration) || duration <= 0) {
+        throw new ValidationError('Leave duration must be greater than 0');
+      }
+    } else {
       const diffMs = endDate.getTime() - startDate.getTime();
       duration = Math.max(1, Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1);
     }
