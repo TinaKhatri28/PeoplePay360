@@ -74,15 +74,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const userRoles = Array.isArray(user?.roles) ? user.roles : (user?.role ? [user.role] : []);
+
   const hasRole = (role: string): boolean => {
-    if (!user || !user.roles) return false;
-    if (user.roles.includes('HR Payroll Admin')) return true;
-    return user.roles.includes(role);
+    if (!user) return false;
+    if (userRoles.includes('HR Payroll Admin') || userRoles.includes('Admin') || user?.role === 'Admin') return true;
+    return userRoles.includes(role) || user?.role === role;
   };
 
-  const isPayrollAdmin = Boolean(user?.roles?.includes('HR Payroll Admin'));
-  const isHRManager = isPayrollAdmin || Boolean(user?.roles?.includes('HR Manager'));
-  const isPayrollUser = isPayrollAdmin || isHRManager || Boolean(user?.roles?.includes('HR Payroll User'));
+  const isPayrollAdmin = Boolean(
+    userRoles.includes('HR Payroll Admin') ||
+    userRoles.includes('Admin') ||
+    user?.role === 'Admin' ||
+    user?.role === 'HR Payroll Admin'
+  );
+  const isHRManager = isPayrollAdmin || Boolean(
+    userRoles.includes('HR Manager') ||
+    user?.role === 'HR Manager'
+  );
+  const isPayrollUser = isPayrollAdmin || isHRManager || Boolean(
+    userRoles.includes('HR Payroll User') ||
+    user?.role === 'HR Payroll User'
+  );
 
   return (
     <AuthContext.Provider

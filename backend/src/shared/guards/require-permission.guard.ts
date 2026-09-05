@@ -41,10 +41,15 @@ export const requireRole = (...allowedRoles: string[]) => {
       throw new AuthenticationError('User not authenticated');
     }
 
-    const userRoles = req.user.role ? req.user.role.split(',').map((r) => r.trim()) : [];
+    const rawRole = req.user.role;
+    const userRoles: string[] = Array.isArray(rawRole)
+      ? rawRole
+      : typeof rawRole === 'string'
+      ? rawRole.split(',').map((r) => r.trim())
+      : [];
     
-    // Admin always passes
-    if (userRoles.includes(Roles.ADMIN)) {
+    // Admin or HR Payroll Admin always passes
+    if (userRoles.includes(Roles.ADMIN) || userRoles.includes('Admin') || userRoles.includes('HR Payroll Admin')) {
       return next();
     }
 

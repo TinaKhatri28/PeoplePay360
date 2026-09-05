@@ -9,16 +9,16 @@ const router = Router();
 
 router.use(authenticate);
 
-router.get('/', requireRole('HR Manager', 'Admin'), userController.getAll);
+router.get('/', requireRole('HR Manager', 'Admin', 'HR Payroll Admin'), userController.getAll);
 router.post(
   '/',
-  requireRole('Admin'),
+  requireRole('Admin', 'HR Payroll Admin', 'HR Manager'),
   validateRequest({ body: createUserSchema }),
   userController.create
 );
 router.put(
   '/:id',
-  requireRole('Admin'),
+  requireRole('Admin', 'HR Payroll Admin', 'HR Manager'),
   validateRequest({ params: userIdParamSchema, body: updateUserSchema }),
   userController.update
 );

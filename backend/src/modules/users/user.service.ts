@@ -17,7 +17,7 @@ export class UserService {
       id: u.id,
       email: u.email,
       role: u.role,
-      roles: u.role,
+      roles: [u.role],
       status: u.status,
       employee_id: u.employee_id,
       employee_name: u.employee ? `${u.employee.first_name} ${u.employee.last_name}` : null,
@@ -34,7 +34,7 @@ export class UserService {
       id: user.id,
       email: user.email,
       role: user.role,
-      roles: user.role,
+      roles: [user.role],
       status: user.status,
       employee_id: user.employee_id,
       employee_name: user.employee ? `${user.employee.first_name} ${user.employee.last_name}` : null,
@@ -51,7 +51,7 @@ export class UserService {
     data: {
       email: string;
       password?: string;
-      roles?: string;
+      roles?: string | string[];
       role?: string;
       employee_id?: string | null;
     }
@@ -65,7 +65,15 @@ export class UserService {
       throw new ConflictError(`User with email ${data.email} already exists`);
     }
 
-    const targetRole = (data.role || data.roles || 'Employee') as ValidRole;
+    let targetRole: ValidRole = 'Employee';
+    if (Array.isArray(data.roles) && data.roles.length > 0) {
+      targetRole = data.roles[0] as ValidRole;
+    } else if (data.role) {
+      targetRole = data.role as ValidRole;
+    } else if (typeof data.roles === 'string') {
+      targetRole = data.roles as ValidRole;
+    }
+
     if (!VALID_ROLES.includes(targetRole)) {
       throw new ValidationError(`Invalid role: ${targetRole}. Valid roles: ${VALID_ROLES.join(', ')}`);
     }
@@ -80,14 +88,14 @@ export class UserService {
       employee_id: data.employee_id || null,
     });
 
-    return { id: user.id, email: user.email, role: user.role };
+    return { id: user.id, email: user.email, role: user.role, roles: [user.role] };
   }
 
   async updateUser(
     organizationId: string,
     id: string,
     data: {
-      roles?: string;
+      roles?: string | string[];
       role?: string;
       status?: string;
       password?: string;
@@ -95,8 +103,16 @@ export class UserService {
     },
     actorUserId?: string
   ) {
-    if (actorUserId && actorUserId === id && (data.role || data.roles)) {
-      const targetRole = (data.role || data.roles) as string;
+    let targetRole: ValidRole | undefined;
+    if (Array.isArray(data.roles) && data.roles.length > 0) {
+      targetRole = data.roles[0] as ValidRole;
+    } else if (data.role) {
+      targetRole = data.role as ValidRole;
+    } else if (typeof data.roles === 'string') {
+      targetRole = data.roles as ValidRole;
+    }
+
+    if (actorUserId && actorUserId === id && targetRole) {
       const currentUser = await this.repo.findById(organizationId, id);
       if (currentUser && targetRole !== currentUser.role) {
         throw new ForbiddenError('Users are not permitted to modify their own administrative role or self-promote');
@@ -104,8 +120,7 @@ export class UserService {
     }
 
     const updateData: any = {};
-    if (data.roles || data.role) {
-      const targetRole = (data.role || data.roles) as ValidRole;
+    if (targetRole) {
       if (!VALID_ROLES.includes(targetRole)) {
         throw new ValidationError(`Invalid role: ${targetRole}. Valid roles: ${VALID_ROLES.join(', ')}`);
       }
