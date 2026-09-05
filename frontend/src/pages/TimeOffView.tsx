@@ -65,15 +65,21 @@ export default function TimeOffView() {
 
   const handleRequestSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!formData.type_id) return;
+    if (!formData.type_id) {
+      setFormError('Please select a leave category');
+      return;
+    }
     setFormError(null);
     setSubmitting(true);
     try {
       await apiRequest('/api/time-off/requests', {
         method: 'POST',
         body: {
-          ...formData,
-          type_id: +formData.type_id,
+          type_id: String(formData.type_id),
+          start_date: formData.start_date,
+          end_date: formData.end_date,
+          duration: durationDays,
+          reason: formData.reason,
           employee_id: user?.employee_id,
         },
       });
@@ -277,9 +283,11 @@ export default function TimeOffView() {
                   <div style={{
                     padding: '10px 14px',
                     borderRadius: 'var(--radius-md)',
-                    background: 'rgba(244, 63, 94, 0.15)',
-                    color: '#fca5a5',
+                    background: 'rgba(220, 38, 38, 0.08)',
+                    border: '1px solid rgba(220, 38, 38, 0.25)',
+                    color: '#DC2626',
                     fontSize: '0.825rem',
+                    fontWeight: 500,
                   }}>
                     {formError}
                   </div>
@@ -333,7 +341,7 @@ export default function TimeOffView() {
                   alignItems: 'center',
                 }}>
                   <span style={{ color: 'var(--text-muted)' }}>Calculated Duration:</span>
-                  <strong style={{ color: '#fff', fontSize: '0.95rem' }}>{durationDays} Day(s)</strong>
+                  <strong style={{ color: 'var(--primary-dark, #0f172a)', fontSize: '0.95rem' }}>{durationDays} Day(s)</strong>
                 </div>
 
                 <div className="form-group">

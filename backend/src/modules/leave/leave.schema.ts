@@ -5,7 +5,7 @@ export const createLeaveRequestSchema = z.object({
   type_id: z.string().min(1, 'Leave type is required'),
   start_date: z.string().min(1, 'Start date is required'),
   end_date: z.string().min(1, 'End date is required'),
-  duration: z.coerce.number().min(0.5, 'Duration must be at least 0.5 days'),
+  duration: z.coerce.number().min(0.5, 'Duration must be at least 0.5 days').optional(),
   reason: z.string().optional(),
 }).refine(
   (data) => new Date(data.start_date) <= new Date(data.end_date),

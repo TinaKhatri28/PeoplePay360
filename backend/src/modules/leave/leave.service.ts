@@ -34,11 +34,6 @@ export class LeaveService {
   }
 
   async createLeaveRequest(organizationId: string, employeeId: string, data: any, actorUserId?: string) {
-    const duration = Number(data.duration);
-    if (duration <= 0) {
-      throw new ValidationError('Leave duration must be greater than 0');
-    }
-
     const startDate = new Date(data.start_date);
     const endDate = new Date(data.end_date);
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
@@ -46,6 +41,12 @@ export class LeaveService {
     }
     if (startDate > endDate) {
       throw new ValidationError('Leave start date must be before or equal to end date');
+    }
+
+    let duration = Number(data.duration);
+    if (!duration || isNaN(duration) || duration <= 0) {
+      const diffMs = endDate.getTime() - startDate.getTime();
+      duration = Math.max(1, Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1);
     }
 
     // Bug 4 Fix: Check for overlapping active or pending leave requests
