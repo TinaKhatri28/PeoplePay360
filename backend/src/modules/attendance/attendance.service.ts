@@ -186,6 +186,36 @@ export class AttendanceService {
 
     return this.repo.update(organizationId, id, updatePayload);
   }
+
+  async bulkUpdateAttendanceStatus(organizationId: string, ids: string[], status: string, actorUserId?: string) {
+    const count = await this.repo.bulkUpdateStatus(organizationId, ids, status);
+    if (this.audit) {
+      await this.audit.log({
+        organizationId,
+        userId: actorUserId,
+        action: 'ATTENDANCE_BULK_UPDATE',
+        resourceType: 'attendance',
+        resourceId: ids.slice(0, 5).join(','),
+        details: { count, status, total_updated: count },
+      });
+    }
+    return { count, status };
+  }
+
+  async bulkDeleteAttendance(organizationId: string, ids: string[], actorUserId?: string) {
+    const count = await this.repo.bulkDelete(organizationId, ids);
+    if (this.audit) {
+      await this.audit.log({
+        organizationId,
+        userId: actorUserId,
+        action: 'ATTENDANCE_BULK_DELETE',
+        resourceType: 'attendance',
+        resourceId: ids.slice(0, 5).join(','),
+        details: { count, total_deleted: count },
+      });
+    }
+    return { count };
+  }
 }
 
 export const attendanceService = new AttendanceService();

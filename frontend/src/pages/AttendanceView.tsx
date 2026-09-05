@@ -18,7 +18,8 @@ import {
   Info,
   ChevronRight,
   Download,
-  CheckSquare
+  CheckSquare,
+  Trash2
 } from 'lucide-react';
 import { apiRequest } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -32,10 +33,19 @@ export default function AttendanceView() {
   const [loading, setLoading] = useState(true);
   const [punching, setPunching] = useState(false);
   const [punchMsg, setPunchMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
 
   // Multi-Selection State for Employees / Records
   const [selectedLogIds, setSelectedLogIds] = useState<string[]>([]);
   const [bulkUpdating, setBulkUpdating] = useState(false);
+
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timer = setTimeout(() => {
+      setToastMessage(null);
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [toastMessage]);
 
   // Filters (Matching Excalidraw Screenshot 1)
   const [search, setSearch] = useState('');
@@ -251,20 +261,65 @@ export default function AttendanceView() {
   const handleBulkUpdateStatus = async (newStatus: 'Present' | 'Absent' | 'Late') => {
     if (!selectedLogIds.length) return;
     setBulkUpdating(true);
+    const count = selectedLogIds.length;
     try {
-      await Promise.all(
-        selectedLogIds.map((id) =>
-          apiRequest(`/api/attendance/${id}`, {
-            method: 'PUT',
-            body: { status: newStatus },
-          })
-        )
-      );
+      try {
+        await apiRequest('/api/attendance/bulk-update', {
+          method: 'POST',
+          body: { ids: selectedLogIds, status: newStatus },
+        });
+      } catch {
+        // Resilient fallback to individual update endpoints
+        await Promise.all(
+          selectedLogIds.map((id) =>
+            apiRequest(`/api/attendance/${id}`, {
+              method: 'PUT',
+              body: { status: newStatus },
+            })
+          )
+        );
+      }
       setSelectedLogIds([]);
-      fetchData();
+      await fetchData();
       window.dispatchEvent(new Event('attendance-updated'));
+      setToastMessage({
+        type: 'success',
+        text: `Successfully updated ${count} employee attendance record(s) to ${newStatus}!`,
+      });
     } catch (err: any) {
-      alert(err.message || 'Failed to update selected attendance records');
+      setToastMessage({
+        type: 'error',
+        text: err.message || 'Failed to update selected attendance records',
+      });
+    } finally {
+      setBulkUpdating(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!selectedLogIds.length) return;
+    const count = selectedLogIds.length;
+    if (!window.confirm(`Are you sure you want to delete ${count} selected attendance record(s)? This action cannot be undone.`)) {
+      return;
+    }
+    setBulkUpdating(true);
+    try {
+      await apiRequest('/api/attendance/bulk-delete', {
+        method: 'POST',
+        body: { ids: selectedLogIds },
+      });
+      setSelectedLogIds([]);
+      await fetchData();
+      window.dispatchEvent(new Event('attendance-updated'));
+      setToastMessage({
+        type: 'success',
+        text: `Successfully deleted ${count} attendance record(s)!`,
+      });
+    } catch (err: any) {
+      setToastMessage({
+        type: 'error',
+        text: err.message || 'Failed to delete selected records',
+      });
     } finally {
       setBulkUpdating(false);
     }
@@ -273,24 +328,33 @@ export default function AttendanceView() {
   const handleExportSelectedCSV = () => {
     const selectedRecords = filtered.filter((r) => selectedLogIds.includes(String(r.id)));
     if (!selectedRecords.length) return;
-    const headers = ['Employee', 'Date', 'Check In', 'Check Out', 'Worked Hours', 'Overtime', 'Status'];
+    const headers = ['Employee', 'Date', 'Check In', 'Check Out', 'Worked Hours', 'Overtime', 'Status', 'Notes'];
     const rows = selectedRecords.map((r) => [
-      `"${r.employee_name || ''}"`,
+      `"${(r.employee_name || '').replace(/"/g, '""')}"`,
       `"${r.date || ''}"`,
-      `"${r.check_in || ''}"`,
-      `"${r.check_out || ''}"`,
-      r.worked_hours || 0,
-      r.overtime_hours || 0,
+      `"${formatTimeOnly(r.check_in)}"`,
+      `"${r.check_out ? formatTimeOnly(r.check_out) : '—'}"`,
+      Number(r.worked_hours || 0).toFixed(2),
+      Number(r.overtime_hours || 0).toFixed(2),
       `"${r.status || ''}"`,
+      `"${(r.notes || '').replace(/"/g, '""')}"`,
     ]);
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `attendance_selected_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.href = url;
+    link.setAttribute('download', `attendance_export_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 200);
+    setToastMessage({
+      type: 'success',
+      text: `Exported ${selectedRecords.length} attendance record(s) to CSV!`,
+    });
   };
 
   const handleCreateNewManual = async (e: FormEvent) => {
@@ -1080,32 +1144,41 @@ export default function AttendanceView() {
             </span>
             <button
               type="button"
-              onClick={() => setSelectedLogIds([])}
+              onClick={() => {
+                setSelectedLogIds([]);
+                setToastMessage({ type: 'info', text: 'Selection cleared.' });
+              }}
               style={{
-                background: 'none',
+                background: 'rgba(255, 255, 255, 0.1)',
                 border: '1px solid rgba(255, 255, 255, 0.3)',
                 color: '#FFFFFF',
                 borderRadius: 'var(--radius-xs)',
-                padding: '4px 10px',
+                padding: '5px 12px',
                 fontSize: '0.75rem',
                 cursor: 'pointer',
                 fontWeight: 600,
+                transition: 'all 0.15s ease',
               }}
             >
               Clear Selection
             </button>
             <button
               type="button"
-              onClick={() => setSelectedLogIds(filtered.map((l) => String(l.id)))}
+              onClick={() => {
+                const all = filtered.map((l) => String(l.id));
+                setSelectedLogIds(all);
+                setToastMessage({ type: 'info', text: `Selected all ${all.length} attendance records.` });
+              }}
               style={{
-                background: 'none',
+                background: 'rgba(255, 255, 255, 0.1)',
                 border: '1px solid rgba(255, 255, 255, 0.3)',
                 color: '#FFFFFF',
                 borderRadius: 'var(--radius-xs)',
-                padding: '4px 10px',
+                padding: '5px 12px',
                 fontSize: '0.75rem',
                 cursor: 'pointer',
                 fontWeight: 600,
+                transition: 'all 0.15s ease',
               }}
             >
               Select All ({filtered.length})
@@ -1126,15 +1199,18 @@ export default function AttendanceView() {
                     borderRadius: 'var(--radius-sm)',
                     padding: '6px 14px',
                     fontSize: '0.8rem',
-                    cursor: 'pointer',
+                    cursor: bulkUpdating ? 'not-allowed' : 'pointer',
                     fontWeight: 600,
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px',
+                    opacity: bulkUpdating ? 0.7 : 1,
+                    boxShadow: '0 2px 6px rgba(46, 125, 91, 0.3)',
+                    transition: 'all 0.15s ease',
                   }}
                 >
                   <CheckCircle2 size={14} />
-                  <span>Mark Present</span>
+                  <span>{bulkUpdating ? 'Updating...' : 'Mark Present'}</span>
                 </button>
 
                 <button
@@ -1148,11 +1224,14 @@ export default function AttendanceView() {
                     borderRadius: 'var(--radius-sm)',
                     padding: '6px 14px',
                     fontSize: '0.8rem',
-                    cursor: 'pointer',
+                    cursor: bulkUpdating ? 'not-allowed' : 'pointer',
                     fontWeight: 600,
+                    opacity: bulkUpdating ? 0.7 : 1,
+                    boxShadow: '0 2px 6px rgba(217, 119, 6, 0.3)',
+                    transition: 'all 0.15s ease',
                   }}
                 >
-                  Mark Late
+                  <span>{bulkUpdating ? 'Updating...' : 'Mark Late'}</span>
                 </button>
 
                 <button
@@ -1166,11 +1245,39 @@ export default function AttendanceView() {
                     borderRadius: 'var(--radius-sm)',
                     padding: '6px 14px',
                     fontSize: '0.8rem',
-                    cursor: 'pointer',
+                    cursor: bulkUpdating ? 'not-allowed' : 'pointer',
                     fontWeight: 600,
+                    opacity: bulkUpdating ? 0.7 : 1,
+                    boxShadow: '0 2px 6px rgba(220, 38, 38, 0.3)',
+                    transition: 'all 0.15s ease',
                   }}
                 >
-                  Mark Absent
+                  <span>{bulkUpdating ? 'Updating...' : 'Mark Absent'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={bulkUpdating}
+                  onClick={handleBulkDelete}
+                  style={{
+                    background: 'rgba(239, 68, 68, 0.15)',
+                    border: '1px solid rgba(239, 68, 68, 0.4)',
+                    color: '#FCA5A5',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '6px 14px',
+                    fontSize: '0.8rem',
+                    cursor: bulkUpdating ? 'not-allowed' : 'pointer',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    opacity: bulkUpdating ? 0.7 : 1,
+                    transition: 'all 0.15s ease',
+                  }}
+                  title="Delete selected attendance records"
+                >
+                  <Trash2 size={14} />
+                  <span>Delete</span>
                 </button>
               </>
             )}
@@ -1190,6 +1297,7 @@ export default function AttendanceView() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
+                transition: 'all 0.15s ease',
               }}
             >
               <Download size={14} />
@@ -1493,6 +1601,39 @@ export default function AttendanceView() {
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* Real-time Toast Feedback Notification */}
+      {toastMessage && (
+        <div style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          zIndex: 9999,
+          padding: '14px 20px',
+          borderRadius: 'var(--radius-md)',
+          background: toastMessage.type === 'success' ? '#064E3B' : toastMessage.type === 'error' ? '#7F1D1D' : '#1E3A5F',
+          color: '#FFFFFF',
+          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.25)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          fontWeight: 600,
+          fontSize: '0.9rem',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          animation: 'fadeIn 0.2s ease',
+        }}>
+          {toastMessage.type === 'success' && <CheckCircle2 size={18} color="#34D399" />}
+          {toastMessage.type === 'error' && <AlertCircle size={18} color="#F87171" />}
+          {toastMessage.type === 'info' && <Info size={18} color="#93C5FD" />}
+          <span>{toastMessage.text}</span>
+          <button
+            onClick={() => setToastMessage(null)}
+            style={{ background: 'none', border: 'none', color: '#FFFFFF', opacity: 0.7, cursor: 'pointer', marginLeft: '8px', display: 'flex', alignItems: 'center' }}
+          >
+            <X size={16} />
+          </button>
         </div>
       )}
     </div>

@@ -33,3 +33,12 @@ export const createAttendanceSchema = z.object({
   status: z.enum(['Present', 'Late', 'Absent', 'Overtime', 'Anomaly']).default('Present'),
   notes: z.string().optional().nullable(),
 });
+
+export const bulkUpdateAttendanceSchema = z.object({
+  ids: z.array(z.string()).min(1, 'At least one record ID is required'),
+  status: z.enum(['Present', 'Late', 'Absent', 'Overtime', 'Anomaly']),
+});
+
+export const bulkDeleteAttendanceSchema = z.object({
+  ids: z.array(z.string()).min(1, 'At least one record ID is required'),
+});

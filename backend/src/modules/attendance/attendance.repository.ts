@@ -90,6 +90,29 @@ export class AttendanceRepository {
     });
   }
 
+  async bulkUpdateStatus(organizationId: string, ids: string[], status: string) {
+    const result = await prisma.attendanceRecord.updateMany({
+      where: {
+        organization_id: organizationId,
+        id: { in: ids },
+      },
+      data: {
+        status,
+      },
+    });
+    return result.count;
+  }
+
+  async bulkDelete(organizationId: string, ids: string[]) {
+    const result = await prisma.attendanceRecord.deleteMany({
+      where: {
+        organization_id: organizationId,
+        id: { in: ids },
+      },
+    });
+    return result.count;
+  }
+
   async findMonthlyRecordsForEmployees(organizationId: string, employeeIds: string[], monthPrefix: string) {
     return prisma.attendanceRecord.findMany({
       where: {

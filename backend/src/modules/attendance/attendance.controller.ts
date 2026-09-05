@@ -93,6 +93,26 @@ export class AttendanceController {
       next(err);
     }
   };
+
+  bulkUpdate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const orgId = req.organizationId || 'org_default';
+      const result = await this.service.bulkUpdateAttendanceStatus(orgId, req.body.ids, req.body.status, req.user?.id);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  bulkDelete = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const orgId = req.organizationId || 'org_default';
+      const result = await this.service.bulkDeleteAttendance(orgId, req.body.ids, req.user?.id);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  };
 }
 
 export const attendanceController = new AttendanceController();
