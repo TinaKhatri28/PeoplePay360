@@ -35,7 +35,7 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchDashboard = async () => {
+  const fetchDashboard = async (isRetry = false) => {
     setLoading(true);
     setError(null);
     try {
@@ -48,7 +48,12 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
       const res = await apiRequest<DashboardData>(`/api/dashboard?${params.toString()}`);
       setData(res);
     } catch (err: any) {
-      setError(err.message || 'Failed to load dashboard data');
+      if (!isRetry) {
+        // Auto retry once after 1.8s for Neon DB cold start recovery
+        setTimeout(() => fetchDashboard(true), 1800);
+      } else {
+        setError(err.message || 'Failed to load dashboard data');
+      }
     } finally {
       setLoading(false);
     }
@@ -166,6 +171,7 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
         <div style={{
           display: 'flex',
           alignItems: 'center',
+          justifyContent: 'space-between',
           gap: '10px',
           padding: '12px 16px',
           borderRadius: 'var(--radius-md)',
@@ -174,8 +180,17 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
           color: '#DC2626',
           fontSize: '0.875rem',
         }}>
-          <AlertCircle size={16} />
-          <span>{error}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <AlertCircle size={16} />
+            <span>{error}</span>
+          </div>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => fetchDashboard()}
+            style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+          >
+            Retry
+          </button>
         </div>
       )}
 
