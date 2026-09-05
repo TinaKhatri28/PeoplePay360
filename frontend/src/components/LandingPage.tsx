@@ -1249,30 +1249,30 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
       <section style={{ maxWidth: '1240px', margin: '0 auto 6rem', padding: '0 2rem' }}>
         <div
           style={{
-            backgroundColor: palette.rosewood,
+            backgroundColor: '#000000',
             borderRadius: '24px',
             padding: '4.5rem 2rem',
             textAlign: 'center',
-            color: palette.cream,
-            border: `3px solid ${palette.charcoal}`,
-            boxShadow: `0px 14px 0px ${palette.charcoal}, 0px 25px 50px ${palette.rosewood}50`,
+            color: '#FFFFFF',
+            border: '2px solid #334155',
+            boxShadow: '0px 14px 0px #1E293B, 0px 25px 50px rgba(0,0,0,0.25)',
             position: 'relative',
             overflow: 'hidden',
           }}
         >
-          <h2 style={{ fontSize: 'clamp(2rem, 3.8vw, 3rem)', fontWeight: 900, marginBottom: '1rem', letterSpacing: '-0.02em' }}>
+          <h2 style={{ fontSize: 'clamp(2rem, 3.8vw, 3rem)', fontWeight: 900, marginBottom: '1rem', letterSpacing: '-0.02em', color: '#FFFFFF' }}>
             Ready to Streamline Your HR & Payroll Operations?
           </h2>
-          <p style={{ fontSize: '1.1rem', maxWidth: '640px', margin: '0 auto 2.5rem', opacity: 0.9, lineHeight: 1.6 }}>
+          <p style={{ fontSize: '1.1rem', maxWidth: '640px', margin: '0 auto 2.5rem', opacity: 0.9, lineHeight: 1.6, color: '#E2E8F0' }}>
             Join 2,500+ enterprises using PeoplePay360 for accurate, error-free payruns and real-time attendance management.
           </p>
 
           <button
             onClick={onEnterLogin}
             style={{
-              backgroundColor: palette.cream,
-              color: palette.rosewood,
-              border: `2px solid ${palette.charcoal}`,
+              backgroundColor: '#FFFFFF',
+              color: '#000000',
+              border: '2px solid #000000',
               borderRadius: '12px',
               padding: '1.15rem 3rem',
               fontSize: '1.15rem',
@@ -1281,8 +1281,8 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
               textTransform: 'uppercase',
               letterSpacing: '0.03em',
               cursor: 'pointer',
-              // 3D Shadow
-              boxShadow: `0px 8px 0px ${palette.rosewoodDark}, 0px 10px 0px ${palette.charcoal}, 0px 16px 25px rgba(0,0,0,0.4)`,
+              // 3D Silver Depth Shadow
+              boxShadow: '0px 8px 0px #94A3B8, 0px 10px 0px #000000, 0px 16px 25px rgba(0,0,0,0.3)',
               transform: 'translateY(0)',
               transition: 'all 0.12s ease',
               display: 'inline-flex',
@@ -1291,19 +1291,19 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = `0px 10px 0px ${palette.rosewoodDark}, 0px 12px 0px ${palette.charcoal}, 0px 20px 30px rgba(0,0,0,0.5)`;
+              e.currentTarget.style.boxShadow = '0px 10px 0px #94A3B8, 0px 12px 0px #000000, 0px 20px 30px rgba(0,0,0,0.4)';
             }}
             onMouseDown={(e) => {
               e.currentTarget.style.transform = 'translateY(6px)';
-              e.currentTarget.style.boxShadow = `0px 2px 0px ${palette.rosewoodDark}, 0px 4px 0px ${palette.charcoal}`;
+              e.currentTarget.style.boxShadow = '0px 2px 0px #94A3B8, 0px 4px 0px #000000';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = `0px 8px 0px ${palette.rosewoodDark}, 0px 10px 0px ${palette.charcoal}, 0px 16px 25px rgba(0,0,0,0.4)`;
+              e.currentTarget.style.boxShadow = '0px 8px 0px #94A3B8, 0px 10px 0px #000000, 0px 16px 25px rgba(0,0,0,0.3)';
             }}
           >
             <span>Proceed to Workspace Sign In</span>
-            <ArrowRight size={20} />
+            <ArrowRight size={20} color="#000000" />
           </button>
         </div>
       </section>
