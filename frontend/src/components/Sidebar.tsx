@@ -28,7 +28,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
   const isEmployeeOnly = !isHRManager && !isPayrollStaff;
 
   const rawNavItems = [
-    { id: 'dashboard', label: isEmployeeOnly ? 'My Dashboard' : 'Dashboard', icon: LayoutDashboard },
+    { id: 'dashboard', label: isEmployeeOnly ? 'My Dashboard' : 'Dashboard', icon: LayoutDashboard, allowed: true },
     { id: 'employees', label: 'Employees', icon: Users, allowed: isHRManager || isPayrollStaff },
     { id: 'contracts', label: 'Contracts', icon: FileText, allowed: isHRManager || isPayrollStaff },
     { id: 'attendance', label: isEmployeeOnly ? 'My Attendance' : 'Attendance', icon: Clock, allowed: true },
@@ -38,7 +38,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
     { id: 'users', label: 'User Governance', icon: UserCheck, allowed: isHRManager },
   ];
 
-  const navItems = rawNavItems.filter(item => item.allowed);
+  const navItems = rawNavItems.filter(item => item.allowed !== false);
 
   return (
     <aside style={{
