@@ -4,9 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "node src/server.js",
-    "seed": "node src/seed.js"
+    "start": "tsx src/server.ts",
+    "dev": "tsx src/server.ts",
+    "build": "tsc",
+    "seed": "tsx src/seed.ts"
   },
   "keywords": [],
   "author": "",
@@ -19,5 +20,15 @@
     "jsonwebtoken": "^9.0.3",
     "pdfkit": "^0.20.2",
     "uuid": "^14.0.2"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^26.4.1",
+    "@types/pdfkit": "^0.17.6",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2"
   }
 }
