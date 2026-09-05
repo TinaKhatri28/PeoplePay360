@@ -48,7 +48,7 @@ describe('UserService (Separation of Concerns & Business Logic)', () => {
       role: 'Employee',
       employee_id: null,
     });
-    expect(result).toEqual({ id: 'usr_1', email: 'john@example.com', role: 'Employee' });
+    expect(result).toEqual({ id: 'usr_1', email: 'john@example.com', role: 'Employee', roles: ['Employee'] });
   });
 
   it('throws NotFoundError when user is not found by ID', async () => {
