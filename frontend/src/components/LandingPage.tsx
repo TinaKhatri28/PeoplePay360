@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, FormEvent } from 'react';
 import {
   ShieldCheck,
   ArrowRight,
@@ -11,6 +11,11 @@ import {
   ChevronRight,
   ChevronDown,
   Lock,
+  Mail,
+  Eye,
+  EyeOff,
+  UserCheck,
+  AlertCircle,
   Zap,
   Building,
   TrendingUp,
@@ -20,12 +25,47 @@ import {
   Check,
   ChevronLeft
 } from 'lucide-react';
+import { useAuth, DEMO_USERS } from '../context/AuthContext';
 
 interface LandingPageProps {
-  onEnterLogin: () => void;
+  onEnterLogin?: () => void;
 }
 
 export default function LandingPage({ onEnterLogin }: LandingPageProps): React.JSX.Element {
+  const { login } = useAuth();
+  const [loginEmail, setLoginEmail] = useState('admin@oxp.com');
+  const [loginPassword, setLoginPassword] = useState('admin123');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleLoginSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setAuthError(null);
+    setSubmitting(true);
+    try {
+      await login(loginEmail, loginPassword);
+    } catch (err: any) {
+      setAuthError(err.message || 'Invalid corporate credentials');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleQuickDemoLogin = async (demoEmail: string, demoPass: string) => {
+    setLoginEmail(demoEmail);
+    setLoginPassword(demoPass);
+    setAuthError(null);
+    setSubmitting(true);
+    try {
+      await login(demoEmail, demoPass);
+    } catch (err: any) {
+      setAuthError(err.message || 'Failed to authenticate demo user');
+    } finally {
+      setSubmitting(false);
+    }
+  };
   // Theme Color Palette
   const palette = {
     cream: '#F1ECE6',
@@ -515,7 +555,7 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
             </div>
           </div>
 
-          {/* RIGHT: Direct Interactive 3D Access & Demo Form (HROne Signature Style) */}
+          {/* RIGHT: Direct Embedded Corporate Login Card */}
           <div>
             <div
               style={{
@@ -523,121 +563,160 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
                 borderRadius: '20px',
                 border: `2px solid ${palette.rosewood}40`,
                 boxShadow: `0 20px 50px ${palette.charcoal}18`,
-                padding: '2.5rem 2.25rem',
+                padding: '2.25rem 2rem',
                 position: 'relative',
               }}
             >
-              <div style={{ marginBottom: '1.5rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
-                  <Zap size={20} color={palette.rosewood} />
+              {/* Login Header */}
+              <div style={{ marginBottom: '1.25rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
+                  <ShieldCheck size={22} color={palette.rosewood} />
                   <h3 style={{ fontSize: '1.45rem', fontWeight: 900, color: palette.charcoal, margin: 0 }}>
-                    Experience PeoplePay360
+                    Sign In to Workspace
                   </h3>
                 </div>
-                <p style={{ fontSize: '0.88rem', color: palette.charcoal, opacity: 0.8, margin: 0 }}>
-                  Enter your details to instantly preview our enterprise payroll and attendance engine.
+                <p style={{ fontSize: '0.85rem', color: palette.charcoal, opacity: 0.8, margin: 0 }}>
+                  Enter your corporate credentials or select a 1-click persona.
                 </p>
               </div>
 
-              <form onSubmit={handleDemoSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
+              {/* Error Alert */}
+              {authError && (
+                <div
+                  style={{
+                    marginBottom: '1rem',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '8px',
+                    backgroundColor: 'rgba(180, 35, 24, 0.08)',
+                    border: '1px solid rgba(180, 35, 24, 0.25)',
+                    color: '#B42318',
+                    fontSize: '0.8rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.45rem',
+                  }}
+                >
+                  <AlertCircle size={15} style={{ flexShrink: 0 }} />
+                  <span>{authError}</span>
+                </div>
+              )}
+
+              {/* Login Form */}
+              <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: palette.charcoal, marginBottom: '0.4rem', textTransform: 'uppercase' }}>
+                  <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 800, color: palette.charcoal, marginBottom: '0.35rem', textTransform: 'uppercase' }}>
                     Corporate Work Email *
                   </label>
-                  <input
-                    type="email"
-                    required
-                    value={demoEmail}
-                    onChange={(e) => setDemoEmail(e.target.value)}
-                    placeholder="admin@company.com"
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem 1rem',
-                      borderRadius: '8px',
-                      border: `1.5px solid ${palette.greige}`,
-                      backgroundColor: palette.cream,
-                      color: palette.charcoal,
-                      fontSize: '0.9rem',
-                      outline: 'none',
-                      fontFamily: 'inherit',
-                      fontStyle: 'italic',
-                      boxSizing: 'border-box',
-                    }}
-                  />
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <Mail size={16} color={palette.rosewood} style={{ position: 'absolute', left: '0.85rem', pointerEvents: 'none', opacity: 0.8 }} />
+                    <input
+                      type="email"
+                      required
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                      placeholder="admin@oxp.com"
+                      style={{
+                        width: '100%',
+                        padding: '0.7rem 0.85rem 0.7rem 2.4rem',
+                        borderRadius: '8px',
+                        border: `1.5px solid ${palette.greige}`,
+                        backgroundColor: palette.cream,
+                        color: palette.charcoal,
+                        fontSize: '0.88rem',
+                        outline: 'none',
+                        fontFamily: 'inherit',
+                        fontStyle: 'italic',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: palette.charcoal, marginBottom: '0.4rem', textTransform: 'uppercase' }}>
-                    Contact Phone *
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    value={demoPhone}
-                    onChange={(e) => setDemoPhone(e.target.value)}
-                    placeholder="+91 98765 43210"
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem 1rem',
-                      borderRadius: '8px',
-                      border: `1.5px solid ${palette.greige}`,
-                      backgroundColor: palette.cream,
-                      color: palette.charcoal,
-                      fontSize: '0.9rem',
-                      outline: 'none',
-                      fontFamily: 'inherit',
-                      fontStyle: 'italic',
-                      boxSizing: 'border-box',
-                    }}
-                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                    <label style={{ fontSize: '0.72rem', fontWeight: 800, color: palette.charcoal, textTransform: 'uppercase', margin: 0 }}>
+                      Password *
+                    </label>
+                    <span style={{ fontSize: '0.72rem', color: palette.rosewood, fontWeight: 700 }}>
+                      Demo: admin123
+                    </span>
+                  </div>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <Lock size={16} color={palette.rosewood} style={{ position: 'absolute', left: '0.85rem', pointerEvents: 'none', opacity: 0.8 }} />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      placeholder="••••••••"
+                      style={{
+                        width: '100%',
+                        padding: '0.7rem 2.4rem 0.7rem 2.4rem',
+                        borderRadius: '8px',
+                        border: `1.5px solid ${palette.greige}`,
+                        backgroundColor: palette.cream,
+                        color: palette.charcoal,
+                        fontSize: '0.88rem',
+                        outline: 'none',
+                        fontFamily: 'inherit',
+                        fontStyle: 'italic',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{
+                        position: 'absolute',
+                        right: '0.75rem',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        color: palette.charcoal,
+                        opacity: 0.7,
+                      }}
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
                 </div>
 
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: palette.charcoal, marginBottom: '0.4rem', textTransform: 'uppercase' }}>
-                    Employee Size *
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.76rem', color: palette.charcoal, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      style={{ cursor: 'pointer', accentColor: palette.rosewood }}
+                    />
+                    <span>Keep me signed in</span>
                   </label>
-                  <select
-                    value={companySize}
-                    onChange={(e) => setCompanySize(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem 1rem',
-                      borderRadius: '8px',
-                      border: `1.5px solid ${palette.greige}`,
-                      backgroundColor: palette.cream,
-                      color: palette.charcoal,
-                      fontSize: '0.9rem',
-                      outline: 'none',
-                      fontFamily: 'inherit',
-                      fontStyle: 'italic',
-                      cursor: 'pointer',
-                      boxSizing: 'border-box',
-                    }}
-                  >
-                    <option value="1-50">1 - 50 Employees</option>
-                    <option value="51-200">51 - 200 Employees</option>
-                    <option value="201-500">201 - 500 Employees</option>
-                    <option value="500+">500+ Enterprise</option>
-                  </select>
+                  <span style={{ fontSize: '0.75rem', color: '#2E7D5B', fontWeight: 800 }}>
+                    ● 256-bit Secure
+                  </span>
                 </div>
 
-                {/* 3D Extruded CTA Button */}
-                <div style={{ paddingTop: '0.5rem' }}>
+                {/* 3D Extruded CTA Sign In Button */}
+                <div style={{ paddingTop: '0.25rem' }}>
                   <button
                     type="submit"
+                    disabled={submitting}
                     style={{
                       width: '100%',
                       backgroundColor: palette.rosewood,
                       color: palette.cream,
                       border: `2px solid ${palette.charcoal}`,
                       borderRadius: '12px',
-                      padding: '1rem',
-                      fontSize: '1.05rem',
+                      padding: '0.9rem',
+                      fontSize: '1rem',
                       fontWeight: 900,
                       fontStyle: 'italic',
                       textTransform: 'uppercase',
                       letterSpacing: '0.03em',
-                      cursor: 'pointer',
+                      cursor: submitting ? 'wait' : 'pointer',
                       // 3D Shadow
                       boxShadow: `0px 8px 0px ${palette.rosewoodDark}, 0px 10px 0px ${palette.charcoal}, 0px 18px 25px ${palette.rosewood}40`,
                       transform: 'translateY(0)',
@@ -645,7 +724,7 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '0.75rem',
+                      gap: '0.65rem',
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = 'translateY(-2px)';
@@ -660,19 +739,50 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
                       e.currentTarget.style.boxShadow = `0px 8px 0px ${palette.rosewoodDark}, 0px 10px 0px ${palette.charcoal}, 0px 18px 25px ${palette.rosewood}40`;
                     }}
                   >
-                    <span>ENTER SYSTEM / BOOK DEMO</span>
-                    <ArrowRight size={18} />
+                    <span>{submitting ? 'Authenticating...' : 'Sign In to Workspace'}</span>
+                    <ArrowRight size={17} />
                   </button>
                 </div>
               </form>
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.25rem', marginTop: '1.25rem', fontSize: '0.75rem', color: palette.charcoal, opacity: 0.75 }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Check size={13} color={palette.rosewood} /> No credit card needed
-                </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Check size={13} color={palette.rosewood} /> Instant access
-                </span>
+              {/* 1-Click Demo Personas */}
+              <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: `1px solid ${palette.rosewood}25` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem', fontWeight: 800, color: palette.rosewood, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.6rem' }}>
+                  <Sparkles size={12} color={palette.rosewood} />
+                  <span>1-Click Instant Demo Personas</span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.45rem' }}>
+                  {DEMO_USERS.map((demo) => (
+                    <button
+                      key={demo.email}
+                      type="button"
+                      onClick={() => handleQuickDemoLogin(demo.email, demo.password)}
+                      style={{
+                        padding: '0.45rem 0.6rem',
+                        borderRadius: '6px',
+                        backgroundColor: palette.cream,
+                        border: `1px solid ${palette.rosewood}30`,
+                        color: palette.charcoal,
+                        fontSize: '0.74rem',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'all 0.15s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = palette.rosewood;
+                        e.currentTarget.style.color = palette.cream;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = palette.cream;
+                        e.currentTarget.style.color = palette.charcoal;
+                      }}
+                    >
+                      <div style={{ fontWeight: 800 }}>{demo.role}</div>
+                      <div style={{ fontSize: '0.65rem', opacity: 0.75 }}>{demo.email}</div>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

@@ -229,8 +229,8 @@ export default function Header({ activeTab }: HeaderProps) {
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div style={{
-                  width: '28px',
-                  height: '28px',
+                  width: '32px',
+                  height: '32px',
                   borderRadius: '50%',
                   background: '#1E3A5F',
                   color: '#FFFFFF',
@@ -240,7 +240,7 @@ export default function Header({ activeTab }: HeaderProps) {
                   fontSize: '0.75rem',
                   fontWeight: 700,
                 }}>
-                  {(user?.name || 'U').slice(0, 2).toUpperCase()}
+                  {((user as any)?.name || user?.email || 'U').slice(0, 2).toUpperCase()}
                 </div>
                 <button
                   onClick={() => setShowWidget(false)}
@@ -263,7 +263,7 @@ export default function Header({ activeTab }: HeaderProps) {
             <div>
               <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Welcome back</div>
               <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#1F2937' }}>
-                {user?.name || 'User Name'}!
+                {(user as any)?.name || user?.email || 'User'}!
               </div>
             </div>
 
