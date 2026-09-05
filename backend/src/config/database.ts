@@ -17,6 +17,6 @@ prisma.$connect()
   .then(() => {
     logger.info('Database connected successfully via Prisma');
   })
-  .catch((err) => {
+  .catch((err: any) => {
     logger.warn(`Database connection initialized (lazy connect): ${err.message}`);
   });
