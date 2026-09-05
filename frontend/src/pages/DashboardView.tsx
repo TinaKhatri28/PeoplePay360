@@ -12,6 +12,15 @@ import {
 } from 'lucide-react';
 import { apiRequest } from '../api';
 import { DashboardData } from '../types';
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+} from 'recharts';
 
 interface DashboardViewProps {
   onNavigate: (tab: string) => void;
@@ -260,61 +269,32 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
             <span className="badge badge-primary">Historical Data</span>
           </div>
 
-          <div style={{
-            height: '220px',
-            display: 'flex',
-            alignItems: 'flex-end',
-            justifyContent: 'space-between',
-            gap: '12px',
-            paddingTop: '20px',
-            borderBottom: '1px solid var(--border-subtle)',
-          }}>
-            {data?.monthlyTrend?.map((item, idx) => {
-              const heightPct = maxTrend > 0 ? Math.max((item.total / maxTrend) * 100, 8) : 8;
-              return (
-                <div
-                  key={idx}
-                  style={{
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    height: '100%',
-                    justifyContent: 'flex-end',
-                    gap: '8px',
-                  }}
-                >
-                  <div style={{
-                    fontSize: '0.675rem',
-                    color: 'var(--text-subtle)',
-                    fontFamily: 'var(--font-mono)',
-                    whiteSpace: 'nowrap',
-                  }}>
-                    {item.total > 0 ? `₹${(item.total / 1000).toFixed(0)}k` : '₹0'}
-                  </div>
-                  <div
-                    style={{
-                      width: '100%',
-                      maxWidth: '42px',
-                      height: `${heightPct}%`,
-                      background: item.total > 0
-                        ? 'linear-gradient(180deg, #6366f1 0%, #312e81 100%)'
-                        : 'rgba(255, 255, 255, 0.05)',
-                      borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0',
-                      transition: 'height 0.4s ease',
-                      boxShadow: item.total > 0 ? '0 0 12px rgba(99, 102, 241, 0.25)' : 'none',
-                    }}
-                  />
-                  <div style={{
-                    fontSize: '0.75rem',
+          <div style={{ height: '220px', width: '100%', paddingTop: '10px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data?.monthlyTrend || []} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
+                <XAxis dataKey="label" stroke="#64748B" fontSize={12} tickLine={false} />
+                <YAxis
+                  stroke="#64748B"
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(v) => `₹${Math.round(v / 1000)}k`}
+                />
+                <Tooltip
+                  formatter={(val: any) => [`₹${Number(val).toLocaleString('en-IN')}`, 'Net Payout']}
+                  contentStyle={{
+                    background: '#FFFFFF',
+                    borderColor: '#E2E8F0',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                    color: '#1F2937',
                     fontWeight: 600,
-                    color: 'var(--text-muted)',
-                  }}>
-                    {item.label}
-                  </div>
-                </div>
-              );
-            })}
+                  }}
+                />
+                <Bar dataKey="total" fill="#1E3A5F" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
@@ -345,7 +325,7 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {data?.byDepartment?.map((dept, idx) => {
                 const pct = totalDeptCost > 0 ? Math.round((dept.total / totalDeptCost) * 100) : 0;
-                const colors = ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'];
+                const colors = ['#1E3A5F', '#3F5F7F', '#2E7D5B', '#B7791F', '#0284C7', '#475569'];
                 const barColor = colors[idx % colors.length];
 
                 return (
@@ -359,7 +339,7 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
                     <div style={{
                       width: '100%',
                       height: '8px',
-                      background: 'rgba(255, 255, 255, 0.05)',
+                      background: 'rgba(30, 58, 95, 0.08)',
                       borderRadius: 'var(--radius-full)',
                       overflow: 'hidden',
                     }}>
