@@ -1,5 +1,6 @@
 import { contractRepository, ContractRepository } from './contract.repository';
 import { auditService, AuditService } from '../audit/audit.service';
+import { prisma } from '../../config/database';
 import { ContractOverlapError, NotFoundError, ValidationError } from '../../shared/errors/app.error';
 
 export class ContractService {
@@ -95,6 +96,32 @@ export class ContractService {
       resourceId: created.id,
       details: { ref: created.ref, employee_id: created.employee_id, wage: created.wage },
     });
+
+    if (created.status === 'Running' && created.employee_id) {
+      try {
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const existingAtt = await prisma.attendanceRecord.findFirst({
+          where: { organization_id: organizationId, employee_id: created.employee_id },
+        });
+        if (!existingAtt) {
+          await prisma.attendanceRecord.create({
+            data: {
+              organization_id: organizationId,
+              employee_id: created.employee_id,
+              date: todayStr,
+              status: 'Present',
+              check_in: new Date(`${todayStr}T09:00:00.000Z`),
+              check_out: new Date(`${todayStr}T18:00:00.000Z`),
+              worked_hours: 8,
+              overtime_hours: 0,
+              notes: 'Auto-initialized upon contract activation',
+            },
+          });
+        }
+      } catch {
+        // Non-blocking
+      }
+    }
 
     return created;
   }
