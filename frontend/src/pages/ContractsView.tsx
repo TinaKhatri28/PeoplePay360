@@ -18,7 +18,8 @@ import {
   ShieldCheck,
   Layers,
   ChevronRight,
-  Info
+  Info,
+  Download
 } from 'lucide-react';
 import { apiRequest } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -215,6 +216,8 @@ export default function ContractsView({ onNavigate }: ContractsViewProps = {}) {
     }
   };
 
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
   const filtered = contracts.filter((c) => {
     if (filterStatus !== 'All' && c.status !== filterStatus) return false;
     if (search) {
@@ -227,6 +230,56 @@ export default function ContractsView({ onNavigate }: ContractsViewProps = {}) {
     }
     return true;
   });
+
+  const isAllSelected = filtered.length > 0 && filtered.every((c) => selectedIds.includes(String(c.id)));
+  const isSomeSelected = selectedIds.length > 0 && !isAllSelected;
+
+  const handleToggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filtered.map((c) => String(c.id)));
+    }
+  };
+
+  const handleToggleSelectOne = (id: string | number, e?: React.MouseEvent | React.ChangeEvent) => {
+    if (e) e.stopPropagation();
+    const strId = String(id);
+    setSelectedIds((prev) =>
+      prev.includes(strId) ? prev.filter((item) => item !== strId) : [...prev, strId]
+    );
+  };
+
+  const exportSelectedCSV = () => {
+    const targetContracts = selectedIds.length > 0
+      ? contracts.filter((c) => selectedIds.includes(String(c.id)))
+      : filtered;
+
+    const headers = ['Contract Ref', 'Employee Name', 'Department', 'Position', 'Monthly Wage', 'Start Date', 'End Date', 'Status'];
+    const rows = targetContracts.map((c) => [
+      c.ref,
+      c.employee_name || `${c.employee?.first_name || ''} ${c.employee?.last_name || ''}`,
+      c.department || c.employee?.department?.name || '',
+      c.position || c.employee?.position || '',
+      c.wage || 0,
+      c.start_date || '',
+      c.end_date || '',
+      c.status,
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [
+      headers.join(','),
+      ...rows.map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
+    ].join('\n');
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `contracts_export_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   if (loading && !contracts.length) {
     return (
@@ -920,11 +973,68 @@ export default function ContractsView({ onNavigate }: ContractsViewProps = {}) {
         )}
       </div>
 
+      {/* Contextual Bulk Action Bar when items are selected */}
+      {selectedIds.length > 0 && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '10px 18px',
+          borderRadius: 'var(--radius-md)',
+          background: 'rgba(0, 0, 0, 0.04)',
+          border: '1px solid rgba(0, 0, 0, 0.12)',
+          flexWrap: 'wrap',
+          gap: '12px',
+          animation: 'fadeIn 0.2s ease',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span className="badge badge-primary">{selectedIds.length} Selected</span>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 600 }}>
+              {selectedIds.length === filtered.length
+                ? 'All contracts in current view selected'
+                : `${selectedIds.length} of ${filtered.length} contracts selected`}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={exportSelectedCSV}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem' }}
+            >
+              <Download size={14} />
+              <span>Export CSV</span>
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => setSelectedIds([])}
+              style={{ fontSize: '0.78rem' }}
+            >
+              Clear Selection
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Contracts Table List with Clickable Rows */}
       <div className="table-container">
         <table className="data-table">
           <thead>
             <tr>
+              <th style={{ width: '42px', textAlign: 'center', padding: '10px 12px' }}>
+                <input
+                  type="checkbox"
+                  checked={isAllSelected}
+                  ref={(input) => {
+                    if (input) input.indeterminate = isSomeSelected;
+                  }}
+                  onChange={handleToggleSelectAll}
+                  title="Select All Contracts"
+                  style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#000000' }}
+                />
+              </th>
               <th>Contract Ref</th>
               <th>Employee</th>
               <th>Monthly Wage</th>
@@ -937,7 +1047,7 @@ export default function ContractsView({ onNavigate }: ContractsViewProps = {}) {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} style={{ textAlign: 'center', padding: '32px', color: '#64748B' }}>
+                <td colSpan={8} style={{ textAlign: 'center', padding: '32px', color: '#64748B' }}>
                   No contracts found matching your filters.
                 </td>
               </tr>
@@ -946,6 +1056,7 @@ export default function ContractsView({ onNavigate }: ContractsViewProps = {}) {
                 const empName = c.employee_name ||
                   (c.employee ? `${c.employee.first_name} ${c.employee.last_name}` : 'Unknown');
                 const position = c.position || c.employee?.position || 'Standard';
+                const isSelected = selectedIds.includes(String(c.id));
 
                 return (
                   <tr
@@ -954,9 +1065,19 @@ export default function ContractsView({ onNavigate }: ContractsViewProps = {}) {
                     style={{
                       cursor: 'pointer',
                       transition: 'background-color 0.15s ease',
+                      backgroundColor: isSelected ? 'rgba(0, 0, 0, 0.03)' : undefined,
                     }}
                     title="Click to open contract details"
                   >
+                    <td style={{ textAlign: 'center', padding: '10px 12px' }} onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={(e) => handleToggleSelectOne(c.id, e)}
+                        style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#000000' }}
+                        title={`Select contract ${c.ref}`}
+                      />
+                    </td>
                     <td>
                       <span style={{
                         fontFamily: 'var(--font-mono)',

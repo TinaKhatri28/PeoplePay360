@@ -7,7 +7,8 @@ import {
   Clock,
   AlertCircle,
   Calendar,
-  X
+  X,
+  Download
 } from 'lucide-react';
 import { apiRequest } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -116,6 +117,91 @@ export default function TimeOffView() {
     }
   };
 
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+
+  const isAllSelected = requests.length > 0 && requests.every((r) => selectedIds.includes(r.id));
+  const isSomeSelected = selectedIds.length > 0 && !isAllSelected;
+
+  const handleToggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(requests.map((r) => r.id));
+    }
+  };
+
+  const handleToggleSelectOne = (id: number, e?: React.MouseEvent | React.ChangeEvent) => {
+    if (e) e.stopPropagation();
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const exportSelectedCSV = () => {
+    const targetRequests = selectedIds.length > 0
+      ? requests.filter((r) => selectedIds.includes(r.id))
+      : requests;
+
+    const headers = ['ID', 'Employee', 'Leave Type', 'Start Date', 'End Date', 'Duration', 'Reason', 'Status'];
+    const rows = targetRequests.map((r) => [
+      r.id,
+      r.employee_name,
+      r.type_name,
+      r.start_date,
+      r.end_date,
+      `${r.duration} ${r.unit || 'Days'}`,
+      r.reason || '',
+      r.status,
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [
+      headers.join(','),
+      ...rows.map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
+    ].join('\n');
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `time_off_requests_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleBulkApprove = async () => {
+    const pendingIds = requests
+      .filter((r) => selectedIds.includes(r.id) && r.status === 'To Approve')
+      .map((r) => r.id);
+    if (!pendingIds.length) {
+      alert('No pending requests to approve among selected items.');
+      return;
+    }
+    try {
+      await Promise.all(pendingIds.map((id) => apiRequest(`/api/time-off/requests/${id}/approve`, { method: 'POST' })));
+      setSelectedIds([]);
+      fetchData();
+    } catch (err: any) {
+      alert(err.message || 'Bulk approval failed');
+    }
+  };
+
+  const handleBulkRefuse = async () => {
+    const pendingIds = requests
+      .filter((r) => selectedIds.includes(r.id) && r.status === 'To Approve')
+      .map((r) => r.id);
+    if (!pendingIds.length) {
+      alert('No pending requests to refuse among selected items.');
+      return;
+    }
+    try {
+      await Promise.all(pendingIds.map((id) => apiRequest(`/api/time-off/requests/${id}/refuse`, { method: 'POST' })));
+      setSelectedIds([]);
+      fetchData();
+    } catch (err: any) {
+      alert(err.message || 'Bulk refusal failed');
+    }
+  };
+
   if (loading && !requests.length) {
     return <div style={{ padding: '20px', color: '#64748B' }}>Loading leave requests...</div>;
   }
@@ -177,7 +263,7 @@ export default function TimeOffView() {
       </div>
 
       <div className="card">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <h3 style={{ fontSize: '1rem', fontWeight: 700 }}>Leave Requests Register</h3>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-subtle)', marginTop: '2px' }}>
@@ -187,10 +273,90 @@ export default function TimeOffView() {
           <span className="badge badge-primary">{requests.length} Total Requests</span>
         </div>
 
+        {/* Contextual Bulk Action Bar when items are selected */}
+        {selectedIds.length > 0 && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '10px 18px',
+            borderRadius: 'var(--radius-md)',
+            background: 'rgba(0, 0, 0, 0.04)',
+            border: '1px solid rgba(0, 0, 0, 0.12)',
+            flexWrap: 'wrap',
+            gap: '12px',
+            marginBottom: '16px',
+            animation: 'fadeIn 0.2s ease',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span className="badge badge-primary">{selectedIds.length} Selected</span>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 600 }}>
+                {selectedIds.length === requests.length
+                  ? 'All leave requests selected'
+                  : `${selectedIds.length} of ${requests.length} leave requests selected`}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              {isHRManager && (
+                <>
+                  <button
+                    type="button"
+                    className="btn btn-success btn-sm"
+                    onClick={handleBulkApprove}
+                    style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.78rem' }}
+                  >
+                    <CheckCircle2 size={13} />
+                    <span>Approve Selected</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-danger btn-sm"
+                    onClick={handleBulkRefuse}
+                    style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.78rem' }}
+                  >
+                    <XCircle size={13} />
+                    <span>Refuse Selected</span>
+                  </button>
+                </>
+              )}
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={exportSelectedCSV}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem' }}
+              >
+                <Download size={14} />
+                <span>Export CSV</span>
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => setSelectedIds([])}
+                style={{ fontSize: '0.78rem' }}
+              >
+                Clear Selection
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="table-container">
           <table className="data-table">
             <thead>
               <tr>
+                <th style={{ width: '42px', textAlign: 'center', padding: '10px 12px' }}>
+                  <input
+                    type="checkbox"
+                    checked={isAllSelected}
+                    ref={(input) => {
+                      if (input) input.indeterminate = isSomeSelected;
+                    }}
+                    onChange={handleToggleSelectAll}
+                    title="Select All Requests"
+                    style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#000000' }}
+                  />
+                </th>
                 <th>Employee</th>
                 <th>Leave Type</th>
                 <th>Dates</th>
@@ -201,64 +367,90 @@ export default function TimeOffView() {
               </tr>
             </thead>
             <tbody>
-              {requests.map((r) => (
-                <tr key={r.id}>
-                  <td>
-                    <span style={{ fontWeight: 600 }}>{r.employee_name}</span>
+              {requests.length === 0 ? (
+                <tr>
+                  <td colSpan={isHRManager ? 8 : 7} style={{ textAlign: 'center', padding: '32px', color: '#64748B' }}>
+                    No leave requests found.
                   </td>
-                  <td>
-                    <span style={{ fontWeight: 600, color: '#818cf8' }}>{r.type_name}</span>
-                  </td>
-                  <td>
-                    <div style={{ fontSize: '0.825rem' }}>{r.start_date} → {r.end_date}</div>
-                  </td>
-                  <td>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
-                      {r.duration} {r.unit || 'Days'}
-                    </span>
-                  </td>
-                  <td>
-                    <span style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>
-                      {r.reason || '—'}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`badge ${
-                      r.status === 'Approved' ? 'badge-success' :
-                      r.status === 'To Approve' ? 'badge-warning' : 'badge-danger'
-                    }`}>
-                      <span className="badge-dot" />
-                      {r.status}
-                    </span>
-                  </td>
-                  {isHRManager && (
-                    <td>
-                      {r.status === 'To Approve' ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <button
-                            className="btn btn-success btn-sm"
-                            onClick={() => handleApprove(r.id)}
-                            title="Approve Request"
-                          >
-                            <CheckCircle2 size={14} />
-                            <span>Approve</span>
-                          </button>
-                          <button
-                            className="btn btn-danger btn-sm"
-                            onClick={() => handleRefuse(r.id)}
-                            title="Refuse Request"
-                          >
-                            <XCircle size={14} />
-                            <span>Refuse</span>
-                          </button>
-                        </div>
-                      ) : (
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>Processed</span>
-                      )}
-                    </td>
-                  )}
                 </tr>
-              ))}
+              ) : (
+                requests.map((r) => {
+                  const isSelected = selectedIds.includes(r.id);
+                  return (
+                    <tr
+                      key={r.id}
+                      style={{
+                        backgroundColor: isSelected ? 'rgba(0, 0, 0, 0.03)' : undefined,
+                        transition: 'background-color 0.15s ease',
+                      }}
+                    >
+                      <td style={{ textAlign: 'center', padding: '10px 12px' }}>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(e) => handleToggleSelectOne(r.id, e)}
+                          style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#000000' }}
+                          title={`Select request for ${r.employee_name}`}
+                        />
+                      </td>
+                      <td>
+                        <span style={{ fontWeight: 600 }}>{r.employee_name}</span>
+                      </td>
+                      <td>
+                        <span style={{ fontWeight: 600, color: '#818cf8' }}>{r.type_name}</span>
+                      </td>
+                      <td>
+                        <div style={{ fontSize: '0.825rem' }}>{r.start_date} → {r.end_date}</div>
+                      </td>
+                      <td>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
+                          {r.duration} {r.unit || 'Days'}
+                        </span>
+                      </td>
+                      <td>
+                        <span style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>
+                          {r.reason || '—'}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`badge ${
+                          r.status === 'Approved' ? 'badge-success' :
+                          r.status === 'To Approve' ? 'badge-warning' : 'badge-danger'
+                        }`}>
+                          <span className="badge-dot" />
+                          {r.status}
+                        </span>
+                      </td>
+                      {isHRManager && (
+                        <td>
+                          {r.status === 'To Approve' ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <button
+                                className="btn btn-success btn-sm"
+                                onClick={() => handleApprove(r.id)}
+                                title="Approve Request"
+                              >
+                                <CheckCircle2 size={14} />
+                                <span>Approve</span>
+                              </button>
+                              <button
+                                className="btn btn-danger btn-sm"
+                                onClick={() => handleRefuse(r.id)}
+                                title="Refuse Request"
+                              >
+                                <XCircle size={14} />
+                                <span>Refuse</span>
+                              </button>
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>Processed</span>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>

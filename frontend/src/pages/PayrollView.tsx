@@ -193,6 +193,99 @@ export default function PayrollView() {
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
+  // Selection for Batches Table
+  const [selectedPayrunIds, setSelectedPayrunIds] = useState<number[]>([]);
+  const isAllPayrunsSelected = payruns.length > 0 && payruns.every((p) => selectedPayrunIds.includes(p.id));
+  const isSomePayrunsSelected = selectedPayrunIds.length > 0 && !isAllPayrunsSelected;
+
+  const handleToggleSelectAllPayruns = () => {
+    if (isAllPayrunsSelected) setSelectedPayrunIds([]);
+    else setSelectedPayrunIds(payruns.map((p) => p.id));
+  };
+
+  const handleToggleSelectOnePayrun = (id: number, e?: React.MouseEvent | React.ChangeEvent) => {
+    if (e) e.stopPropagation();
+    setSelectedPayrunIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const exportPayrunsCSV = () => {
+    const targets = selectedPayrunIds.length > 0
+      ? payruns.filter((p) => selectedPayrunIds.includes(p.id))
+      : payruns;
+
+    const headers = ['Batch ID', 'Cycle Period', 'Company', 'Created Date', 'Status'];
+    const rows = targets.map((p) => [
+      p.id,
+      `${monthNames[p.period_month]} ${p.period_year}`,
+      p.company || '',
+      p.created_at ? p.created_at.slice(0, 10) : '',
+      p.status,
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [
+      headers.join(','),
+      ...rows.map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
+    ].join('\n');
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `payroll_batches_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Selection for Payslips Table
+  const [selectedSlipIds, setSelectedSlipIds] = useState<number[]>([]);
+  const slips = payrunDetails?.payslips || [];
+  const isAllSlipsSelected = slips.length > 0 && slips.every((s) => selectedSlipIds.includes(s.id));
+  const isSomeSlipsSelected = selectedSlipIds.length > 0 && !isAllSlipsSelected;
+
+  const handleToggleSelectAllSlips = () => {
+    if (isAllSlipsSelected) setSelectedSlipIds([]);
+    else setSelectedSlipIds(slips.map((s) => s.id));
+  };
+
+  const handleToggleSelectOneSlip = (id: number, e?: React.MouseEvent | React.ChangeEvent) => {
+    if (e) e.stopPropagation();
+    setSelectedSlipIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const exportPayslipsCSV = () => {
+    const targets = selectedSlipIds.length > 0
+      ? slips.filter((s) => selectedSlipIds.includes(s.id))
+      : slips;
+
+    const headers = ['Payslip ID', 'Employee Name', 'Gross Wage', 'Deductions', 'Net Pay', 'Warnings', 'Sent Status'];
+    const rows = targets.map((s) => [
+      s.id,
+      s.employee_name,
+      s.gross || 0,
+      s.deductions || 0,
+      s.net || 0,
+      s.warnings ? s.warnings.join('; ') : '',
+      s.sent ? 'Sent' : 'Draft',
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [
+      headers.join(','),
+      ...rows.map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
+    ].join('\n');
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `payslips_batch_${selectedPayrun?.id || ''}_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (loading && !payruns.length) {
     return <div style={{ padding: '20px', color: '#64748B' }}>Loading payroll studio...</div>;
   }
@@ -290,10 +383,67 @@ export default function PayrollView() {
                 )}
               </div>
 
+              {/* Contextual Bulk Action Bar for Payrun Batches */}
+              {selectedPayrunIds.length > 0 && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '10px 18px',
+                  borderRadius: 'var(--radius-md)',
+                  background: 'rgba(0, 0, 0, 0.04)',
+                  border: '1px solid rgba(0, 0, 0, 0.12)',
+                  flexWrap: 'wrap',
+                  gap: '12px',
+                  animation: 'fadeIn 0.2s ease',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span className="badge badge-primary">{selectedPayrunIds.length} Selected</span>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 600 }}>
+                      {selectedPayrunIds.length === payruns.length
+                        ? 'All payrun batches selected'
+                        : `${selectedPayrunIds.length} of ${payruns.length} payrun batches selected`}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={exportPayrunsCSV}
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem' }}
+                    >
+                      <Download size={14} />
+                      <span>Export CSV</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => setSelectedPayrunIds([])}
+                      style={{ fontSize: '0.78rem' }}
+                    >
+                      Clear Selection
+                    </button>
+                  </div>
+                </div>
+              )}
+
           <div className="table-container">
             <table className="data-table">
               <thead>
                 <tr>
+                  <th style={{ width: '42px', textAlign: 'center', padding: '10px 12px' }}>
+                    <input
+                      type="checkbox"
+                      checked={isAllPayrunsSelected}
+                      ref={(input) => {
+                        if (input) input.indeterminate = isSomePayrunsSelected;
+                      }}
+                      onChange={handleToggleSelectAllPayruns}
+                      title="Select All Payruns"
+                      style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#000000' }}
+                    />
+                  </th>
                   <th>Cycle Period</th>
                   <th>Company</th>
                   <th>Created Date</th>
@@ -302,41 +452,67 @@ export default function PayrollView() {
                 </tr>
               </thead>
               <tbody>
-                {payruns.map((p) => (
-                  <tr key={p.id}>
-                    <td>
-                      <div style={{ fontWeight: 700, color: '#1F2937' }}>
-                        {monthNames[p.period_month]} {p.period_year}
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: '#64748B', fontFamily: 'var(--font-mono)' }}>
-                        Batch #{p.id}
-                      </div>
-                    </td>
-                    <td>{p.company}</td>
-                    <td>
-                      <div style={{ fontSize: '0.825rem' }}>{p.created_at ? p.created_at.slice(0, 10) : '—'}</div>
-                    </td>
-                    <td>
-                      <span className={`badge ${
-                        p.status === 'Paid' ? 'badge-success' :
-                        p.status === 'Validated' ? 'badge-info' :
-                        p.status === 'Computed' ? 'badge-warning' : 'badge-neutral'
-                      }`}>
-                        <span className="badge-dot" />
-                        {p.status}
-                      </span>
-                    </td>
-                    <td>
-                      <button
-                        className="btn btn-secondary btn-sm"
-                        onClick={() => openPayrun(p)}
-                      >
-                        <span>Open Batch Studio</span>
-                        <ChevronRight size={14} />
-                      </button>
+                {payruns.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} style={{ textAlign: 'center', padding: '32px', color: '#64748B' }}>
+                      No payrun batches found.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  payruns.map((p) => {
+                    const isSelected = selectedPayrunIds.includes(p.id);
+                    return (
+                      <tr
+                        key={p.id}
+                        style={{
+                          backgroundColor: isSelected ? 'rgba(0, 0, 0, 0.03)' : undefined,
+                          transition: 'background-color 0.15s ease',
+                        }}
+                      >
+                        <td style={{ textAlign: 'center', padding: '10px 12px' }}>
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => handleToggleSelectOnePayrun(p.id, e)}
+                            style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#000000' }}
+                            title={`Select batch #${p.id}`}
+                          />
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: 700, color: '#1F2937' }}>
+                            {monthNames[p.period_month]} {p.period_year}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: '#64748B', fontFamily: 'var(--font-mono)' }}>
+                            Batch #{p.id}
+                          </div>
+                        </td>
+                        <td>{p.company}</td>
+                        <td>
+                          <div style={{ fontSize: '0.825rem' }}>{p.created_at ? p.created_at.slice(0, 10) : '—'}</div>
+                        </td>
+                        <td>
+                          <span className={`badge ${
+                            p.status === 'Paid' ? 'badge-success' :
+                            p.status === 'Validated' ? 'badge-info' :
+                            p.status === 'Computed' ? 'badge-warning' : 'badge-neutral'
+                          }`}>
+                            <span className="badge-dot" />
+                            {p.status}
+                          </span>
+                        </td>
+                        <td>
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => openPayrun(p)}
+                          >
+                            <span>Open Batch Studio</span>
+                            <ChevronRight size={14} />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
@@ -480,15 +656,73 @@ export default function PayrollView() {
           </div>
 
           <div className="card">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
               <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1F2937' }}>Employee Payslips</h3>
               <span className="badge badge-info">{payrunDetails?.payslips?.length || 0} Slips</span>
             </div>
+
+            {/* Contextual Bulk Action Bar for Payslips */}
+            {selectedSlipIds.length > 0 && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '10px 18px',
+                borderRadius: 'var(--radius-md)',
+                background: 'rgba(0, 0, 0, 0.04)',
+                border: '1px solid rgba(0, 0, 0, 0.12)',
+                flexWrap: 'wrap',
+                gap: '12px',
+                marginBottom: '16px',
+                animation: 'fadeIn 0.2s ease',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span className="badge badge-primary">{selectedSlipIds.length} Selected</span>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 600 }}>
+                    {selectedSlipIds.length === slips.length
+                      ? 'All payslips in batch selected'
+                      : `${selectedSlipIds.length} of ${slips.length} payslips selected`}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={exportPayslipsCSV}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem' }}
+                  >
+                    <Download size={14} />
+                    <span>Export CSV</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => setSelectedSlipIds([])}
+                    style={{ fontSize: '0.78rem' }}
+                  >
+                    Clear Selection
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div className="table-container">
               <table className="data-table">
                 <thead>
                   <tr>
+                    <th style={{ width: '42px', textAlign: 'center', padding: '10px 12px' }}>
+                      <input
+                        type="checkbox"
+                        checked={isAllSlipsSelected}
+                        ref={(input) => {
+                          if (input) input.indeterminate = isSomeSlipsSelected;
+                        }}
+                        onChange={handleToggleSelectAllSlips}
+                        title="Select All Payslips"
+                        style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#000000' }}
+                      />
+                    </th>
                     <th>Employee</th>
                     <th>Gross Wage</th>
                     <th>Deductions</th>
@@ -499,65 +733,91 @@ export default function PayrollView() {
                   </tr>
                 </thead>
                 <tbody>
-                  {payrunDetails?.payslips?.map((slip) => (
-                    <tr key={slip.id}>
-                      <td>
-                        <span style={{ fontWeight: 600, color: '#1F2937' }}>{slip.employee_name}</span>
-                      </td>
-                      <td>
-                        <span style={{ fontFamily: 'var(--font-mono)' }}>
-                          ₹{slip.gross?.toLocaleString('en-IN')}
-                        </span>
-                      </td>
-                      <td>
-                        <span style={{ fontFamily: 'var(--font-mono)', color: slip.deductions > 0 ? '#B42318' : '#64748B' }}>
-                          {slip.deductions > 0 ? `-₹${slip.deductions.toLocaleString('en-IN')}` : '₹0'}
-                        </span>
-                      </td>
-                      <td>
-                        <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#2E7D5B', fontSize: '1rem' }}>
-                          ₹{slip.net?.toLocaleString('en-IN')}
-                        </span>
-                      </td>
-                      <td>
-                        {slip.warnings?.length > 0 ? (
-                          <span className="badge badge-warning" title={slip.warnings.join(', ')}>
-                            <AlertTriangle size={12} />
-                            <span>{slip.warnings.length} Issue(s)</span>
-                          </span>
-                        ) : (
-                          <span className="badge badge-success">
-                            <CheckCircle2 size={12} />
-                            <span>Clean</span>
-                          </span>
-                        )}
-                      </td>
-                      <td>
-                        <span className={`badge ${slip.sent ? 'badge-success' : 'badge-neutral'}`}>
-                          {slip.sent ? 'Sent' : 'Draft'}
-                        </span>
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <button
-                            className="btn btn-secondary btn-sm"
-                            onClick={() => setInspectedSlip(slip)}
-                          >
-                            <Eye size={13} />
-                            <span>Breakdown</span>
-                          </button>
-                          <button
-                            className="btn btn-outline-primary btn-sm"
-                            onClick={() => handleDownloadPdf(slip)}
-                            title="Download PDF"
-                          >
-                            <Download size={13} />
-                            <span>PDF</span>
-                          </button>
-                        </div>
+                  {slips.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} style={{ textAlign: 'center', padding: '32px', color: '#64748B' }}>
+                        No payslips found in this payrun.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    slips.map((slip) => {
+                      const isSelected = selectedSlipIds.includes(slip.id);
+                      return (
+                        <tr
+                          key={slip.id}
+                          style={{
+                            backgroundColor: isSelected ? 'rgba(0, 0, 0, 0.03)' : undefined,
+                            transition: 'background-color 0.15s ease',
+                          }}
+                        >
+                          <td style={{ textAlign: 'center', padding: '10px 12px' }}>
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={(e) => handleToggleSelectOneSlip(slip.id, e)}
+                              style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#000000' }}
+                              title={`Select payslip for ${slip.employee_name}`}
+                            />
+                          </td>
+                          <td>
+                            <span style={{ fontWeight: 600, color: '#1F2937' }}>{slip.employee_name}</span>
+                          </td>
+                          <td>
+                            <span style={{ fontFamily: 'var(--font-mono)' }}>
+                              ₹{slip.gross?.toLocaleString('en-IN')}
+                            </span>
+                          </td>
+                          <td>
+                            <span style={{ fontFamily: 'var(--font-mono)', color: slip.deductions > 0 ? '#B42318' : '#64748B' }}>
+                              {slip.deductions > 0 ? `-₹${slip.deductions.toLocaleString('en-IN')}` : '₹0'}
+                            </span>
+                          </td>
+                          <td>
+                            <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#2E7D5B', fontSize: '1rem' }}>
+                              ₹{slip.net?.toLocaleString('en-IN')}
+                            </span>
+                          </td>
+                          <td>
+                            {slip.warnings?.length > 0 ? (
+                              <span className="badge badge-warning" title={slip.warnings.join(', ')}>
+                                <AlertTriangle size={12} />
+                                <span>{slip.warnings.length} Issue(s)</span>
+                              </span>
+                            ) : (
+                              <span className="badge badge-success">
+                                <CheckCircle2 size={12} />
+                                <span>Clean</span>
+                              </span>
+                            )}
+                          </td>
+                          <td>
+                            <span className={`badge ${slip.sent ? 'badge-success' : 'badge-neutral'}`}>
+                              {slip.sent ? 'Sent' : 'Draft'}
+                            </span>
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <button
+                                className="btn btn-secondary btn-sm"
+                                onClick={() => setInspectedSlip(slip)}
+                              >
+                                <Eye size={13} />
+                                <span>Breakdown</span>
+                              </button>
+                              <button
+                                className="btn btn-outline-primary btn-sm"
+                                onClick={() => handleDownloadPdf(slip)}
+                                title="Download PDF"
+                              >
+                                <Download size={13} />
+                                <span>PDF</span>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>

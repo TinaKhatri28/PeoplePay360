@@ -8,7 +8,8 @@ import {
   X,
   Layers,
   Calculator,
-  Calendar
+  Calendar,
+  Download
 } from 'lucide-react';
 import { apiRequest } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -85,6 +86,67 @@ export default function SalaryStructuresView() {
     }
   };
 
+  const [selectedRuleIds, setSelectedRuleIds] = useState<number[]>([]);
+
+  const handleToggleSelectAllRules = (rules: Array<{ id: number }>) => {
+    const ids = rules.map((r) => r.id);
+    const allSelected = ids.length > 0 && ids.every((id) => selectedRuleIds.includes(id));
+    if (allSelected) {
+      setSelectedRuleIds((prev) => prev.filter((id) => !ids.includes(id)));
+    } else {
+      setSelectedRuleIds((prev) => Array.from(new Set([...prev, ...ids])));
+    }
+  };
+
+  const handleToggleSelectOneRule = (id: number, e?: React.MouseEvent | React.ChangeEvent) => {
+    if (e) e.stopPropagation();
+    setSelectedRuleIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const exportSelectedRulesCSV = (structureName: string, rules: any[]) => {
+    const targets = rules.filter((r) => selectedRuleIds.includes(r.id));
+    const toExport = targets.length > 0 ? targets : rules;
+
+    const headers = ['Structure', 'Sequence', 'Rule Name', 'Category', 'Compute Method', 'Value / Formula'];
+    const rows = toExport.map((r) => [
+      structureName,
+      r.sequence,
+      r.name,
+      r.category,
+      r.compute_method,
+      r.compute_method === 'FIXED' ? `Fixed ₹${r.amount || 0}` :
+      r.compute_method === 'PERCENTAGE' ? `${r.percentage}% of ${r.percentage_of}` :
+      `Formula [${r.formula_key}]`,
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [
+      headers.join(','),
+      ...rows.map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
+    ].join('\n');
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `${structureName.toLowerCase().replace(/\s+/g, '_')}_rules_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleBulkDeleteRules = async () => {
+    if (!selectedRuleIds.length) return;
+    if (!confirm(`Are you sure you want to remove ${selectedRuleIds.length} selected rule(s)?`)) return;
+    try {
+      await Promise.all(selectedRuleIds.map((id) => apiRequest(`/api/salary/rules/${id}`, { method: 'DELETE' })));
+      setSelectedRuleIds([]);
+      fetchData();
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete selected rules');
+    }
+  };
+
   if (loading && !structures.length) {
     return <div style={{ padding: '20px', color: '#64748B' }}>Loading salary structure configurations...</div>;
   }
@@ -131,54 +193,160 @@ export default function SalaryStructuresView() {
                 )}
               </div>
 
-              <div className="table-container">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Seq</th>
-                      <th>Rule / Component</th>
-                      <th>Category</th>
-                      <th>Method</th>
-                      <th>Value Formula</th>
-                      {isPayrollAdmin && <th>Remove</th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {st.rules?.map((r) => (
-                      <tr key={r.id}>
-                        <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-subtle)' }}>{r.sequence}</td>
-                        <td style={{ fontWeight: 600 }}>{r.name}</td>
-                        <td>
-                          <span className={`badge ${
-                            r.category === 'Basic' ? 'badge-primary' :
-                            r.category === 'Allowance' ? 'badge-success' : 'badge-danger'
-                          }`}>
-                            {r.category}
+              {/* Contextual Bulk Action Bar when rules in this structure are selected */}
+              {(() => {
+                const stRuleIds = (st.rules || []).map((r) => r.id);
+                const selectedInSt = stRuleIds.filter((id) => selectedRuleIds.includes(id));
+                const isAllInSt = stRuleIds.length > 0 && selectedInSt.length === stRuleIds.length;
+                const isSomeInSt = selectedInSt.length > 0 && !isAllInSt;
+
+                return (
+                  <>
+                    {selectedInSt.length > 0 && (
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '10px 18px',
+                        borderRadius: 'var(--radius-md)',
+                        background: 'rgba(0, 0, 0, 0.04)',
+                        border: '1px solid rgba(0, 0, 0, 0.12)',
+                        flexWrap: 'wrap',
+                        gap: '12px',
+                        marginBottom: '16px',
+                        animation: 'fadeIn 0.2s ease',
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <span className="badge badge-primary">{selectedInSt.length} Selected</span>
+                          <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 600 }}>
+                            {selectedInSt.length === stRuleIds.length
+                              ? `All ${st.name} rules selected`
+                              : `${selectedInSt.length} of ${stRuleIds.length} rules selected`}
                           </span>
-                        </td>
-                        <td>
-                          <span style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)' }}>{r.compute_method}</span>
-                        </td>
-                        <td>
-                          {r.compute_method === 'FIXED' && `Fixed ₹${r.amount?.toLocaleString('en-IN')}`}
-                          {r.compute_method === 'PERCENTAGE' && `${r.percentage}% of ${r.percentage_of}`}
-                          {r.compute_method === 'FORMULA' && `Formula [${r.formula_key}]`}
-                        </td>
-                        {isPayrollAdmin && (
-                          <td>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                          {isPayrollAdmin && (
                             <button
-                              style={{ background: 'none', border: 'none', color: '#f43f5e', cursor: 'pointer', padding: '4px' }}
-                              onClick={() => handleDeleteRule(r.id)}
+                              type="button"
+                              className="btn btn-danger btn-sm"
+                              onClick={handleBulkDeleteRules}
+                              style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.78rem' }}
                             >
-                              <Trash2 size={15} />
+                              <Trash2 size={13} />
+                              <span>Delete Selected</span>
                             </button>
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                          )}
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => exportSelectedRulesCSV(st.name, st.rules || [])}
+                            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem' }}
+                          >
+                            <Download size={14} />
+                            <span>Export CSV</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => setSelectedRuleIds((prev) => prev.filter((id) => !stRuleIds.includes(id)))}
+                            style={{ fontSize: '0.78rem' }}
+                          >
+                            Clear Selection
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="table-container">
+                      <table className="data-table">
+                        <thead>
+                          <tr>
+                            <th style={{ width: '42px', textAlign: 'center', padding: '10px 12px' }}>
+                              <input
+                                type="checkbox"
+                                checked={isAllInSt}
+                                ref={(input) => {
+                                  if (input) input.indeterminate = isSomeInSt;
+                                }}
+                                onChange={() => handleToggleSelectAllRules(st.rules || [])}
+                                title={`Select All ${st.name} Rules`}
+                                style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#000000' }}
+                              />
+                            </th>
+                            <th>Seq</th>
+                            <th>Rule / Component</th>
+                            <th>Category</th>
+                            <th>Method</th>
+                            <th>Value Formula</th>
+                            {isPayrollAdmin && <th>Remove</th>}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {st.rules?.length === 0 ? (
+                            <tr>
+                              <td colSpan={isPayrollAdmin ? 7 : 6} style={{ textAlign: 'center', padding: '24px', color: '#64748B' }}>
+                                No salary rules configured for this structure.
+                              </td>
+                            </tr>
+                          ) : (
+                            st.rules?.map((r) => {
+                              const isSelected = selectedRuleIds.includes(r.id);
+                              return (
+                                <tr
+                                  key={r.id}
+                                  style={{
+                                    backgroundColor: isSelected ? 'rgba(0, 0, 0, 0.03)' : undefined,
+                                    transition: 'background-color 0.15s ease',
+                                  }}
+                                >
+                                  <td style={{ textAlign: 'center', padding: '10px 12px' }}>
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      onChange={(e) => handleToggleSelectOneRule(r.id, e)}
+                                      style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#000000' }}
+                                      title={`Select rule ${r.name}`}
+                                    />
+                                  </td>
+                                  <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-subtle)' }}>{r.sequence}</td>
+                                  <td style={{ fontWeight: 600 }}>{r.name}</td>
+                                  <td>
+                                    <span className={`badge ${
+                                      r.category === 'Basic' ? 'badge-primary' :
+                                      r.category === 'Allowance' ? 'badge-success' : 'badge-danger'
+                                    }`}>
+                                      {r.category}
+                                    </span>
+                                  </td>
+                                  <td>
+                                    <span style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)' }}>{r.compute_method}</span>
+                                  </td>
+                                  <td>
+                                    {r.compute_method === 'FIXED' && `Fixed ₹${r.amount?.toLocaleString('en-IN')}`}
+                                    {r.compute_method === 'PERCENTAGE' && `${r.percentage}% of ${r.percentage_of}`}
+                                    {r.compute_method === 'FORMULA' && `Formula [${r.formula_key}]`}
+                                  </td>
+                                  {isPayrollAdmin && (
+                                    <td>
+                                      <button
+                                        style={{ background: 'none', border: 'none', color: '#f43f5e', cursor: 'pointer', padding: '4px' }}
+                                        onClick={() => handleDeleteRule(r.id)}
+                                      >
+                                        <Trash2 size={15} />
+                                      </button>
+                                    </td>
+                                  )}
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           ))}
         </div>

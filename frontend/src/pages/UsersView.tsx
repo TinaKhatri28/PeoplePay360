@@ -1,5 +1,5 @@
 import React, { useState, useEffect, FormEvent } from 'react';
-import { Plus, X, Search, Shield, UserCheck, Edit2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Plus, X, Search, Shield, UserCheck, Edit2, CheckCircle2, AlertCircle, Download } from 'lucide-react';
 import { apiRequest } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { User, Employee } from '../types';
@@ -134,6 +134,56 @@ export default function UsersView() {
     return matchSearch && matchRole;
   });
 
+  const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
+  const isAllUsersSelected = filteredUsers.length > 0 && filteredUsers.every((u) => selectedUserIds.includes(u.id));
+  const isSomeUsersSelected = selectedUserIds.length > 0 && !isAllUsersSelected;
+
+  const handleToggleSelectAll = () => {
+    if (isAllUsersSelected) {
+      setSelectedUserIds([]);
+    } else {
+      setSelectedUserIds(filteredUsers.map((u) => u.id));
+    }
+  };
+
+  const handleToggleSelectOne = (id: number, e?: React.MouseEvent | React.ChangeEvent) => {
+    if (e) e.stopPropagation();
+    setSelectedUserIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const exportUsersCSV = () => {
+    const targets = selectedUserIds.length > 0
+      ? users.filter((u) => selectedUserIds.includes(u.id))
+      : filteredUsers;
+
+    const headers = ['User ID', 'Linked Employee', 'Email', 'Roles', 'Status'];
+    const rows = targets.map((u) => {
+      const rolesList = Array.isArray(u.roles) ? u.roles : (u.role ? [u.role] : ['Employee']);
+      return [
+        u.id,
+        u.employee_name || 'Unlinked',
+        u.email,
+        rolesList.join('; '),
+        u.status || 'Active',
+      ];
+    });
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [
+      headers.join(','),
+      ...rows.map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
+    ].join('\n');
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `users_export_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (loading && !users.length) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '350px', color: 'var(--text-muted)', fontWeight: 600 }}>
@@ -247,11 +297,68 @@ export default function UsersView() {
         </div>
       </div>
 
+      {/* Contextual Bulk Action Bar when items are selected */}
+      {selectedUserIds.length > 0 && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '10px 18px',
+          borderRadius: 'var(--radius-md)',
+          background: 'rgba(0, 0, 0, 0.04)',
+          border: '1px solid rgba(0, 0, 0, 0.12)',
+          flexWrap: 'wrap',
+          gap: '12px',
+          animation: 'fadeIn 0.2s ease',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span className="badge badge-primary">{selectedUserIds.length} Selected</span>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 600 }}>
+              {selectedUserIds.length === filteredUsers.length
+                ? 'All users in current view selected'
+                : `${selectedUserIds.length} of ${filteredUsers.length} users selected`}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={exportUsersCSV}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem' }}
+            >
+              <Download size={14} />
+              <span>Export CSV</span>
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => setSelectedUserIds([])}
+              style={{ fontSize: '0.78rem' }}
+            >
+              Clear Selection
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Users Table */}
       <div className="table-container">
         <table className="data-table">
           <thead>
             <tr>
+              <th style={{ width: '42px', textAlign: 'center', padding: '10px 12px' }}>
+                <input
+                  type="checkbox"
+                  checked={isAllUsersSelected}
+                  ref={(input) => {
+                    if (input) input.indeterminate = isSomeUsersSelected;
+                  }}
+                  onChange={handleToggleSelectAll}
+                  title="Select All Users"
+                  style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#000000' }}
+                />
+              </th>
               <th>Account Identifier</th>
               <th>Linked Employee</th>
               <th>Work Email</th>
@@ -263,7 +370,7 @@ export default function UsersView() {
           <tbody>
             {filteredUsers.length === 0 ? (
               <tr>
-                <td colSpan={6} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+                <td colSpan={7} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
                   No user accounts match the selected filters.
                 </td>
               </tr>
@@ -271,9 +378,25 @@ export default function UsersView() {
               filteredUsers.map((u) => {
                 const rolesList = Array.isArray(u.roles) ? u.roles : (u.role ? [u.role] : ['Employee']);
                 const primaryRole = rolesList[0] || u.role || 'Employee';
+                const isSelected = selectedUserIds.includes(u.id);
 
                 return (
-                  <tr key={u.id}>
+                  <tr
+                    key={u.id}
+                    style={{
+                      backgroundColor: isSelected ? 'rgba(0, 0, 0, 0.03)' : undefined,
+                      transition: 'background-color 0.15s ease',
+                    }}
+                  >
+                    <td style={{ textAlign: 'center', padding: '10px 12px' }}>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={(e) => handleToggleSelectOne(u.id, e)}
+                        style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#000000' }}
+                        title={`Select user ${u.email}`}
+                      />
+                    </td>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <div style={{
