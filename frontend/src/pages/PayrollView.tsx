@@ -1,6 +1,5 @@
 import React, { useState, useEffect, FormEvent } from 'react';
 import {
-  Coins,
   Plus,
   Play,
   CheckCircle2,
@@ -8,17 +7,17 @@ import {
   Send,
   Download,
   Eye,
-  FileText,
-  Calendar,
   X,
   ChevronRight,
   ArrowLeft,
   DollarSign,
-  AlertCircle
+  LayoutDashboard,
+  Coins
 } from 'lucide-react';
 import { apiRequest, downloadPayslipPdf } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { Payrun, Payslip, Employee, SalaryStructure } from '../types';
+import PayrollDashboardView from '../components/PayrollDashboardView';
 
 export default function PayrollView() {
   const { isPayrollUser, isPayrollAdmin } = useAuth();
@@ -26,6 +25,7 @@ export default function PayrollView() {
   const [loading, setLoading] = useState(true);
   const [selectedPayrun, setSelectedPayrun] = useState<Payrun | null>(null);
   const [payrunDetails, setPayrunDetails] = useState<Payrun | null>(null);
+  const [payrollSubTab, setPayrollSubTab] = useState<'dashboard' | 'batches'>('dashboard');
 
   const [showNewModal, setShowNewModal] = useState(false);
   const [newYear, setNewYear] = useState<number>(2026);
@@ -204,27 +204,84 @@ export default function PayrollView() {
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '16px',
+            gap: '12px',
+            background: '#FFFFFF',
+            padding: '8px 12px',
+            borderRadius: 'var(--radius-lg)',
+            border: '1px solid #E2E8F0',
+            boxShadow: 'var(--shadow-sm)',
           }}>
-            <div>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Payroll Cycles & Batches</h2>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                Track scheduled disbursements, compute salary rules, and generate payslips
-              </p>
-            </div>
+            <button
+              onClick={() => setPayrollSubTab('dashboard')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 16px',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                background: payrollSubTab === 'dashboard' ? '#1E3A5F' : 'transparent',
+                color: payrollSubTab === 'dashboard' ? '#FFFFFF' : '#64748B',
+                border: 'none',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <LayoutDashboard size={16} />
+              <span>Payroll Analytics Dashboard</span>
+            </button>
 
-            {isPayrollUser && (
-              <button
-                className="btn btn-primary"
-                onClick={() => setShowNewModal(true)}
-              >
-                <Plus size={16} />
-                <span>Create New Payrun</span>
-              </button>
-            )}
+            <button
+              onClick={() => setPayrollSubTab('batches')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 16px',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                background: payrollSubTab === 'batches' ? '#1E3A5F' : 'transparent',
+                color: payrollSubTab === 'batches' ? '#FFFFFF' : '#64748B',
+                border: 'none',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <Coins size={16} />
+              <span>Payrun Cycles & Batches ({payruns.length})</span>
+            </button>
           </div>
+
+          {payrollSubTab === 'dashboard' ? (
+            <PayrollDashboardView />
+          ) : (
+            <>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '16px',
+              }}>
+                <div>
+                  <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1F2937' }}>Payroll Cycles & Batches</h2>
+                  <p style={{ fontSize: '0.8rem', color: '#64748B' }}>
+                    Track scheduled disbursements, compute salary rules, and generate payslips
+                  </p>
+                </div>
+
+                {isPayrollUser && (
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => setShowNewModal(true)}
+                  >
+                    <Plus size={16} />
+                    <span>Create New Payrun</span>
+                  </button>
+                )}
+              </div>
 
           <div className="table-container">
             <table className="data-table">
@@ -241,10 +298,10 @@ export default function PayrollView() {
                 {payruns.map((p) => (
                   <tr key={p.id}>
                     <td>
-                      <div style={{ fontWeight: 700, color: '#fff' }}>
+                      <div style={{ fontWeight: 700, color: '#1F2937' }}>
                         {monthNames[p.period_month]} {p.period_year}
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-subtle)', fontFamily: 'var(--font-mono)' }}>
+                      <div style={{ fontSize: '0.75rem', color: '#64748B', fontFamily: 'var(--font-mono)' }}>
                         Batch #{p.id}
                       </div>
                     </td>
@@ -277,7 +334,9 @@ export default function PayrollView() {
             </table>
           </div>
         </>
-      ) : (
+      )}
+    </>
+  ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={{
             display: 'flex',
@@ -286,7 +345,7 @@ export default function PayrollView() {
             flexWrap: 'wrap',
             gap: '16px',
             paddingBottom: '16px',
-            borderBottom: '1px solid var(--border-subtle)',
+            borderBottom: '1px solid #E2E8F0',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
               <button
@@ -297,15 +356,10 @@ export default function PayrollView() {
                 <span>All Payruns</span>
               </button>
               <div>
-<<<<<<< HEAD:frontend/src/pages/PayrollView.jsx
-                <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#fff' }}>
-                  Payrun: {monthNames[payrunDetails?.period_month]} {payrunDetails?.period_year}
-=======
                 <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#1F2937' }}>
                   Payrun: {monthNames[payrunDetails?.period_month || 0]} {payrunDetails?.period_year}
->>>>>>> 8b6891f392b2b3d91a1ee98cd4bd675cc7c9e38b:frontend/src/pages/PayrollView.tsx
                 </h2>
-                <div style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>
+                <div style={{ fontSize: '0.775rem', color: '#64748B' }}>
                   Batch #{payrunDetails?.id} • {payrunDetails?.payslips?.length || 0} Employees Enrolled
                 </div>
               </div>
@@ -324,8 +378,8 @@ export default function PayrollView() {
           </div>
 
           <div className="card" style={{
-            background: 'linear-gradient(135deg, rgba(19, 26, 43, 0.95) 0%, rgba(27, 38, 65, 0.85) 100%)',
-            border: '1px solid rgba(99, 102, 241, 0.3)',
+            background: '#FFFFFF',
+            border: '1px solid #E2E8F0',
           }}>
             <div style={{
               display: 'flex',
@@ -335,10 +389,10 @@ export default function PayrollView() {
               gap: '16px',
             }}>
               <div>
-                <div style={{ fontSize: '0.75rem', color: '#a5b4fc', fontWeight: 700, textTransform: 'uppercase' }}>
+                <div style={{ fontSize: '0.75rem', color: '#1E3A5F', fontWeight: 700, textTransform: 'uppercase' }}>
                   Step-by-Step Processing Studio
                 </div>
-                <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                <div style={{ fontSize: '0.9rem', color: '#64748B', marginTop: '2px' }}>
                   {payrunDetails?.status === 'Draft' && 'Ready to compute salary rules, attendance overtime, and unpaid leave penalties.'}
                   {payrunDetails?.status === 'Computed' && 'Salaries computed. Run validation checks to ensure complete bank details & contract compliance.'}
                   {payrunDetails?.status === 'Validated' && 'Payrun verified. HR Admin can now approve disbursement.'}
@@ -397,7 +451,7 @@ export default function PayrollView() {
                         <span>Mark Paid (Approve Batch)</span>
                       </button>
                     ) : (
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>
+                      <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
                         (Requires HR Payroll Admin to mark paid)
                       </div>
                     )}
@@ -420,7 +474,7 @@ export default function PayrollView() {
 
           <div className="card">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 700 }}>Employee Payslips</h3>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1F2937' }}>Employee Payslips</h3>
               <span className="badge badge-info">{payrunDetails?.payslips?.length || 0} Slips</span>
             </div>
 
@@ -441,7 +495,7 @@ export default function PayrollView() {
                   {payrunDetails?.payslips?.map((slip) => (
                     <tr key={slip.id}>
                       <td>
-                        <span style={{ fontWeight: 600 }}>{slip.employee_name}</span>
+                        <span style={{ fontWeight: 600, color: '#1F2937' }}>{slip.employee_name}</span>
                       </td>
                       <td>
                         <span style={{ fontFamily: 'var(--font-mono)' }}>
@@ -449,12 +503,12 @@ export default function PayrollView() {
                         </span>
                       </td>
                       <td>
-                        <span style={{ fontFamily: 'var(--font-mono)', color: slip.deductions > 0 ? '#fb7185' : 'var(--text-muted)' }}>
+                        <span style={{ fontFamily: 'var(--font-mono)', color: slip.deductions > 0 ? '#B42318' : '#64748B' }}>
                           {slip.deductions > 0 ? `-₹${slip.deductions.toLocaleString('en-IN')}` : '₹0'}
                         </span>
                       </td>
                       <td>
-                        <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#34d399', fontSize: '1rem' }}>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#2E7D5B', fontSize: '1rem' }}>
                           ₹{slip.net?.toLocaleString('en-IN')}
                         </span>
                       </td>
@@ -508,9 +562,9 @@ export default function PayrollView() {
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: '650px' }}>
             <div className="modal-header">
-              <h3 style={{ fontSize: '1.15rem' }}>Initiate Payroll Run</h3>
+              <h3 style={{ fontSize: '1.15rem', color: '#1F2937' }}>Initiate Payroll Run</h3>
               <button
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer' }}
                 onClick={() => setShowNewModal(false)}
               >
                 <X size={20} />
@@ -565,7 +619,7 @@ export default function PayrollView() {
                     </label>
                     <button
                       type="button"
-                      style={{ background: 'none', border: 'none', color: '#818cf8', fontSize: '0.75rem', cursor: 'pointer' }}
+                      style={{ background: 'none', border: 'none', color: '#1E3A5F', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600 }}
                       onClick={() => {
                         if (selectedEmpIds.length === eligible.length) setSelectedEmpIds([]);
                         else setSelectedEmpIds(eligible.map((e) => e.id));
@@ -576,11 +630,11 @@ export default function PayrollView() {
                   </div>
 
                   {loadingEligible ? (
-                    <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-subtle)' }}>
+                    <div style={{ padding: '20px', textAlign: 'center', color: '#64748B' }}>
                       Evaluating active contracts...
                     </div>
                   ) : eligible.length === 0 ? (
-                    <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-subtle)' }}>
+                    <div style={{ padding: '20px', textAlign: 'center', color: '#64748B' }}>
                       No active contracts found covering this month.
                     </div>
                   ) : (
@@ -591,9 +645,9 @@ export default function PayrollView() {
                       flexDirection: 'column',
                       gap: '6px',
                       padding: '8px',
-                      background: 'rgba(0, 0, 0, 0.2)',
+                      background: '#F8F9FA',
                       borderRadius: 'var(--radius-md)',
-                      border: '1px solid var(--border-subtle)',
+                      border: '1px solid #E2E8F0',
                     }}>
                       {eligible.map((emp) => {
                         const checked = selectedEmpIds.includes(emp.id);
@@ -606,7 +660,7 @@ export default function PayrollView() {
                               gap: '10px',
                               padding: '8px 12px',
                               borderRadius: 'var(--radius-xs)',
-                              background: checked ? 'rgba(99, 102, 241, 0.12)' : 'transparent',
+                              background: checked ? 'rgba(30, 58, 95, 0.08)' : 'transparent',
                               cursor: 'pointer',
                               fontSize: '0.825rem',
                             }}
@@ -619,9 +673,9 @@ export default function PayrollView() {
                                 else setSelectedEmpIds(selectedEmpIds.filter((id) => id !== emp.id));
                               }}
                             />
-                            <span style={{ fontWeight: 600 }}>{emp.name}</span>
-                            <span style={{ color: 'var(--text-subtle)' }}>({emp.position})</span>
-                            <span style={{ marginLeft: 'auto', fontFamily: 'var(--font-mono)', color: '#34d399' }}>
+                            <span style={{ fontWeight: 600, color: '#1F2937' }}>{emp.name}</span>
+                            <span style={{ color: '#64748B' }}>({emp.position})</span>
+                            <span style={{ marginLeft: 'auto', fontFamily: 'var(--font-mono)', color: '#2E7D5B', fontWeight: 600 }}>
                               ₹{emp.contract?.wage?.toLocaleString('en-IN')}/mo
                             </span>
                           </label>
@@ -658,11 +712,11 @@ export default function PayrollView() {
           <div className="modal-content">
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <CheckCircle2 size={20} color="#10b981" />
-                <h3 style={{ fontSize: '1.15rem' }}>Payrun Validation Audit</h3>
+                <CheckCircle2 size={20} color="#2E7D5B" />
+                <h3 style={{ fontSize: '1.15rem', color: '#1F2937' }}>Payrun Validation Audit</h3>
               </div>
               <button
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer' }}
                 onClick={() => setValidationReport(null)}
               >
                 <X size={20} />
@@ -675,24 +729,26 @@ export default function PayrollView() {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 padding: '12px 16px',
-                background: 'rgba(255, 255, 255, 0.02)',
+                background: '#F8F9FA',
                 borderRadius: 'var(--radius-md)',
+                border: '1px solid #E2E8F0',
               }}>
-                <span>Total Payslips Scanned:</span>
-                <strong>{payrunDetails?.payslips?.length || 0}</strong>
+                <span style={{ color: '#64748B' }}>Total Payslips Scanned:</span>
+                <strong style={{ color: '#1F2937' }}>{payrunDetails?.payslips?.length || 0}</strong>
               </div>
 
               <div>
-                <h4 style={{ fontSize: '0.9rem', marginBottom: '8px' }}>Audited Flags & Warnings</h4>
+                <h4 style={{ fontSize: '0.9rem', marginBottom: '8px', color: '#1F2937' }}>Audited Flags & Warnings</h4>
                 {validationReport.issues?.length === 0 ? (
                   <div style={{
                     padding: '16px',
                     borderRadius: 'var(--radius-md)',
-                    background: 'rgba(16, 185, 129, 0.12)',
-                    border: '1px solid rgba(16, 185, 129, 0.3)',
-                    color: '#34d399',
+                    background: 'rgba(46, 125, 91, 0.08)',
+                    border: '1px solid rgba(46, 125, 91, 0.25)',
+                    color: '#2E7D5B',
                     fontSize: '0.85rem',
                     textAlign: 'center',
+                    fontWeight: 600,
                   }}>
                     All payslips passed integrity checks with 0 critical blockers!
                   </div>
@@ -704,9 +760,9 @@ export default function PayrollView() {
                         style={{
                           padding: '10px 14px',
                           borderRadius: 'var(--radius-md)',
-                          background: 'rgba(245, 158, 11, 0.1)',
-                          border: '1px solid rgba(245, 158, 11, 0.25)',
-                          color: '#fbbf24',
+                          background: 'rgba(183, 121, 31, 0.08)',
+                          border: '1px solid rgba(183, 121, 31, 0.25)',
+                          color: '#B7791F',
                           fontSize: '0.825rem',
                           display: 'flex',
                           alignItems: 'center',
@@ -739,19 +795,13 @@ export default function PayrollView() {
           <div className="modal-content" style={{ maxWidth: '600px' }}>
             <div className="modal-header">
               <div>
-<<<<<<< HEAD:frontend/src/pages/PayrollView.jsx
-                <h3 style={{ fontSize: '1.15rem' }}>Payslip Itemization</h3>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                  {inspectedSlip.employee_name} • {monthNames[payrunDetails?.period_month]} {payrunDetails?.period_year}
-=======
                 <h3 style={{ fontSize: '1.15rem', color: '#1F2937' }}>Payslip Itemization</h3>
                 <div style={{ fontSize: '0.8rem', color: '#64748B' }}>
                   {inspectedSlip.employee_name} • {monthNames[payrunDetails?.period_month || 0]} {payrunDetails?.period_year}
->>>>>>> 8b6891f392b2b3d91a1ee98cd4bd675cc7c9e38b:frontend/src/pages/PayrollView.tsx
                 </div>
               </div>
               <button
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer' }}
                 onClick={() => setInspectedSlip(null)}
               >
                 <X size={20} />
@@ -763,9 +813,9 @@ export default function PayrollView() {
                 <div style={{
                   padding: '10px 14px',
                   borderRadius: 'var(--radius-md)',
-                  background: 'rgba(245, 158, 11, 0.15)',
-                  border: '1px solid rgba(245, 158, 11, 0.3)',
-                  color: '#fbbf24',
+                  background: 'rgba(183, 121, 31, 0.08)',
+                  border: '1px solid rgba(183, 121, 31, 0.25)',
+                  color: '#B7791F',
                   fontSize: '0.8rem',
                 }}>
                   {inspectedSlip.warnings.join('; ')}
@@ -781,30 +831,27 @@ export default function PayrollView() {
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       padding: '10px 14px',
-                      background: 'rgba(255, 255, 255, 0.02)',
+                      background: '#F8F9FA',
                       borderRadius: 'var(--radius-sm)',
+                      border: '1px solid #E2E8F0',
                       fontSize: '0.85rem',
                     }}
                   >
                     <div>
-                      <span style={{ fontWeight: 600 }}>{line.name}</span>
+                      <span style={{ fontWeight: 600, color: '#1F2937' }}>{line.name}</span>
                       <span style={{
                         marginLeft: '8px',
                         fontSize: '0.7rem',
-                        color: line.category === 'Deduction' ? '#fb7185' : '#818cf8',
+                        color: line.category === 'Deduction' ? '#B42318' : '#1E3A5F',
+                        fontWeight: 600,
                       }}>
                         [{line.category}]
                       </span>
                     </div>
                     <span style={{
                       fontFamily: 'var(--font-mono)',
-<<<<<<< HEAD:frontend/src/pages/PayrollView.jsx
-                      fontWeight: 600,
-                      color: line.category === 'Deduction' ? '#fb7185' : 'var(--text-main)',
-=======
                       fontWeight: 700,
                       color: line.category === 'Deduction' ? '#B42318' : '#1F2937',
->>>>>>> 8b6891f392b2b3d91a1ee98cd4bd675cc7c9e38b:frontend/src/pages/PayrollView.tsx
                     }}>
                       {line.category === 'Deduction' ? '-' : ''}₹{Math.abs(line.amount).toLocaleString('en-IN')}
                     </span>
@@ -813,49 +860,17 @@ export default function PayrollView() {
               </div>
 
               <div style={{
-<<<<<<< HEAD:frontend/src/pages/PayrollView.jsx
-                marginTop: '10px',
-                padding: '16px',
-                background: 'rgba(0, 0, 0, 0.25)',
-                borderRadius: 'var(--radius-md)',
-=======
                 padding: '14px',
                 background: 'rgba(30, 58, 95, 0.06)',
                 borderRadius: 'var(--radius-md)',
                 border: '1px solid rgba(30, 58, 95, 0.2)',
->>>>>>> 8b6891f392b2b3d91a1ee98cd4bd675cc7c9e38b:frontend/src/pages/PayrollView.tsx
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
               }}>
-<<<<<<< HEAD:frontend/src/pages/PayrollView.jsx
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Gross Earnings:</span>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
-                    ₹{inspectedSlip.gross?.toLocaleString('en-IN')}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Total Deductions:</span>
-                  <span style={{ fontFamily: 'var(--font-mono)', color: '#fb7185' }}>
-                    -₹{inspectedSlip.deductions?.toLocaleString('en-IN')}
-                  </span>
-                </div>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  fontSize: '1.1rem',
-                  fontWeight: 800,
-                  paddingTop: '8px',
-                  borderTop: '1px solid var(--border-subtle)',
-                }}>
-                  <span>Net Take-Home Pay:</span>
-                  <span style={{ color: '#34d399', fontFamily: 'var(--font-mono)' }}>
-=======
                 <div>
                   <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Net Take-Home Pay</div>
                   <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#2E7D5B', fontFamily: 'var(--font-mono)' }}>
->>>>>>> 8b6891f392b2b3d91a1ee98cd4bd675cc7c9e38b:frontend/src/pages/PayrollView.tsx
                     ₹{inspectedSlip.net?.toLocaleString('en-IN')}
                   </div>
                 </div>

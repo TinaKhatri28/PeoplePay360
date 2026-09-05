@@ -8,11 +8,6 @@ import {
   Coins,
   Sliders,
   LogOut,
-<<<<<<< HEAD:frontend/src/components/Sidebar.jsx
-  Sparkles,
-  ShieldAlert,
-=======
->>>>>>> 8b6891f392b2b3d91a1ee98cd4bd675cc7c9e38b:frontend/src/components/Sidebar.tsx
   UserCheck
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -25,22 +20,31 @@ interface SidebarProps {
 export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
   const { user, logout } = useAuth();
 
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'employees', label: 'Employees', icon: Users },
-    { id: 'contracts', label: 'Contracts', icon: FileText },
-    { id: 'attendance', label: 'Attendance', icon: Clock },
-    { id: 'timeoff', label: 'Time Off & Leaves', icon: CalendarOff },
-    { id: 'payroll', label: 'Payroll Studio', icon: Coins, highlight: true },
-    { id: 'salary', label: 'Salary & Schedules', icon: Sliders },
+  const userRoles = user?.roles || [];
+  const isAdmin = userRoles.includes('HR Payroll Admin') || userRoles.includes('Admin');
+  const isHRManager = isAdmin || userRoles.includes('HR Manager');
+  const isPayrollStaff = isAdmin || userRoles.includes('HR Payroll User');
+  const isEmployeeOnly = !isHRManager && !isPayrollStaff;
+
+  const rawNavItems = [
+    { id: 'dashboard', label: isEmployeeOnly ? 'My Dashboard' : 'Dashboard', icon: LayoutDashboard },
+    { id: 'employees', label: 'Employees', icon: Users, allowed: isHRManager || isPayrollStaff },
+    { id: 'contracts', label: 'Contracts', icon: FileText, allowed: isHRManager || isPayrollStaff },
+    { id: 'attendance', label: isEmployeeOnly ? 'My Attendance' : 'Attendance', icon: Clock, allowed: true },
+    { id: 'timeoff', label: isEmployeeOnly ? 'My Leaves & Quotas' : 'Time Off & Leaves', icon: CalendarOff, allowed: true },
+    { id: 'payroll', label: isPayrollStaff ? 'Payroll Dashboard' : 'Payroll Details', icon: Coins, highlight: true, allowed: isHRManager || isPayrollStaff },
+    { id: 'salary', label: 'Salary & Schedules', icon: Sliders, allowed: isHRManager || isPayrollStaff },
+    { id: 'users', label: 'User Governance', icon: UserCheck, allowed: isHRManager },
   ];
+
+  const navItems = rawNavItems.filter(item => item.allowed);
 
   return (
     <aside style={{
       width: '260px',
       minWidth: '260px',
       background: 'var(--bg-sidebar)',
-      borderRight: '1px solid var(--border-subtle)',
+      borderRight: '1px solid rgba(255, 255, 255, 0.1)',
       display: 'flex',
       flexDirection: 'column',
       height: '100vh',
@@ -53,18 +57,18 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         display: 'flex',
         alignItems: 'center',
         gap: '12px',
-        borderBottom: '1px solid var(--border-subtle)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
       }}>
         <div style={{
-          width: '40px',
-          height: '40px',
+          width: '38px',
+          height: '38px',
           borderRadius: 'var(--radius-md)',
-          background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
+          background: 'linear-gradient(135deg, #3F5F7F 0%, #1E3A5F 100%)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 4px 14px var(--primary-glow)',
-          color: '#fff',
+          color: '#FFFFFF',
           fontWeight: 800,
           fontSize: '1.25rem',
         }}>
@@ -72,19 +76,17 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         </div>
         <div>
           <div style={{
-            fontSize: '1.125rem',
+            fontSize: '1.1rem',
             fontWeight: 800,
             letterSpacing: '-0.02em',
-            background: 'linear-gradient(90deg, #ffffff 0%, #cbd5e1 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
+            color: '#FFFFFF',
             display: 'flex',
             alignItems: 'center',
-            gap: '6px'
+            gap: '4px'
           }}>
-            PeoplePay<span style={{ color: '#818cf8', WebkitTextFillColor: '#818cf8' }}>360</span>
+            PeoplePay<span style={{ color: '#93C5FD' }}>360</span>
           </div>
-          <div style={{ fontSize: '0.7rem', color: 'var(--text-subtle)', fontWeight: 600 }}>
+          <div style={{ fontSize: '0.675rem', color: '#94A3B8', fontWeight: 600, letterSpacing: '0.04em' }}>
             ENTERPRISE HR & PAYROLL
           </div>
         </div>
@@ -94,7 +96,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         <div style={{
           fontSize: '0.675rem',
           fontWeight: 700,
-          color: 'var(--text-subtle)',
+          color: '#94A3B8',
           textTransform: 'uppercase',
           letterSpacing: '0.08em',
           padding: '8px 12px 4px',
@@ -115,36 +117,35 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
                 gap: '12px',
                 padding: '10px 14px',
                 borderRadius: 'var(--radius-md)',
-                background: isActive ? 'var(--primary-light)' : 'transparent',
-                color: isActive ? '#ffffff' : 'var(--text-muted)',
+                background: isActive ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
+                color: isActive ? '#FFFFFF' : '#CBD5E1',
                 fontWeight: isActive ? 600 : 500,
                 fontSize: '0.875rem',
-                border: isActive ? '1px solid rgba(99, 102, 241, 0.4)' : '1px solid transparent',
+                border: isActive ? '1px solid rgba(255, 255, 255, 0.25)' : '1px solid transparent',
                 cursor: 'pointer',
                 transition: 'all var(--transition-fast)',
                 textAlign: 'left',
                 width: '100%',
-                position: 'relative',
               }}
               onMouseEnter={(e) => {
                 if (!isActive) {
-                  e.currentTarget.style.background = 'var(--bg-hover)';
-                  e.currentTarget.style.color = 'var(--text-main)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.color = '#FFFFFF';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isActive) {
                   e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = 'var(--text-muted)';
+                  e.currentTarget.style.color = '#CBD5E1';
                 }
               }}
             >
-              <Icon size={18} color={isActive ? '#818cf8' : 'currentColor'} />
+              <Icon size={18} color={isActive ? '#93C5FD' : 'currentColor'} />
               <span>{item.label}</span>
               {item.highlight && (
                 <span style={{
                   marginLeft: 'auto',
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  background: '#2E7D5B',
                   color: '#fff',
                   fontSize: '0.65rem',
                   fontWeight: 700,
@@ -159,79 +160,21 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         })}
       </nav>
 
-<<<<<<< HEAD:frontend/src/components/Sidebar.jsx
-      {/* Demo Persona Quick Switcher */}
-      <div style={{
-        padding: '12px 14px',
-        margin: '0 12px 12px',
-        background: 'rgba(255, 255, 255, 0.02)',
-        borderRadius: 'var(--radius-md)',
-        border: '1px solid var(--border-subtle)',
-      }}>
-        <div style={{
-          fontSize: '0.675rem',
-          fontWeight: 700,
-          color: 'var(--text-subtle)',
-          textTransform: 'uppercase',
-          letterSpacing: '0.06em',
-          marginBottom: '8px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-        }}>
-          <Sparkles size={12} color="#818cf8" />
-          <span>Quick Switch Persona</span>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          {DEMO_USERS.map((demo) => {
-            const isCurrent = user?.email === demo.email;
-            return (
-              <button
-                key={demo.email}
-                onClick={() => login(demo.email, demo.password)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '5px 8px',
-                  borderRadius: 'var(--radius-xs)',
-                  background: isCurrent ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
-                  border: isCurrent ? '1px solid rgba(99, 102, 241, 0.4)' : '1px solid transparent',
-                  color: isCurrent ? '#a5b4fc' : 'var(--text-muted)',
-                  fontSize: '0.725rem',
-                  cursor: 'pointer',
-                  fontWeight: isCurrent ? 600 : 400,
-                  transition: 'all 0.15s ease',
-                }}
-                title={`Switch to ${demo.role}`}
-              >
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {demo.badge}
-                </span>
-                {isCurrent && <UserCheck size={12} color="#818cf8" />}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* User Footer */}
-=======
->>>>>>> 8b6891f392b2b3d91a1ee98cd4bd675cc7c9e38b:frontend/src/components/Sidebar.tsx
       <div style={{
         padding: '16px 20px',
-        borderTop: '1px solid var(--border-subtle)',
+        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        background: 'rgba(0, 0, 0, 0.15)',
+        background: 'rgba(0, 0, 0, 0.2)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
           <div style={{
             width: '34px',
             height: '34px',
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+            background: '#3F5F7F',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -246,7 +189,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
             <div style={{
               fontSize: '0.8125rem',
               fontWeight: 600,
-              color: 'var(--text-main)',
+              color: '#FFFFFF',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -255,7 +198,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
             </div>
             <div style={{
               fontSize: '0.675rem',
-              color: 'var(--text-subtle)',
+              color: '#94A3B8',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -271,7 +214,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
           style={{
             background: 'transparent',
             border: 'none',
-            color: 'var(--text-subtle)',
+            color: '#94A3B8',
             cursor: 'pointer',
             padding: '6px',
             borderRadius: 'var(--radius-xs)',
@@ -280,8 +223,8 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
             justifyContent: 'center',
             transition: 'color var(--transition-fast)',
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = '#f43f5e')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-subtle)')}
+          onMouseEnter={(e) => (e.currentTarget.style.color = '#B42318')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}
         >
           <LogOut size={16} />
         </button>
