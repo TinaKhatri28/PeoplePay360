@@ -124,7 +124,7 @@ export class DashboardService {
           for (const alc of (lt.allocations || [])) {
             allocated += (alc.allocated || 0);
           }
-          if (allocated === 0) allocated = lt.days_per_year || 18;
+          if (allocated === 0) allocated = 18;
           const remaining = Math.max(0, allocated - approved);
 
           return {
