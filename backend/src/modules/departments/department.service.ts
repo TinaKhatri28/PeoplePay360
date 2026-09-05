@@ -1,11 +1,13 @@
 import { departmentRepository, DepartmentRepository } from './department.repository';
 import { ConflictError } from '../../shared/errors/app.error';
+import { cacheService } from '../../shared/utils/cache.service';
 
 export class DepartmentService {
   constructor(private readonly repo: DepartmentRepository = departmentRepository) {}
 
   async getAllDepartments(organizationId: string) {
-    return this.repo.findAll(organizationId);
+    const cacheKey = `departments:${organizationId}`;
+    return cacheService.getOrSet(cacheKey, () => this.repo.findAll(organizationId), 300);
   }
 
   async createDepartment(organizationId: string, name: string) {
@@ -13,7 +15,9 @@ export class DepartmentService {
     if (existing) {
       throw new ConflictError(`Department "${name}" already exists`);
     }
-    return this.repo.create(organizationId, name);
+    const created = await this.repo.create(organizationId, name);
+    await cacheService.del(`departments:${organizationId}`);
+    return created;
   }
 }
 

@@ -2,17 +2,22 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { env } from '../../config/env';
 import { AuthenticationError } from '../errors/app.error';
-import { AuthenticatedUser } from '../types/express';
+import { tokenBlacklistService } from '../utils/token-blacklist.service';
 
-export const authenticate = (req: Request, res: Response, next: NextFunction): void => {
+export const authenticate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    throw new AuthenticationError('Authorization token required');
+    return next(new AuthenticationError('Authorization token required'));
   }
 
   const token = authHeader.split(' ')[1];
 
   try {
+    const isRevoked = await tokenBlacklistService.isTokenRevoked(token);
+    if (isRevoked) {
+      return next(new AuthenticationError('Authentication token has been revoked'));
+    }
+
     const decoded = jwt.verify(token, env.JWT_SECRET) as any;
     req.user = {
       id: decoded.id || decoded.userId,
@@ -26,8 +31,8 @@ export const authenticate = (req: Request, res: Response, next: NextFunction): v
     next();
   } catch (err: any) {
     if (err.name === 'TokenExpiredError') {
-      throw new AuthenticationError('Token has expired');
+      return next(new AuthenticationError('Token has expired'));
     }
-    throw new AuthenticationError('Invalid or malformed authentication token');
+    return next(new AuthenticationError('Invalid or malformed authentication token'));
   }
 };

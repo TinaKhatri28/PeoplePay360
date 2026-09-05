@@ -73,7 +73,7 @@ export class AuthService {
     };
 
     const accessToken = jwt.sign(payload, env.JWT_SECRET, {
-      expiresIn: '12h',
+      expiresIn: '15m',
     });
 
     const refreshToken = jwt.sign(
@@ -85,7 +85,7 @@ export class AuthService {
     return {
       accessToken,
       refreshToken,
-      expiresIn: '12h',
+      expiresIn: '15m',
     };
   }
 
@@ -156,7 +156,11 @@ export class AuthService {
     }
   }
 
-  async logout(userId: string) {
+  async logout(userId: string, token?: string) {
+    if (token) {
+      const { tokenBlacklistService } = await import('../../shared/utils/token-blacklist.service');
+      await tokenBlacklistService.revokeToken(token, 900);
+    }
     await this.repo.updateRefreshTokenHash(userId, null);
     return { success: true, message: 'Logged out successfully' };
   }

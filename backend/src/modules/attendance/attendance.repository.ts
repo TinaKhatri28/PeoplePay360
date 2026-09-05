@@ -1,4 +1,5 @@
 import { prisma } from '../../config/database';
+import { NotFoundError } from '../../shared/errors/app.error';
 
 export class AttendanceRepository {
   async findAll(organizationId: string, filters: { date?: string; employee_id?: string }) {
@@ -78,7 +79,11 @@ export class AttendanceRepository {
     });
   }
 
-  async update(id: string, data: any) {
+  async update(organizationId: string, id: string, data: any) {
+    const existing = await this.findById(organizationId, id);
+    if (!existing) {
+      throw new NotFoundError(`Attendance record with id ${id} not found in this organization`);
+    }
     return prisma.attendanceRecord.update({
       where: { id },
       data,

@@ -164,7 +164,7 @@ export class AttendanceService {
       finalStatus = 'Present';
     }
 
-    const updated = await this.repo.update(active.id, {
+    const updated = await this.repo.update(organizationId, active.id, {
       check_out: checkOutTime,
       worked_hours: workedHours,
       overtime_hours: overtimeHours,
@@ -175,7 +175,7 @@ export class AttendanceService {
     return updated;
   }
 
-  async updateAttendance(id: string, data: any, actorUserId?: string) {
+  async updateAttendance(organizationId: string, id: string, data: any, actorUserId?: string) {
     const updatePayload: any = {};
     if (data.check_in) updatePayload.check_in = new Date(data.check_in);
     if (data.check_out) updatePayload.check_out = new Date(data.check_out);
@@ -184,7 +184,7 @@ export class AttendanceService {
     if (data.worked_hours !== undefined) updatePayload.worked_hours = Number(data.worked_hours);
     if (data.overtime_hours !== undefined) updatePayload.overtime_hours = Number(data.overtime_hours);
 
-    return this.repo.update(id, updatePayload);
+    return this.repo.update(organizationId, id, updatePayload);
   }
 }
 

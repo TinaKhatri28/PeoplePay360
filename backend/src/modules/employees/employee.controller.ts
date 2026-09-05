@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { employeeService, EmployeeService } from './employee.service';
 import { departmentService } from '../departments/department.service';
 import { ForbiddenError } from '../../shared/errors/app.error';
+import { sanitizeEmployeePII } from '../../shared/utils/masking.util';
 
 export class EmployeeController {
   constructor(private readonly service: EmployeeService = employeeService) {}
@@ -10,7 +11,9 @@ export class EmployeeController {
     try {
       const orgId = req.organizationId || 'org_default';
       const employees = await this.service.listEmployees(orgId, req.query as any);
-      res.json(employees);
+      const isPrivileged = req.user?.role === 'Admin' || req.user?.role === 'HR Manager' || req.user?.role === 'HR Payroll Admin' || req.user?.role === 'HR Payroll User';
+      const sanitized = employees.map(emp => sanitizeEmployeePII(emp, isPrivileged || req.user?.employeeId === emp.id));
+      res.json(sanitized);
     } catch (err) {
       next(err);
     }
@@ -20,7 +23,9 @@ export class EmployeeController {
     try {
       const orgId = req.organizationId || 'org_default';
       const employee = await this.service.getEmployeeById(orgId, req.params.id as string);
-      res.json(employee);
+      const isPrivileged = req.user?.role === 'Admin' || req.user?.role === 'HR Manager' || req.user?.role === 'HR Payroll Admin' || req.user?.role === 'HR Payroll User';
+      const sanitized = sanitizeEmployeePII(employee, isPrivileged || req.user?.employeeId === employee.id);
+      res.json(sanitized);
     } catch (err) {
       next(err);
     }

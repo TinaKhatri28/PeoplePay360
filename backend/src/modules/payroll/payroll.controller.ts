@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { payrollService, PayrollService } from './payroll.service';
 import { payslipPdfService } from '../payslips/payslip-pdf.service';
 import { ForbiddenError } from '../../shared/errors/app.error';
+import { dispatchJob, PAYROLL_QUEUE_NAME } from '../../jobs/queue';
 
 export class PayrollController {
   constructor(private readonly service: PayrollService = payrollService) {}
@@ -52,7 +53,32 @@ export class PayrollController {
   computePayrun = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const orgId = req.organizationId || 'org_default';
-      const result = await this.service.computePayrun(orgId, req.params.id as string, req.user?.id);
+      const payrunId = req.params.id as string;
+      const isAsync = req.query.async === 'true';
+
+      if (isAsync) {
+        await dispatchJob(
+          PAYROLL_QUEUE_NAME,
+          'compute-payrun',
+          {
+            organizationId: orgId,
+            payrunId,
+            actorUserId: req.user?.id,
+          },
+          async () => {
+            await this.service.computePayrun(orgId, payrunId, req.user?.id);
+          }
+        );
+
+        res.status(202).json({
+          status: 'Accepted',
+          message: 'Payrun calculation queued for background processing',
+          payrunId,
+        });
+        return;
+      }
+
+      const result = await this.service.computePayrun(orgId, payrunId, req.user?.id);
       res.json(result);
     } catch (err) {
       next(err);
@@ -118,7 +144,7 @@ export class PayrollController {
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="payslip-${slip.id}.pdf"`);
 
-      payslipPdfService.generatePayslipPdf(slip, res);
+      await payslipPdfService.generatePayslipPdf(slip, res);
     } catch (err) {
       next(err);
     }

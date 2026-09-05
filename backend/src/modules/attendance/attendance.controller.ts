@@ -86,7 +86,8 @@ export class AttendanceController {
 
   update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const result = await this.service.updateAttendance(req.params.id as string, req.body, req.user?.id);
+      const orgId = req.organizationId || 'org_default';
+      const result = await this.service.updateAttendance(orgId, req.params.id as string, req.body, req.user?.id);
       res.json(result);
     } catch (err) {
       next(err);

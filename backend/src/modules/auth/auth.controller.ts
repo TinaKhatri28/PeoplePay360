@@ -26,7 +26,9 @@ export class AuthController {
   logout = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = req.user!.id;
-      const result = await this.service.logout(userId);
+      const authHeader = req.headers.authorization;
+      const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
+      const result = await this.service.logout(userId, token);
       res.status(200).json(result);
     } catch (err) {
       next(err);

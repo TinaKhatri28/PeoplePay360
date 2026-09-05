@@ -1,5 +1,6 @@
 import { scheduleRepository, ScheduleRepository } from './schedule.repository';
 import { NotFoundError } from '../../shared/errors/app.error';
+import { cacheService } from '../../shared/utils/cache.service';
 
 export interface ScheduleDay {
   day: string; // Monday, Tuesday, etc.
@@ -32,21 +33,24 @@ export class ScheduleService {
   }
 
   async getAllSchedules(organizationId: string) {
-    const schedules = await this.repo.findAll(organizationId);
-    return schedules.map((s) => {
-      let days: ScheduleDay[] = [];
-      try {
-        days = JSON.parse(s.schedule_json || '[]');
-      } catch {
-        days = [];
-      }
-      const weeklyHours = this.calculateWeeklyHours(days);
-      return {
-        ...s,
-        schedule: days,
-        weekly_hours: weeklyHours,
-      };
-    });
+    const cacheKey = `schedules:${organizationId}`;
+    return cacheService.getOrSet(cacheKey, async () => {
+      const schedules = await this.repo.findAll(organizationId);
+      return schedules.map((s) => {
+        let days: ScheduleDay[] = [];
+        try {
+          days = JSON.parse(s.schedule_json || '[]');
+        } catch {
+          days = [];
+        }
+        const weeklyHours = this.calculateWeeklyHours(days);
+        return {
+          ...s,
+          schedule: days,
+          weekly_hours: weeklyHours,
+        };
+      });
+    }, 300);
   }
 
   async getScheduleById(organizationId: string, id: string) {
@@ -83,6 +87,8 @@ export class ScheduleService {
       standard_hours: standardHours,
       schedule_json: JSON.stringify(days),
     });
+
+    await cacheService.del(`schedules:${organizationId}`);
 
     return {
       ...created,

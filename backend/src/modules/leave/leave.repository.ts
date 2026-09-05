@@ -105,9 +105,9 @@ export class LeaveRepository {
     deductDuration?: number;
   }) {
     return prisma.$transaction(async (tx) => {
-      // 1. Fetch current request within transaction lock
-      const req = await tx.leaveRequest.findUnique({
-        where: { id: params.requestId },
+      // 1. Fetch current request within transaction lock with strict tenant boundary
+      const req = await tx.leaveRequest.findFirst({
+        where: { id: params.requestId, organization_id: params.organizationId },
       });
 
       if (!req) {
@@ -121,8 +121,8 @@ export class LeaveRepository {
 
       // 2. If approving, deduct allocation
       if (params.newStatus === 'Approved' && params.allocationId && params.deductDuration) {
-        const alloc = await tx.leaveAllocation.findUnique({
-          where: { id: params.allocationId },
+        const alloc = await tx.leaveAllocation.findFirst({
+          where: { id: params.allocationId, organization_id: params.organizationId },
         });
 
         if (!alloc) {

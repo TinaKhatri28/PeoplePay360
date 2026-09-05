@@ -1,6 +1,7 @@
 import { leaveRepository, LeaveRepository } from './leave.repository';
 import { auditService, AuditService } from '../audit/audit.service';
 import { InsufficientLeaveBalanceError, NotFoundError, ValidationError } from '../../shared/errors/app.error';
+import { cacheService } from '../../shared/utils/cache.service';
 
 export class LeaveService {
   constructor(
@@ -9,7 +10,8 @@ export class LeaveService {
   ) {}
 
   async getLeaveTypes(organizationId: string) {
-    return this.repo.findAllTypes(organizationId);
+    const cacheKey = `leave_types:${organizationId}`;
+    return cacheService.getOrSet(cacheKey, () => this.repo.findAllTypes(organizationId), 300);
   }
 
   async getLeaveRequests(organizationId: string, filters: { employee_id?: string; status?: string }) {

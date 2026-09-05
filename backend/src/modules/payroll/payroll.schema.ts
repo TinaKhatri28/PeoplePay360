@@ -12,3 +12,7 @@ export const queryEligibleSchema = z.object({
   year: z.coerce.number().min(2000).max(2100),
   month: z.coerce.number().min(1).max(12),
 });
+
+export const idParamSchema = z.object({
+  id: z.string().min(1, 'ID is required'),
+});

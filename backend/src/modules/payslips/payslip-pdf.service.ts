@@ -1,11 +1,10 @@
 import PDFDocument from 'pdfkit';
 import { Response } from 'express';
+import { maskBankAccount } from '../../shared/utils/masking.util';
+import { cacheService } from '../../shared/utils/cache.service';
 
 export class PayslipPdfService {
-  generatePayslipPdf(payslip: any, stream: Response): void {
-    const doc = new PDFDocument({ margin: 40, size: 'A4' });
-    doc.pipe(stream);
-
+  private renderPdfContent(doc: PDFKit.PDFDocument, payslip: any): void {
     const empName = payslip.employee 
       ? `${payslip.employee.first_name} ${payslip.employee.last_name}` 
       : 'Employee';
@@ -34,7 +33,8 @@ export class PayslipPdfService {
     doc.text(`Email: ${payslip.employee?.email || 'N/A'}`, 55, 152);
     doc.text(`Position: ${payslip.employee?.position || 'Staff'}`, 55, 166);
 
-    doc.text(`Bank Account: ${payslip.employee?.bank_account || 'N/A'}`, 320, 138);
+    const maskedAccount = maskBankAccount(payslip.employee?.bank_account);
+    doc.text(`Bank Account: ${maskedAccount}`, 320, 138);
     doc.text(`Payslip ID: ${payslip.id.slice(0, 13)}...`, 320, 152);
     doc.text(`Date Generated: ${new Date().toLocaleDateString()}`, 320, 166);
 
@@ -97,8 +97,34 @@ export class PayslipPdfService {
       760,
       { align: 'center', width: 515 }
     );
+  }
 
-    doc.end();
+  async generatePayslipPdfBuffer(payslip: any): Promise<Buffer> {
+    const cacheKey = `pdf:payslip:${payslip.id}`;
+    const cachedBase64 = await cacheService.get<string>(cacheKey);
+    if (cachedBase64) {
+      return Buffer.from(cachedBase64, 'base64');
+    }
+
+    const buffer = await new Promise<Buffer>((resolve, reject) => {
+      const doc = new PDFDocument({ margin: 40, size: 'A4' });
+      const chunks: Buffer[] = [];
+      doc.on('data', (chunk) => chunks.push(chunk));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+
+      this.renderPdfContent(doc, payslip);
+      doc.end();
+    });
+
+    // Cache PDF buffer base64 for 1 hour (3600 seconds)
+    await cacheService.set(cacheKey, buffer.toString('base64'), 3600);
+    return buffer;
+  }
+
+  async generatePayslipPdf(payslip: any, stream: Response): Promise<void> {
+    const buffer = await this.generatePayslipPdfBuffer(payslip);
+    stream.end(buffer);
   }
 }
 
