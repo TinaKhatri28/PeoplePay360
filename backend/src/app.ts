@@ -4,6 +4,8 @@ import helmet from 'helmet';
 import { requestIdMiddleware } from './shared/middleware/request-id.middleware';
 import { tenantMiddleware } from './shared/middleware/tenant.middleware';
 import { errorMiddleware } from './shared/middleware/error.middleware';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerDocument } from './config/swagger';
 
 // Module routers
 import authRoutes from './modules/auth/auth.routes';
@@ -43,6 +45,10 @@ export const createApp = (): Express => {
       timestamp: new Date().toISOString(),
     });
   });
+
+  // Swagger / OpenAPI documentation UI
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+  app.use('/api/v1/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
   // Helper to mount routers to a given base path prefix
   const mountRoutes = (prefix: string) => {

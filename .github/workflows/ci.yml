@@ -1,0 +1,84 @@
+name: PeoplePay360 CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  backend-test-and-build:
+    name: Backend Test, Lint & Build
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgrespassword
+          POSTGRES_DB: peoplepay360
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Generate Prisma Client
+        working-directory: ./backend
+        run: npx prisma generate
+        env:
+          DATABASE_URL: "postgresql://postgres:postgrespassword@localhost:5432/peoplepay360?schema=public"
+
+      - name: Run Database Migrations / Schema Push
+        working-directory: ./backend
+        run: npx prisma db push
+        env:
+          DATABASE_URL: "postgresql://postgres:postgrespassword@localhost:5432/peoplepay360?schema=public"
+
+      - name: Seed Database
+        working-directory: ./backend
+        run: npx tsx prisma/seed.ts
+        env:
+          DATABASE_URL: "postgresql://postgres:postgrespassword@localhost:5432/peoplepay360?schema=public"
+          JWT_SECRET: "ci-test-jwt-secret-key-super-secure-32chars"
+          JWT_REFRESH_SECRET: "ci-test-jwt-refresh-secret-key-super-secure-32chars"
+
+      - name: Run Vitest Unit & Integration Tests
+        working-directory: ./backend
+        run: npm test
+        env:
+          DATABASE_URL: "postgresql://postgres:postgrespassword@localhost:5432/peoplepay360?schema=public"
+          JWT_SECRET: "ci-test-jwt-secret-key-super-secure-32chars"
+          JWT_REFRESH_SECRET: "ci-test-jwt-refresh-secret-key-super-secure-32chars"
+
+      - name: Build TypeScript Production Bundle
+        working-directory: ./backend
+        run: npm run build
