@@ -119,20 +119,20 @@ export default function Header({ activeTab }: HeaderProps) {
       height: '74px',
       padding: '0 32px',
       background: '#FFFFFF',
-      borderBottom: '1px solid #E2E6EC',
+      borderBottom: '1px solid #E2E8F0',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       position: 'sticky',
       top: 0,
       zIndex: 30,
-      boxShadow: '0 1px 3px rgba(11, 19, 43, 0.03)',
+      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03)',
     }}>
       <div>
-        <h1 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0B132B', margin: 0, letterSpacing: '-0.02em' }}>
+        <h1 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0A0A0A', margin: 0 }}>
           {current.title}
         </h1>
-        <p style={{ fontSize: '0.75rem', color: '#5A6A85', marginTop: '2px', margin: 0, fontWeight: 600 }}>
+        <p style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '2px', margin: 0 }}>
           {current.desc}
         </p>
       </div>
@@ -143,16 +143,16 @@ export default function Header({ activeTab }: HeaderProps) {
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
-          background: '#F4F5F7',
+          background: '#F8FAFC',
           padding: '6px 12px',
           borderRadius: 'var(--radius-full)',
-          border: '1px solid #E2E6EC',
+          border: '1px solid #E2E8F0',
           fontSize: '0.8rem',
           fontFamily: 'var(--font-mono)',
-          color: '#0B132B',
+          color: '#0A0A0A',
           fontWeight: 700,
         }}>
-          <Clock size={14} color="#0B132B" />
+          <Clock size={14} color="#000000" />
           <span>{time.toLocaleTimeString()}</span>
         </div>
 
@@ -167,22 +167,22 @@ export default function Header({ activeTab }: HeaderProps) {
               gap: '8px',
               padding: '6px 14px',
               borderRadius: 'var(--radius-full)',
-              background: punchStatus?.checkedIn ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.1)',
-              border: `1px solid ${punchStatus?.checkedIn ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}`,
+              background: punchStatus?.checkedIn ? 'rgba(22, 163, 74, 0.1)' : 'rgba(220, 38, 38, 0.08)',
+              border: `1px solid ${punchStatus?.checkedIn ? 'rgba(22, 163, 74, 0.35)' : 'rgba(220, 38, 38, 0.35)'}`,
               fontSize: '0.75rem',
-              fontWeight: 800,
-              color: punchStatus?.checkedIn ? '#059669' : '#DC2626',
+              fontWeight: 700,
+              color: punchStatus?.checkedIn ? '#16A34A' : '#DC2626',
               cursor: 'pointer',
               transition: 'all 0.15s ease',
-              boxShadow: showWidget ? '0 0 0 2px rgba(11, 19, 43, 0.15)' : 'none',
+              boxShadow: showWidget ? '0 0 0 2px rgba(0, 0, 0, 0.15)' : 'none',
             }}
           >
             <span style={{
               width: '8px',
               height: '8px',
               borderRadius: '50%',
-              background: punchStatus?.checkedIn ? '#10B981' : '#EF4444',
-              boxShadow: punchStatus?.checkedIn ? '0 0 8px #10B981' : 'none',
+              background: punchStatus?.checkedIn ? '#16A34A' : '#DC2626',
+              boxShadow: punchStatus?.checkedIn ? '0 0 8px #16A34A' : 'none',
             }} />
             <span>{punchStatus?.checkedIn ? 'Clocked In' : 'Clocked Out'}</span>
             <span style={{ fontSize: '0.65rem', opacity: 0.7, marginLeft: '2px' }}>▼</span>
@@ -198,8 +198,8 @@ export default function Header({ activeTab }: HeaderProps) {
             width: '360px',
             background: '#FFFFFF',
             borderRadius: '16px',
-            border: '1px solid #E2E6EC',
-            boxShadow: '0 20px 35px -5px rgba(11, 19, 43, 0.15)',
+            border: '1px solid #E2E8F0',
+            boxShadow: '0 20px 35px -5px rgba(0, 0, 0, 0.15), 0 10px 15px -5px rgba(0, 0, 0, 0.04)',
             padding: '22px',
             zIndex: 100,
             display: 'flex',
@@ -212,7 +212,7 @@ export default function Header({ activeTab }: HeaderProps) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              borderBottom: '1px solid #F0F2F5',
+              borderBottom: '1px solid #F1F5F9',
               paddingBottom: '12px',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -220,9 +220,9 @@ export default function Header({ activeTab }: HeaderProps) {
                   width: '10px',
                   height: '10px',
                   borderRadius: '50%',
-                  background: punchStatus?.checkedIn ? '#10B981' : '#EF4444',
+                  background: punchStatus?.checkedIn ? '#16A34A' : '#DC2626',
                 }} />
-                <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 900, color: '#0B132B' }}>
+                <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: '#0A0A0A' }}>
                   Attendance Widget
                 </h4>
               </div>
@@ -232,13 +232,13 @@ export default function Header({ activeTab }: HeaderProps) {
                   width: '32px',
                   height: '32px',
                   borderRadius: '50%',
-                  background: '#FFAE19',
-                  color: '#0B132B',
+                  background: '#000000',
+                  color: '#FFFFFF',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '0.75rem',
-                  fontWeight: 900,
+                  fontWeight: 700,
                 }}>
                   {((user as any)?.name || user?.email || 'U').slice(0, 2).toUpperCase()}
                 </div>
@@ -262,7 +262,7 @@ export default function Header({ activeTab }: HeaderProps) {
             {/* Greeting */}
             <div>
               <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Welcome back</div>
-              <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#1F2937' }}>
+              <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0A0A0A' }}>
                 {(user as any)?.name || user?.email || 'User'}!
               </div>
             </div>
@@ -271,17 +271,17 @@ export default function Header({ activeTab }: HeaderProps) {
               <div style={{
                 padding: '8px 12px',
                 borderRadius: '8px',
-                background: 'rgba(180, 35, 24, 0.08)',
-                color: '#B42318',
+                background: 'rgba(220, 38, 38, 0.08)',
+                color: '#DC2626',
                 fontSize: '0.75rem',
               }}>
                 {widgetError}
               </div>
             )}
 
-            {/* Time / Duration Rows (Excalidraw Screenshot 2) */}
+            {/* Time / Duration Rows */}
             <div style={{
-              background: '#F8F9FA',
+              background: '#F8FAFC',
               borderRadius: '10px',
               border: '1px solid #E2E8F0',
               padding: '14px 16px',
@@ -290,12 +290,12 @@ export default function Header({ activeTab }: HeaderProps) {
               gap: '10px',
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
-                <span style={{ color: '#1F2937', fontWeight: 600 }}>
+                <span style={{ color: '#0A0A0A', fontWeight: 600 }}>
                   {punchStatus?.checkedIn && punchStatus.checkInTime
                     ? `${formatPunchTime(punchStatus.checkInTime)} — Now`
                     : 'Shift not active'}
                 </span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: punchStatus?.checkedIn ? '#2E7D5B' : '#64748B' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: punchStatus?.checkedIn ? '#16A34A' : '#64748B' }}>
                   {getLiveElapsed()}
                 </span>
               </div>
@@ -309,7 +309,7 @@ export default function Header({ activeTab }: HeaderProps) {
                 paddingTop: '8px',
               }}>
                 <span style={{ color: '#64748B', fontWeight: 600 }}>Today</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#1E3A5F' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#000000' }}>
                   {punchStatus?.checkedIn ? getLiveElapsed() : `${Number(punchStatus?.todayWorkedHours || 0).toFixed(2)}h`}
                 </span>
               </div>
@@ -324,17 +324,17 @@ export default function Header({ activeTab }: HeaderProps) {
                   width: '100%',
                   padding: '12px',
                   borderRadius: '10px',
-                  background: '#1E3A5F',
+                  background: '#000000',
                   color: '#FFFFFF',
                   fontWeight: 700,
                   fontSize: '0.95rem',
-                  border: 'none',
+                  border: '1px solid #334155',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
-                  boxShadow: '0 4px 12px rgba(30, 58, 95, 0.25)',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
                   transition: 'background 0.15s ease',
                 }}
               >
@@ -349,17 +349,17 @@ export default function Header({ activeTab }: HeaderProps) {
                   width: '100%',
                   padding: '12px',
                   borderRadius: '10px',
-                  background: '#3B82F6',
+                  background: '#334155',
                   color: '#FFFFFF',
                   fontWeight: 700,
                   fontSize: '0.95rem',
-                  border: 'none',
+                  border: '1px solid #64748B',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
-                  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+                  boxShadow: '0 4px 12px rgba(51, 65, 85, 0.3)',
                   transition: 'background 0.15s ease',
                 }}
               >
@@ -368,7 +368,7 @@ export default function Header({ activeTab }: HeaderProps) {
               </button>
             )}
 
-            {/* Footnote Note (Excalidraw Screenshot 2) */}
+            {/* Footnote Note */}
             <div style={{
               fontSize: '0.7rem',
               color: '#64748B',
@@ -387,13 +387,13 @@ export default function Header({ activeTab }: HeaderProps) {
           gap: '6px',
           padding: '6px 12px',
           borderRadius: 'var(--radius-full)',
-          background: 'rgba(30, 58, 95, 0.08)',
-          border: '1px solid rgba(30, 58, 95, 0.2)',
+          background: 'rgba(0, 0, 0, 0.05)',
+          border: '1px solid #E2E8F0',
           fontSize: '0.75rem',
-          fontWeight: 600,
-          color: '#1E3A5F',
+          fontWeight: 700,
+          color: '#0A0A0A',
         }}>
-          <ShieldCheck size={14} color="#1E3A5F" />
+          <ShieldCheck size={14} color="#000000" />
           <span>{user?.roles?.[0] || 'User'}</span>
         </div>
       </div>

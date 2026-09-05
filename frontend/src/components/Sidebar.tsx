@@ -27,13 +27,13 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
   const isEmployeeOnly = !isHRManager && !isPayrollStaff;
 
   const rawNavItems = [
-    { id: 'dashboard', label: isEmployeeOnly ? 'My Dashboard' : 'Dashboard Overview', icon: LayoutDashboard, allowed: true },
+    { id: 'dashboard', label: isEmployeeOnly ? 'My Dashboard' : 'Dashboard', icon: LayoutDashboard },
     { id: 'employees', label: 'Employees', icon: Users, allowed: isHRManager || isPayrollStaff },
     { id: 'contracts', label: 'Contracts', icon: FileText, allowed: isHRManager || isPayrollStaff },
     { id: 'attendance', label: isEmployeeOnly ? 'My Attendance' : 'Attendance', icon: Clock, allowed: true },
     { id: 'timeoff', label: isEmployeeOnly ? 'My Leaves & Quotas' : 'Time Off & Leaves', icon: CalendarOff, allowed: true },
-    { id: 'payroll', label: isPayrollStaff ? 'Payroll Dashboard' : 'Payroll Studio', icon: Coins, highlight: true, allowed: isHRManager || isPayrollStaff },
-    { id: 'salary', label: 'Salary Structures', icon: Sliders, allowed: isHRManager || isPayrollStaff },
+    { id: 'payroll', label: isPayrollStaff ? 'Payroll Dashboard' : 'Payroll Details', icon: Coins, highlight: true, allowed: isHRManager || isPayrollStaff },
+    { id: 'salary', label: 'Salary & Schedules', icon: Sliders, allowed: isHRManager || isPayrollStaff },
     { id: 'users', label: 'User Governance', icon: UserCheck, allowed: isHRManager },
   ];
 
@@ -43,8 +43,8 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
     <aside style={{
       width: '260px',
       minWidth: '260px',
-      background: '#0B132B',
-      borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+      background: '#0B0C10',
+      borderRight: '1px solid #1E293B',
       display: 'flex',
       flexDirection: 'column',
       height: '100vh',
@@ -52,76 +52,55 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
       top: 0,
       zIndex: 40,
     }}>
-      {/* Brand Header */}
       <div style={{
         padding: '24px 20px',
         display: 'flex',
         alignItems: 'center',
         gap: '12px',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+        borderBottom: '1px solid #1E293B',
       }}>
-        {/* Geometric Bauhaus Logo Emblem */}
         <div style={{
-          width: '40px',
-          height: '40px',
-          borderRadius: '12px',
-          background: 'linear-gradient(135deg, #FFAE19 0%, #E59C14 100%)',
+          width: '38px',
+          height: '38px',
+          borderRadius: 'var(--radius-md)',
+          background: 'linear-gradient(135deg, #FFFFFF 0%, #C0C0C0 50%, #475569 100%)',
+          border: '1px solid #E2E8F0',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 4px 14px rgba(255, 174, 25, 0.35)',
-          position: 'relative',
-          overflow: 'hidden',
-          flexShrink: 0,
+          color: '#000000',
+          fontWeight: 900,
+          fontSize: '1.25rem',
+          boxShadow: '0 2px 8px rgba(255,255,255,0.2)',
         }}>
-          {/* Geometric Inner Shapes */}
-          <div style={{
-            position: 'absolute',
-            width: '18px',
-            height: '18px',
-            borderRadius: '50%',
-            backgroundColor: '#0B132B',
-            top: '4px',
-            left: '4px',
-          }} />
-          <div style={{
-            position: 'absolute',
-            width: '18px',
-            height: '18px',
-            backgroundColor: '#FFFFFF',
-            bottom: '4px',
-            right: '4px',
-            borderRadius: '0 8px 0 8px',
-          }} />
+          P
         </div>
-
         <div>
           <div style={{
-            fontSize: '1.15rem',
-            fontWeight: 900,
-            letterSpacing: '-0.03em',
+            fontSize: '1.1rem',
+            fontWeight: 800,
+            letterSpacing: '-0.02em',
             color: '#FFFFFF',
             display: 'flex',
             alignItems: 'center',
-            gap: '2px'
+            gap: '4px'
           }}>
-            PeoplePay<span style={{ color: '#FFAE19' }}>360</span>
+            PeoplePay<span style={{ color: '#E2E8F0' }}>360</span>
           </div>
-          <div style={{ fontSize: '0.65rem', color: '#8A99AD', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-            Enterprise HR & Payroll
+          <div style={{ fontSize: '0.675rem', color: '#94A3B8', fontWeight: 700, letterSpacing: '0.06em' }}>
+            ENTERPRISE HR & PAYROLL
           </div>
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav style={{ flex: 1, padding: '18px 12px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+      <nav style={{ flex: 1, padding: '16px 12px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
         <div style={{
           fontSize: '0.675rem',
-          fontWeight: 800,
-          color: 'rgba(255, 255, 255, 0.35)',
+          fontWeight: 700,
+          color: '#64748B',
           textTransform: 'uppercase',
           letterSpacing: '0.08em',
-          padding: '8px 12px 6px',
+          padding: '8px 12px 4px',
         }}>
           Workforce & Operations
         </div>
@@ -137,18 +116,17 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
-                padding: '11px 14px',
-                borderRadius: '10px',
-                background: isActive ? '#FFAE19' : 'transparent',
-                color: isActive ? '#0B132B' : 'rgba(255, 255, 255, 0.75)',
-                fontWeight: isActive ? 800 : 600,
-                fontSize: '0.88rem',
-                border: 'none',
+                padding: '10px 14px',
+                borderRadius: 'var(--radius-md)',
+                background: isActive ? 'linear-gradient(90deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.06) 100%)' : 'transparent',
+                color: isActive ? '#FFFFFF' : '#94A3B8',
+                fontWeight: isActive ? 700 : 500,
+                fontSize: '0.875rem',
+                border: isActive ? '1px solid rgba(226, 232, 240, 0.3)' : '1px solid transparent',
                 cursor: 'pointer',
-                transition: 'all 0.15s ease',
+                transition: 'all var(--transition-fast)',
                 textAlign: 'left',
                 width: '100%',
-                boxShadow: isActive ? '0 4px 15px rgba(255, 174, 25, 0.3)' : 'none',
               }}
               onMouseEnter={(e) => {
                 if (!isActive) {
@@ -159,21 +137,21 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
               onMouseLeave={(e) => {
                 if (!isActive) {
                   e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.75)';
+                  e.currentTarget.style.color = '#94A3B8';
                 }
               }}
             >
-              <Icon size={18} color={isActive ? '#0B132B' : 'rgba(255, 255, 255, 0.65)'} />
-              <span style={{ flex: 1 }}>{item.label}</span>
+              <Icon size={18} color={isActive ? '#FFFFFF' : '#64748B'} />
+              <span>{item.label}</span>
               {item.highlight && (
                 <span style={{
-                  background: isActive ? '#0B132B' : '#10B981',
-                  color: isActive ? '#FFAE19' : '#FFFFFF',
-                  fontSize: '0.62rem',
-                  fontWeight: 900,
-                  padding: '2px 7px',
-                  borderRadius: '999px',
-                  letterSpacing: '0.04em',
+                  marginLeft: 'auto',
+                  background: '#FFFFFF',
+                  color: '#000000',
+                  fontSize: '0.65rem',
+                  fontWeight: 800,
+                  padding: '2px 6px',
+                  borderRadius: 'var(--radius-full)',
                 }}>
                   LIVE
                 </span>
@@ -183,35 +161,34 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         })}
       </nav>
 
-      {/* User Footer */}
       <div style={{
-        padding: '16px 18px',
-        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+        padding: '16px 20px',
+        borderTop: '1px solid #1E293B',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        background: 'rgba(0, 0, 0, 0.25)',
+        background: '#050608',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
           <div style={{
-            width: '36px',
-            height: '36px',
+            width: '34px',
+            height: '34px',
             borderRadius: '50%',
-            background: '#FFAE19',
-            border: '2px solid rgba(255, 255, 255, 0.2)',
+            background: 'linear-gradient(135deg, #334155 0%, #1E293B 100%)',
+            border: '2px solid #64748B',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontWeight: 900,
-            fontSize: '0.82rem',
-            color: '#0B132B',
+            fontWeight: 800,
+            fontSize: '0.8rem',
+            color: '#FFFFFF',
             flexShrink: 0,
           }}>
             {user?.employee_name?.slice(0, 2).toUpperCase() || user?.email?.slice(0, 2).toUpperCase() || 'U'}
           </div>
           <div style={{ minWidth: 0 }}>
             <div style={{
-              fontSize: '0.82rem',
+              fontSize: '0.8125rem',
               fontWeight: 700,
               color: '#FFFFFF',
               whiteSpace: 'nowrap',
@@ -221,9 +198,8 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
               {user?.employee_name || user?.email?.split('@')[0]}
             </div>
             <div style={{
-              fontSize: '0.68rem',
-              color: '#FFAE19',
-              fontWeight: 700,
+              fontSize: '0.675rem',
+              color: '#94A3B8',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -239,17 +215,17 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
           style={{
             background: 'transparent',
             border: 'none',
-            color: 'rgba(255, 255, 255, 0.45)',
+            color: '#64748B',
             cursor: 'pointer',
             padding: '6px',
-            borderRadius: '6px',
+            borderRadius: 'var(--radius-xs)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            transition: 'color 0.15s ease',
+            transition: 'color var(--transition-fast)',
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = '#FFAE19')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(255, 255, 255, 0.45)')}
+          onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = '#64748B')}
         >
           <LogOut size={16} />
         </button>
