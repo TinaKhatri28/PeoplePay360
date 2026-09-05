@@ -55,7 +55,7 @@ export class SalaryRuleEvaluator {
       }
 
       case 'UNPAID_LEAVE_DEDUCTION': {
-        const dailyRate = ctx.basic / (ctx.expectedWorkingDays || 30);
+        const dailyRate = ctx.basic / (ctx.expectedWorkingDays || 26);
         return +(dailyRate * ctx.unpaidLeaveDays).toFixed(2);
       }
 

@@ -70,7 +70,7 @@ export class LeaveRepository {
       where: {
         organization_id: organizationId,
         employee_id: { in: employeeIds },
-        status: 'Approved',
+        status: { in: ['Approved', 'To Approve'] },
         start_date: { lte: periodEnd },
         end_date: { gte: periodStart },
       },

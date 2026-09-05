@@ -165,12 +165,41 @@ export class PayrollCalculationService {
       }
     }
 
-    // Index unpaid leave days by employee_id
+    // Index unpaid leave days and detailed leave records by employee_id
+    interface UnpaidLeaveItem {
+      id: string;
+      typeName: string;
+      duration: number;
+      startDate: Date;
+      endDate: Date;
+      status: string;
+      reason?: string | null;
+    }
+
     const leaveMap = new Map<string, number>();
+    const unpaidLeavesByEmployee = new Map<string, UnpaidLeaveItem[]>();
+
     for (const l of approvedLeaves) {
-      if (!l.leave_type.is_paid || l.leave_type.name.toLowerCase().includes('unpaid')) {
+      const isUnpaid =
+        !l.leave_type?.is_paid ||
+        l.leave_type?.name.toLowerCase().includes('unpaid') ||
+        (l.leave_type?.code && l.leave_type.code.toLowerCase().includes('unpaid'));
+
+      if (isUnpaid) {
         const cur = leaveMap.get(l.employee_id) || 0;
         leaveMap.set(l.employee_id, cur + l.duration);
+
+        const list = unpaidLeavesByEmployee.get(l.employee_id) || [];
+        list.push({
+          id: l.id,
+          typeName: l.leave_type?.name || 'Unpaid Leave',
+          duration: l.duration,
+          startDate: new Date(l.start_date),
+          endDate: new Date(l.end_date),
+          status: l.status,
+          reason: l.reason,
+        });
+        unpaidLeavesByEmployee.set(l.employee_id, list);
       }
     }
 
@@ -245,10 +274,13 @@ export class PayrollCalculationService {
 
       const attendance = attendanceMap.get(eid) || { workedHours: 0, overtimeHours: 0, absentDays: 0, presentDays: 0 };
       const unpaidLeaveDays = leaveMap.get(eid) || 0;
+      const empUnpaidLeaves = unpaidLeavesByEmployee.get(eid) || [];
 
       const targetStructureId = structureIdOverride || contract.salary_structure_id;
       const rules = (targetStructureId && rulesByStructure.get(targetStructureId)) || [];
       const basicSalary = Number(contract.wage) || 0;
+      const expectedWorkingDays = 26;
+      const dailyRate = expectedWorkingDays > 0 ? +(basicSalary / expectedWorkingDays).toFixed(2) : 0;
 
       const context = {
         basic: basicSalary,
@@ -256,13 +288,47 @@ export class PayrollCalculationService {
         overtimeHours: attendance.overtimeHours,
         unpaidLeaveDays,
         absentDays: attendance.absentDays,
-        expectedWorkingDays: 26,
+        expectedWorkingDays,
         standardMonthlyHours: 160,
       };
 
       const lines: PayslipLineResult[] = [];
       let grossSalary = 0;
       let totalDeductions = 0;
+      let hasHandledUnpaidLeave = false;
+
+      // Format date like "Sep 12"
+      const formatLeaveDate = (d: Date): string => {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return `${months[d.getUTCMonth()]} ${d.getUTCDate()}`;
+      };
+
+      // Push itemized unpaid leave deduction lines with breakdown details
+      const pushUnpaidLeaveDeductions = () => {
+        if (empUnpaidLeaves.length === 0) return;
+        let pendingDays = 0;
+
+        for (const ul of empUnpaidLeaves) {
+          const itemDeduction = +(ul.duration * dailyRate).toFixed(2);
+          const startStr = formatLeaveDate(ul.startDate);
+          const endStr = formatLeaveDate(ul.endDate);
+          const dateStr = startStr === endStr ? startStr : `${startStr} - ${endStr}`;
+          const isPending = ul.status === 'To Approve';
+          if (isPending) pendingDays += ul.duration;
+          const statusTag = isPending ? ' [Pending Approval]' : '';
+
+          lines.push({
+            name: `Unpaid Leave Deduction - ${ul.typeName} (${ul.duration} ${ul.duration === 1 ? 'day' : 'days'} @ $${dailyRate.toFixed(2)}/day: ${dateStr})${statusTag}`,
+            category: 'Deduction',
+            amount: itemDeduction,
+          });
+          totalDeductions += itemDeduction;
+        }
+
+        if (pendingDays > 0) {
+          warnings.push(`Contains ${pendingDays} day(s) of unpaid leave pending approval`);
+        }
+      };
 
       for (const rule of rules) {
         let amount = 0;
@@ -272,10 +338,22 @@ export class PayrollCalculationService {
           amount = this.ruleEvaluator.evaluate(rule, context);
         }
 
-        // Enforce Deduction category for absence and unpaid leave formula rules
-        const isDeductionFormula = rule.formula_key === 'ATTENDANCE_BASED' || rule.formula_key === 'UNPAID_LEAVE_DEDUCTION';
+        // Handle UNPAID_LEAVE_DEDUCTION rule by inserting the itemized breakdown
+        if (rule.formula_key === 'UNPAID_LEAVE_DEDUCTION') {
+          hasHandledUnpaidLeave = true;
+          pushUnpaidLeaveDeductions();
+          continue;
+        }
+
+        // Enforce Deduction category for absence formula rule
+        const isDeductionFormula = rule.formula_key === 'ATTENDANCE_BASED';
         const effectiveCategory = isDeductionFormula ? 'Deduction' : rule.category;
         const absAmount = Math.abs(amount);
+
+        // Omit zero-amount deductions to keep payslip clean
+        if (effectiveCategory === 'Deduction' && absAmount === 0) {
+          continue;
+        }
 
         lines.push({
           name: rule.name,
@@ -291,11 +369,18 @@ export class PayrollCalculationService {
         }
       }
 
-      if (lines.length === 0) {
-        grossSalary = basicSalary;
-        lines.push({ name: 'Basic Salary', category: 'Basic', amount: basicSalary });
+      // If structure did NOT have an explicit UNPAID_LEAVE_DEDUCTION rule, but employee has unpaid leaves
+      if (!hasHandledUnpaidLeave && empUnpaidLeaves.length > 0) {
+        pushUnpaidLeaveDeductions();
       }
 
+      if (lines.length === 0 || !lines.some((l) => l.category === 'Basic')) {
+        grossSalary = basicSalary;
+        lines.unshift({ name: 'Basic Salary', category: 'Basic', amount: basicSalary });
+      }
+
+      totalDeductions = +totalDeductions.toFixed(2);
+      grossSalary = +grossSalary.toFixed(2);
       let netSalary = +(grossSalary - totalDeductions).toFixed(2);
       if (netSalary < 0) {
         warnings.push(

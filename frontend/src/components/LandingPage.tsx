@@ -683,9 +683,7 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
                     />
                     <span>Keep me signed in</span>
                   </label>
-                  <span style={{ fontSize: '0.75rem', color: '#2E7D5B', fontWeight: 800 }}>
-                    ● 256-bit Secure
-                  </span>
+
                 </div>
 
                 {/* 3D Extruded CTA Sign In Button */}

@@ -59,7 +59,7 @@ export class PayslipPdfService {
     for (const line of lines) {
       const isDeduction = line.category === 'Deduction';
       doc.rect(40, y, 515, 22).fillColor(y % 44 === 0 ? '#f8fafc' : '#ffffff').fill();
-      doc.fillColor('#1e293b').text(line.name, 55, y + 6);
+      doc.fillColor('#1e293b').text(line.name, 55, y + 6, { width: 235, lineBreak: false, ellipsis: true });
       doc.fillColor(isDeduction ? '#dc2626' : '#16a34a').text(line.category, 300, y + 6);
       doc.fillColor('#0f172a').text(
         `${isDeduction ? '-' : ''}$${Math.abs(line.amount).toFixed(2)}`,

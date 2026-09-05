@@ -132,4 +132,168 @@ describe('PayrollCalculationService - Bug 1 & Bug 3 Fixes', () => {
     expect(empResult.netSalary).toBe(0);
     expect(empResult.warnings.some((w) => w.includes('exceed gross earnings') && w.includes('Net salary capped at $0.00'))).toBe(true);
   });
+
+  it('creates detailed itemized deduction lines for approved unpaid leaves with days, rate, and dates', async () => {
+    mockEmployeesRepo.findManyByIds.mockResolvedValue([
+      { id: 'emp_3', first_name: 'Alice', last_name: 'Wong', bank_account: 'ACC33333333' },
+    ]);
+    mockContractRepo.findContractsValidForPeriodForEmployees.mockResolvedValue([
+      {
+        id: 'contract_3',
+        employee_id: 'emp_3',
+        wage: 2600, // Daily rate = 2600 / 26 = 100.00
+        salary_structure_id: 'struct_standard',
+      },
+    ]);
+    mockAttendanceRepo.findMonthlyRecordsForEmployees.mockResolvedValue([]);
+    mockLeaveRepo.findApprovedLeavesForEmployees.mockResolvedValue([
+      {
+        id: 'leave_1',
+        employee_id: 'emp_3',
+        duration: 2,
+        start_date: new Date(Date.UTC(2026, 5, 10)),
+        end_date: new Date(Date.UTC(2026, 5, 11)),
+        status: 'Approved',
+        leave_type: { name: 'Unpaid Leave', is_paid: false, code: 'UNPAID' },
+      },
+    ]);
+    mockSalaryRepo.findRulesForStructures.mockResolvedValue([
+      {
+        structure_id: 'struct_standard',
+        name: 'Basic Salary',
+        category: 'Basic',
+        compute_method: 'FIXED',
+        sequence: 1,
+      },
+      {
+        structure_id: 'struct_standard',
+        name: 'Unpaid Leave Deduction',
+        category: 'Deduction',
+        compute_method: 'FORMULA',
+        formula_key: 'UNPAID_LEAVE_DEDUCTION',
+        sequence: 2,
+      },
+    ]);
+
+    const results = await service.calculateBatchPayroll('org_1', ['emp_3'], 2026, 6);
+    const empResult = results.get('emp_3')!;
+
+    expect(empResult).toBeDefined();
+    expect(empResult.basicSalary).toBe(2600);
+    expect(empResult.unpaidLeaveDays).toBe(2);
+    expect(empResult.totalDeductions).toBe(200);
+    expect(empResult.netSalary).toBe(2400);
+
+    const unpaidLine = empResult.lines.find((l) => l.name.includes('Unpaid Leave Deduction'));
+    expect(unpaidLine).toBeDefined();
+    expect(unpaidLine?.category).toBe('Deduction');
+    expect(unpaidLine?.amount).toBe(200);
+    expect(unpaidLine?.name).toContain('2 days @ $100.00/day');
+    expect(unpaidLine?.name).toContain('Jun 10 - Jun 11');
+  });
+
+  it('includes applied unpaid leave in To Approve status with [Pending Approval] tag and warning', async () => {
+    mockEmployeesRepo.findManyByIds.mockResolvedValue([
+      { id: 'emp_4', first_name: 'Bob', last_name: 'Lee', bank_account: 'ACC44444444' },
+    ]);
+    mockContractRepo.findContractsValidForPeriodForEmployees.mockResolvedValue([
+      {
+        id: 'contract_4',
+        employee_id: 'emp_4',
+        wage: 2600,
+        salary_structure_id: 'struct_standard',
+      },
+    ]);
+    mockAttendanceRepo.findMonthlyRecordsForEmployees.mockResolvedValue([]);
+    mockLeaveRepo.findApprovedLeavesForEmployees.mockResolvedValue([
+      {
+        id: 'leave_pending',
+        employee_id: 'emp_4',
+        duration: 3,
+        start_date: new Date(Date.UTC(2026, 5, 15)),
+        end_date: new Date(Date.UTC(2026, 5, 17)),
+        status: 'To Approve',
+        leave_type: { name: 'Leave Without Pay', is_paid: false, code: 'LWP' },
+      },
+    ]);
+    mockSalaryRepo.findRulesForStructures.mockResolvedValue([
+      {
+        structure_id: 'struct_standard',
+        name: 'Basic Salary',
+        category: 'Basic',
+        compute_method: 'FIXED',
+        sequence: 1,
+      },
+      {
+        structure_id: 'struct_standard',
+        name: 'Unpaid Leave Deduction',
+        category: 'Deduction',
+        compute_method: 'FORMULA',
+        formula_key: 'UNPAID_LEAVE_DEDUCTION',
+        sequence: 2,
+      },
+    ]);
+
+    const results = await service.calculateBatchPayroll('org_1', ['emp_4'], 2026, 6);
+    const empResult = results.get('emp_4')!;
+
+    expect(empResult).toBeDefined();
+    expect(empResult.totalDeductions).toBe(300);
+    expect(empResult.netSalary).toBe(2300);
+
+    const pendingLine = empResult.lines.find((l) => l.name.includes('Leave Without Pay'));
+    expect(pendingLine).toBeDefined();
+    expect(pendingLine?.name).toContain('[Pending Approval]');
+    expect(pendingLine?.name).toContain('3 days @ $100.00/day');
+    expect(empResult.warnings.some((w) => w.includes('3 day(s) of unpaid leave pending approval'))).toBe(true);
+  });
+
+  it('automatically deducts and creates breakdown even if salary structure has no UNPAID_LEAVE_DEDUCTION rule', async () => {
+    mockEmployeesRepo.findManyByIds.mockResolvedValue([
+      { id: 'emp_5', first_name: 'Carol', last_name: 'Danvers', bank_account: 'ACC55555555' },
+    ]);
+    mockContractRepo.findContractsValidForPeriodForEmployees.mockResolvedValue([
+      {
+        id: 'contract_5',
+        employee_id: 'emp_5',
+        wage: 5200, // Daily rate = 5200 / 26 = 200.00
+        salary_structure_id: 'struct_bare',
+      },
+    ]);
+    mockAttendanceRepo.findMonthlyRecordsForEmployees.mockResolvedValue([]);
+    mockLeaveRepo.findApprovedLeavesForEmployees.mockResolvedValue([
+      {
+        id: 'leave_bare',
+        employee_id: 'emp_5',
+        duration: 1,
+        start_date: new Date(Date.UTC(2026, 5, 20)),
+        end_date: new Date(Date.UTC(2026, 5, 20)),
+        status: 'Approved',
+        leave_type: { name: 'Unpaid Leave', is_paid: false, code: 'UNPAID' },
+      },
+    ]);
+    // Structure only has Basic Salary - no formula rule!
+    mockSalaryRepo.findRulesForStructures.mockResolvedValue([
+      {
+        structure_id: 'struct_bare',
+        name: 'Basic Salary',
+        category: 'Basic',
+        compute_method: 'FIXED',
+        sequence: 1,
+      },
+    ]);
+
+    const results = await service.calculateBatchPayroll('org_1', ['emp_5'], 2026, 6);
+    const empResult = results.get('emp_5')!;
+
+    expect(empResult).toBeDefined();
+    expect(empResult.totalDeductions).toBe(200);
+    expect(empResult.netSalary).toBe(5000);
+
+    const autoLine = empResult.lines.find((l) => l.name.includes('Unpaid Leave Deduction'));
+    expect(autoLine).toBeDefined();
+    expect(autoLine?.category).toBe('Deduction');
+    expect(autoLine?.amount).toBe(200);
+    expect(autoLine?.name).toContain('1 day @ $200.00/day');
+  });
 });
