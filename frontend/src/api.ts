@@ -61,7 +61,29 @@ export async function apiRequest<T = any>(endpoint: string, options: ApiRequestO
   }
 
   if (!response.ok) {
-    const errorMsg = data?.error || data?.message || `Request failed with status ${response.status}`;
+    let errorMsg = `Request failed with status ${response.status}`;
+    if (typeof data === 'string' && data.length > 0) {
+      errorMsg = data;
+    } else if (data && typeof data === 'object') {
+      if (typeof data.error === 'string') {
+        errorMsg = data.error;
+      } else if (data.error && typeof data.error === 'object') {
+        if (data.error.message && typeof data.error.message === 'string') {
+          errorMsg = data.error.message;
+          if (Array.isArray(data.error.details) && data.error.details.length > 0) {
+            const detailMsgs = data.error.details
+              .map((d: any) => (d.field ? `${d.field}: ${d.message}` : d.message || JSON.stringify(d)))
+              .join(', ');
+            errorMsg = `${errorMsg}: ${detailMsgs}`;
+          }
+        } else {
+          errorMsg = JSON.stringify(data.error);
+        }
+      } else if (typeof data.message === 'string') {
+        errorMsg = data.message;
+      }
+    }
+
     const err: any = new Error(errorMsg);
     err.status = response.status;
     err.data = data;

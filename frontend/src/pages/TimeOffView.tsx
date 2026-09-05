@@ -65,16 +65,22 @@ export default function TimeOffView() {
 
   const handleRequestSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!formData.type_id) return;
+    if (!formData.type_id) {
+      setFormError('Please select a leave category.');
+      return;
+    }
     setFormError(null);
     setSubmitting(true);
     try {
       await apiRequest('/api/time-off/requests', {
         method: 'POST',
         body: {
-          ...formData,
-          type_id: +formData.type_id,
-          employee_id: user?.employee_id,
+          type_id: String(formData.type_id),
+          start_date: formData.start_date,
+          end_date: formData.end_date,
+          duration: durationDays,
+          reason: formData.reason?.trim() || undefined,
+          employee_id: user?.employee_id ? String(user.employee_id) : undefined,
         },
       });
       setShowModal(false);
@@ -84,7 +90,7 @@ export default function TimeOffView() {
         end_date: new Date().toISOString().slice(0, 10),
         reason: '',
       });
-      fetchData();
+      await fetchData();
     } catch (err: any) {
       setFormError(err.message || 'Failed to submit leave request');
     } finally {
@@ -275,13 +281,18 @@ export default function TimeOffView() {
               <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 {formError && (
                   <div style={{
-                    padding: '10px 14px',
-                    borderRadius: 'var(--radius-md)',
-                    background: 'rgba(244, 63, 94, 0.15)',
-                    color: '#fca5a5',
-                    fontSize: '0.825rem',
+                    padding: '12px 14px',
+                    borderRadius: '8px',
+                    background: 'rgba(239, 68, 68, 0.12)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    color: '#f87171',
+                    fontSize: '0.85rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
                   }}>
-                    {formError}
+                    <AlertCircle size={16} style={{ flexShrink: 0 }} />
+                    <span>{formError}</span>
                   </div>
                 )}
 

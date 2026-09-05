@@ -25,12 +25,6 @@ function MainApp() {
   const isStaff = isAdmin || isPayrollUser;
   const isEmployeeOnly = !isManager && !isStaff;
 
-  useEffect(() => {
-    if (isStaff && !isManager && activeTab === 'dashboard') {
-      setActiveTab('payroll');
-    }
-  }, [user]);
-
   if (loading) {
     return (
       <div style={{

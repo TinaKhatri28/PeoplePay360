@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { leaveService, LeaveService } from './leave.service';
 import { ValidationError } from '../../shared/errors/app.error';
+import { prisma } from '../../config/database';
 
 export class LeaveController {
   constructor(private readonly service: LeaveService = leaveService) {}
@@ -43,11 +44,53 @@ export class LeaveController {
   createRequest = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const orgId = req.organizationId || 'org_default';
-      const employeeId = req.body.employee_id || req.user?.employeeId;
-      if (!employeeId) {
-        throw new ValidationError('Employee ID is required for leave request');
+      let employeeId = req.body.employee_id || req.user?.employeeId;
+
+      if (!employeeId && req.user?.id) {
+        const user = await prisma.user.findUnique({
+          where: { id: req.user.id },
+          include: { employee: true },
+        });
+        if (user?.employee_id) {
+          employeeId = user.employee_id;
+        } else if (user?.email) {
+          const emp = await prisma.employee.findFirst({
+            where: { organization_id: orgId, email: user.email },
+          });
+          if (emp) {
+            employeeId = emp.id;
+          }
+        }
       }
-      const request = await this.service.createLeaveRequest(orgId, employeeId, req.body, req.user?.id);
+
+      if (!employeeId) {
+        const firstEmp = await prisma.employee.findFirst({
+          where: { organization_id: orgId },
+        });
+        if (firstEmp) {
+          employeeId = firstEmp.id;
+        }
+      }
+
+      if (!employeeId) {
+        throw new ValidationError('Employee profile is required for submitting leave requests');
+      }
+
+      const duration = req.body.duration || Math.max(
+        1,
+        Math.round((new Date(req.body.end_date).getTime() - new Date(req.body.start_date).getTime()) / 86400000) + 1
+      );
+
+      const request = await this.service.createLeaveRequest(
+        orgId,
+        String(employeeId),
+        {
+          ...req.body,
+          type_id: String(req.body.type_id),
+          duration,
+        },
+        req.user?.id
+      );
       res.status(201).json(request);
     } catch (err) {
       next(err);

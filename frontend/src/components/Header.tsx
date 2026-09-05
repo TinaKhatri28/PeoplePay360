@@ -119,20 +119,20 @@ export default function Header({ activeTab }: HeaderProps) {
       height: '74px',
       padding: '0 32px',
       background: '#FFFFFF',
-      borderBottom: '1px solid #E2E8F0',
+      borderBottom: '1px solid #E2E6EC',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       position: 'sticky',
       top: 0,
       zIndex: 30,
-      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.03)',
+      boxShadow: '0 1px 3px rgba(11, 19, 43, 0.03)',
     }}>
       <div>
-        <h1 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#1E3A5F', margin: 0 }}>
+        <h1 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0B132B', margin: 0, letterSpacing: '-0.02em' }}>
           {current.title}
         </h1>
-        <p style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '2px', margin: 0 }}>
+        <p style={{ fontSize: '0.75rem', color: '#5A6A85', marginTop: '2px', margin: 0, fontWeight: 600 }}>
           {current.desc}
         </p>
       </div>
@@ -143,20 +143,20 @@ export default function Header({ activeTab }: HeaderProps) {
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
-          background: '#F8F9FA',
+          background: '#F4F5F7',
           padding: '6px 12px',
           borderRadius: 'var(--radius-full)',
-          border: '1px solid #E2E8F0',
+          border: '1px solid #E2E6EC',
           fontSize: '0.8rem',
           fontFamily: 'var(--font-mono)',
-          color: '#1F2937',
-          fontWeight: 600,
+          color: '#0B132B',
+          fontWeight: 700,
         }}>
-          <Clock size={14} color="#1E3A5F" />
+          <Clock size={14} color="#0B132B" />
           <span>{time.toLocaleTimeString()}</span>
         </div>
 
-        {/* Interactive Attendance Status Indicator (Excalidraw Screenshot 2) */}
+        {/* Interactive Attendance Status Indicator */}
         {user?.employee_id && (
           <div
             onClick={() => setShowWidget(!showWidget)}
@@ -167,29 +167,29 @@ export default function Header({ activeTab }: HeaderProps) {
               gap: '8px',
               padding: '6px 14px',
               borderRadius: 'var(--radius-full)',
-              background: punchStatus?.checkedIn ? 'rgba(46, 125, 91, 0.1)' : 'rgba(180, 35, 24, 0.08)',
-              border: `1px solid ${punchStatus?.checkedIn ? 'rgba(46, 125, 91, 0.35)' : 'rgba(180, 35, 24, 0.35)'}`,
+              background: punchStatus?.checkedIn ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.1)',
+              border: `1px solid ${punchStatus?.checkedIn ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}`,
               fontSize: '0.75rem',
-              fontWeight: 700,
-              color: punchStatus?.checkedIn ? '#2E7D5B' : '#B42318',
+              fontWeight: 800,
+              color: punchStatus?.checkedIn ? '#059669' : '#DC2626',
               cursor: 'pointer',
               transition: 'all 0.15s ease',
-              boxShadow: showWidget ? '0 0 0 2px rgba(30, 58, 95, 0.2)' : 'none',
+              boxShadow: showWidget ? '0 0 0 2px rgba(11, 19, 43, 0.15)' : 'none',
             }}
           >
             <span style={{
               width: '8px',
               height: '8px',
               borderRadius: '50%',
-              background: punchStatus?.checkedIn ? '#2E7D5B' : '#B42318',
-              boxShadow: punchStatus?.checkedIn ? '0 0 8px #2E7D5B' : 'none',
+              background: punchStatus?.checkedIn ? '#10B981' : '#EF4444',
+              boxShadow: punchStatus?.checkedIn ? '0 0 8px #10B981' : 'none',
             }} />
             <span>{punchStatus?.checkedIn ? 'Clocked In' : 'Clocked Out'}</span>
             <span style={{ fontSize: '0.65rem', opacity: 0.7, marginLeft: '2px' }}>▼</span>
           </div>
         )}
 
-        {/* Attendance Widget Popover Modal (Excalidraw Blueprint Screenshot 2) */}
+        {/* Attendance Widget Popover Modal */}
         {showWidget && (
           <div style={{
             position: 'absolute',
@@ -198,8 +198,8 @@ export default function Header({ activeTab }: HeaderProps) {
             width: '360px',
             background: '#FFFFFF',
             borderRadius: '16px',
-            border: '1px solid #E2E8F0',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            border: '1px solid #E2E6EC',
+            boxShadow: '0 20px 35px -5px rgba(11, 19, 43, 0.15)',
             padding: '22px',
             zIndex: 100,
             display: 'flex',
@@ -212,7 +212,7 @@ export default function Header({ activeTab }: HeaderProps) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              borderBottom: '1px solid #F1F5F9',
+              borderBottom: '1px solid #F0F2F5',
               paddingBottom: '12px',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -220,9 +220,9 @@ export default function Header({ activeTab }: HeaderProps) {
                   width: '10px',
                   height: '10px',
                   borderRadius: '50%',
-                  background: punchStatus?.checkedIn ? '#2E7D5B' : '#B42318',
+                  background: punchStatus?.checkedIn ? '#10B981' : '#EF4444',
                 }} />
-                <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: '#1E3A5F' }}>
+                <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 900, color: '#0B132B' }}>
                   Attendance Widget
                 </h4>
               </div>
@@ -232,13 +232,13 @@ export default function Header({ activeTab }: HeaderProps) {
                   width: '32px',
                   height: '32px',
                   borderRadius: '50%',
-                  background: '#1E3A5F',
-                  color: '#FFFFFF',
+                  background: '#FFAE19',
+                  color: '#0B132B',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '0.75rem',
-                  fontWeight: 700,
+                  fontWeight: 900,
                 }}>
                   {((user as any)?.name || user?.email || 'U').slice(0, 2).toUpperCase()}
                 </div>

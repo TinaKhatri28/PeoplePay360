@@ -16,15 +16,16 @@ export default function LoginView({ onBackToLanding }: LoginViewProps): React.JS
   const [submitting, setSubmitting] = useState<boolean>(false);
 
   const colors = {
-    primary: '#1E3A5F',
-    secondary: '#3F5F7F',
-    bg: '#F8F9FA',
+    primary: '#0B132B',
+    accent: '#FFAE19',
+    secondary: '#3A4B6E',
+    bg: '#F4F5F7',
     card: '#FFFFFF',
-    text: '#1F2937',
-    muted: '#64748B',
-    success: '#2E7D5B',
-    error: '#B42318',
-    border: '#E2E8F0',
+    text: '#0B132B',
+    muted: '#5A6A85',
+    success: '#10B981',
+    error: '#EF4444',
+    border: '#E2E6EC',
   };
 
   const handleFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -70,7 +71,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps): React.JS
         boxSizing: 'border-box',
       }}
     >
-      {/* Background Ambient Glows */}
+      {/* Background Geometric Bauhaus Blobs */}
       <div
         style={{
           position: 'absolute',
@@ -79,7 +80,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps): React.JS
           width: '26rem',
           height: '26rem',
           borderRadius: '9999px',
-          backgroundColor: 'rgba(63, 95, 127, 0.12)',
+          backgroundColor: 'rgba(255, 174, 25, 0.12)',
           filter: 'blur(70px)',
           pointerEvents: 'none',
         }}
@@ -92,7 +93,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps): React.JS
           width: '26rem',
           height: '26rem',
           borderRadius: '9999px',
-          backgroundColor: 'rgba(30, 58, 95, 0.12)',
+          backgroundColor: 'rgba(11, 19, 43, 0.1)',
           filter: 'blur(70px)',
           pointerEvents: 'none',
         }}
@@ -116,15 +117,14 @@ export default function LoginView({ onBackToLanding }: LoginViewProps): React.JS
             border: `1px solid ${colors.border}`,
             color: colors.primary,
             fontSize: '0.85rem',
-            fontWeight: 700,
-            fontStyle: 'italic',
+            fontWeight: 800,
             cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+            boxShadow: '0 4px 12px rgba(11, 19, 43, 0.06)',
             zIndex: 20,
             transition: 'all 0.15s ease',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'rgba(30, 58, 95, 0.05)';
+            e.currentTarget.style.backgroundColor = 'rgba(255, 174, 25, 0.15)';
             e.currentTarget.style.transform = 'translateX(-2px)';
           }}
           onMouseLeave={(e) => {
@@ -147,13 +147,13 @@ export default function LoginView({ onBackToLanding }: LoginViewProps): React.JS
           borderRadius: '1.25rem',
           border: `1px solid ${colors.border}`,
           padding: '2.5rem 2.25rem',
-          boxShadow: '0 20px 40px -15px rgba(30, 58, 95, 0.12)',
+          boxShadow: '0 20px 40px -15px rgba(11, 19, 43, 0.12)',
           zIndex: 10,
           boxSizing: 'border-box',
         }}
       >
         {/* Brand Header */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '1.8rem' }}>
           <div
             style={{
               display: 'inline-flex',
@@ -162,25 +162,25 @@ export default function LoginView({ onBackToLanding }: LoginViewProps): React.JS
               width: '3.5rem',
               height: '3.5rem',
               borderRadius: '1rem',
-              backgroundColor: 'rgba(30, 58, 95, 0.08)',
-              border: `1px solid rgba(30, 58, 95, 0.2)`,
+              backgroundColor: colors.primary,
+              boxShadow: '0 8px 18px rgba(11, 19, 43, 0.25)',
               marginBottom: '1rem',
             }}
           >
-            <ShieldCheck size={28} color={colors.primary} />
+            <ShieldCheck size={28} color={colors.accent} />
           </div>
           <h1
             style={{
-              fontSize: '1.65rem',
-              fontWeight: 800,
+              fontSize: '1.75rem',
+              fontWeight: 900,
               color: colors.primary,
               margin: 0,
-              letterSpacing: '-0.02em',
+              letterSpacing: '-0.03em',
             }}
           >
-            PeoplePay<span style={{ color: colors.secondary }}>360</span>
+            PeoplePay<span style={{ color: colors.accent }}>360</span>
           </h1>
-          <p style={{ fontSize: '0.8125rem', color: colors.muted, marginTop: '0.35rem', margin: 0 }}>
+          <p style={{ fontSize: '0.82rem', color: colors.muted, marginTop: '0.35rem', margin: 0, fontWeight: 600 }}>
             Enterprise HRMS & Payroll Automation OS
           </p>
         </div>
@@ -192,8 +192,8 @@ export default function LoginView({ onBackToLanding }: LoginViewProps): React.JS
               marginBottom: '1.25rem',
               padding: '0.75rem 1rem',
               borderRadius: '0.75rem',
-              backgroundColor: 'rgba(180, 35, 24, 0.08)',
-              border: `1px solid rgba(180, 35, 24, 0.25)`,
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid rgba(239, 68, 68, 0.25)',
               color: colors.error,
               fontSize: '0.825rem',
               display: 'flex',
@@ -213,8 +213,8 @@ export default function LoginView({ onBackToLanding }: LoginViewProps): React.JS
             <label
               style={{
                 display: 'block',
-                fontSize: '0.7rem',
-                fontWeight: 700,
+                fontSize: '0.72rem',
+                fontWeight: 800,
                 color: colors.text,
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em',
@@ -255,8 +255,8 @@ export default function LoginView({ onBackToLanding }: LoginViewProps): React.JS
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
               <label
                 style={{
-                  fontSize: '0.7rem',
-                  fontWeight: 700,
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
                   color: colors.text,
                   textTransform: 'uppercase',
                   letterSpacing: '0.05em',
@@ -265,18 +265,9 @@ export default function LoginView({ onBackToLanding }: LoginViewProps): React.JS
               >
                 Password
               </label>
-              <a
-                href="#forgot"
-                onClick={(e) => { e.preventDefault(); alert('For demo login, please click one of the quick persona buttons below.'); }}
-                style={{
-                  fontSize: '0.75rem',
-                  color: colors.secondary,
-                  textDecoration: 'none',
-                  fontWeight: 600,
-                }}
-              >
-                Forgot?
-              </a>
+              <span style={{ fontSize: '0.74rem', color: colors.accent, fontWeight: 700 }}>
+                Demo: admin123
+              </span>
             </div>
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
               <Lock
@@ -322,76 +313,74 @@ export default function LoginView({ onBackToLanding }: LoginViewProps): React.JS
           </div>
 
           {/* Remember Me */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <input
-              id="remember"
-              type="checkbox"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-              style={{ cursor: 'pointer', accentColor: colors.primary }}
-            />
-            <label htmlFor="remember" style={{ fontSize: '0.78rem', color: colors.muted, cursor: 'pointer' }}>
-              Keep me signed in for 24 hours
-            </label>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <input
+                id="remember"
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                style={{ cursor: 'pointer', accentColor: colors.primary }}
+              />
+              <label htmlFor="remember" style={{ fontSize: '0.78rem', color: colors.muted, cursor: 'pointer', fontWeight: 600 }}>
+                Keep me signed in
+              </label>
+            </div>
+            <span style={{ fontSize: '0.72rem', color: colors.success, fontWeight: 800 }}>
+              ● Encrypted
+            </span>
           </div>
 
-          {/* 3D Crystal Deep Navy Button */}
-          <div style={{ paddingTop: '0.5rem' }}>
+          {/* 3D Extruded Button */}
+          <div style={{ paddingTop: '0.35rem' }}>
             <button
               type="submit"
               disabled={submitting}
               style={{
                 position: 'relative',
                 width: '100%',
-                padding: '0.85rem 1.5rem',
+                padding: '0.9rem 1.5rem',
                 borderRadius: '0.75rem',
-                border: '1px solid rgba(255, 255, 255, 0.4)',
-                background: `linear-gradient(180deg, #3F5F7F 0%, #1E3A5F 100%)`,
-                boxShadow: `
-                  inset 0 1px 1px rgba(255, 255, 255, 0.7),
-                  inset 0 -2px 4px rgba(10, 20, 35, 0.5),
-                  0 10px 20px -5px rgba(30, 58, 95, 0.35),
-                  0 4px 6px -2px rgba(30, 58, 95, 0.2)
-                `,
-                color: '#FFFFFF',
-                fontSize: '0.9rem',
-                fontWeight: 700,
+                border: `2px solid ${colors.primary}`,
+                background: colors.accent,
+                color: colors.primary,
+                boxShadow: `0 6px 0 ${colors.primary}, 0 12px 20px rgba(255, 174, 25, 0.35)`,
+                fontSize: '0.95rem',
+                fontWeight: 900,
                 cursor: submitting ? 'wait' : 'pointer',
                 overflow: 'hidden',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '0.5rem',
-                transition: 'transform 0.1s ease',
+                transform: 'translateY(0)',
+                transition: 'all 0.12s ease',
               }}
-              onMouseDown={(e) => (e.currentTarget.style.transform = 'translateY(1px)')}
-              onMouseUp={(e) => (e.currentTarget.style.transform = 'translateY(0px)')}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = `0 8px 0 ${colors.primary}, 0 16px 24px rgba(255, 174, 25, 0.45)`;
+              }}
+              onMouseDown={(e) => {
+                e.currentTarget.style.transform = 'translateY(4px)';
+                e.currentTarget.style.boxShadow = `0 2px 0 ${colors.primary}`;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = `0 6px 0 ${colors.primary}, 0 12px 20px rgba(255, 174, 25, 0.35)`;
+              }}
             >
-              <span
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: '10%',
-                  right: '10%',
-                  height: '1px',
-                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.85), transparent)',
-                  pointerEvents: 'none',
-                }}
-              />
-              <span style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.4)' }}>
-                {submitting ? 'Authenticating...' : 'Sign In to Workspace'}
-              </span>
-              <ArrowRight size={16} />
+              <span>{submitting ? 'Authenticating...' : 'Sign In to Workspace'}</span>
+              <ArrowRight size={17} />
             </button>
           </div>
         </form>
 
         {/* Demo Quick Logins */}
-        <div style={{ marginTop: '1.75rem', paddingTop: '1.25rem', borderTop: `1px solid ${colors.border}` }}>
+        <div style={{ marginTop: '1.6rem', paddingTop: '1.25rem', borderTop: `1px solid ${colors.border}` }}>
           <div style={{
             fontSize: '0.7rem',
-            fontWeight: 700,
-            color: colors.muted,
+            fontWeight: 800,
+            color: colors.primary,
             textTransform: 'uppercase',
             letterSpacing: '0.06em',
             marginBottom: '0.75rem',
@@ -399,11 +388,11 @@ export default function LoginView({ onBackToLanding }: LoginViewProps): React.JS
             alignItems: 'center',
             gap: '0.35rem',
           }}>
-            <Sparkles size={13} color={colors.primary} />
-            <span>1-Click Demo Personas</span>
+            <Sparkles size={13} color={colors.accent} />
+            <span>1-Click Instant Demo Personas</span>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
             {DEMO_USERS.map((demo) => (
               <button
                 key={demo.email}
@@ -411,9 +400,8 @@ export default function LoginView({ onBackToLanding }: LoginViewProps): React.JS
                 onClick={() => handleDemoLogin(demo.email, demo.password)}
                 style={{
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '0.5rem 0.75rem',
+                  flexDirection: 'column',
+                  padding: '0.55rem 0.75rem',
                   borderRadius: '0.5rem',
                   backgroundColor: colors.bg,
                   border: `1px solid ${colors.border}`,
@@ -424,19 +412,16 @@ export default function LoginView({ onBackToLanding }: LoginViewProps): React.JS
                   textAlign: 'left',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = colors.primary;
-                  e.currentTarget.style.backgroundColor = 'rgba(30, 58, 95, 0.05)';
+                  e.currentTarget.style.borderColor = colors.accent;
+                  e.currentTarget.style.backgroundColor = 'rgba(255, 174, 25, 0.1)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.borderColor = colors.border;
                   e.currentTarget.style.backgroundColor = colors.bg;
                 }}
               >
-                <div>
-                  <div style={{ fontWeight: 700, color: colors.primary }}>{demo.role}</div>
-                  <div style={{ fontSize: '0.7rem', color: colors.muted }}>{demo.email}</div>
-                </div>
-                <UserCheck size={14} color={colors.secondary} />
+                <div style={{ fontWeight: 800, color: colors.primary }}>{demo.role}</div>
+                <div style={{ fontSize: '0.68rem', color: colors.muted }}>{demo.email}</div>
               </button>
             ))}
           </div>
@@ -445,7 +430,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps): React.JS
         {/* Footer */}
         <div
           style={{
-            marginTop: '1.5rem',
+            marginTop: '1.4rem',
             paddingTop: '1rem',
             borderTop: `1px solid ${colors.border}`,
             display: 'flex',
@@ -467,7 +452,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps): React.JS
             />
             <span>API Gateway Connected</span>
           </div>
-          <span>v2.4.0 TS Engine</span>
+          <span>v2.4.0 Engine</span>
         </div>
       </div>
     </div>

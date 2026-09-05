@@ -66,18 +66,20 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
       setSubmitting(false);
     }
   };
-  // Theme Color Palette
+
+  // Neo-Bauhaus & NexaVerse Official Palette
   const palette = {
-    cream: '#F1ECE6',
-    greige: '#DDD5CD',
-    rosewood: '#7D4047',
-    rosewoodDark: '#562A30',
-    rosewoodLight: '#F5EBEB',
-    charcoal: '#2E2E2E',
+    bg: '#F4F5F7',
+    primary: '#0B132B',        // Deep Midnight Navy
+    primaryDark: '#060B18',
+    gold: '#FFAE19',           // Vibrant Warm Gold
+    goldDark: '#D48C0F',
+    border: '#E2E6EC',
+    muted: '#5A6A85',
     white: '#FFFFFF',
   };
 
-  // Cycling Typewriter text in Hero (HROne signature feature)
+  // Cycling Typewriter text in Hero
   const cyclingPhrases = [
     'Complex HR Ops',
     '1-Click Payroll Runs',
@@ -185,7 +187,6 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
       name: 'Rajesh Sharma',
       designation: 'Chief Human Resources Officer',
       company: 'OmniTech Global',
-      metric: '92% time saved on payroll',
     },
     {
       quote:
@@ -193,7 +194,6 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
       name: 'Priya Narang',
       designation: 'VP of People Operations',
       company: 'Crestline Logistics',
-      metric: '100% error-free compliance',
     },
     {
       quote:
@@ -201,7 +201,6 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
       name: 'Vikram Malhotra',
       designation: 'Head of Payroll & Compliance',
       company: 'Zenith Retail Brands',
-      metric: '1,200+ employees automated',
     },
   ];
 
@@ -210,7 +209,7 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
   const faqs = [
     {
       q: 'How does PeoplePay360 automate payroll calculations and tax deductions?',
-      a: 'PeoplePay360 automatically aggregates verified attendance, overtime records, contractual salary tiers, and statutory deduction formulas to compute net pays in real-time. PDF payslips are generated instantly and dispatched to employees upon one-click approval.',
+      a: 'PeoplePay360 automatically aggregates verified attendance, overtime records, contractual salary tiers, and statutory deduction formulas to compute net pays in real-time. PDF payslips are generated instantly and dispatched upon one-click approval.',
     },
     {
       q: 'Can we manage multiple salary structures and allowances for different employee tiers?',
@@ -226,25 +225,14 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
     },
   ];
 
-  // Demo Form State
-  const [demoEmail, setDemoEmail] = useState('');
-  const [demoPhone, setDemoPhone] = useState('');
-  const [companySize, setCompanySize] = useState('51-200');
-
-  const handleDemoSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onEnterLogin();
-  };
-
   return (
     <div
       style={{
         minHeight: '100vh',
         width: '100%',
-        backgroundColor: palette.cream,
-        color: palette.charcoal,
+        backgroundColor: palette.bg,
+        color: palette.primary,
         fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
-        fontStyle: 'italic',
         overflowX: 'hidden',
         position: 'relative',
         boxSizing: 'border-box',
@@ -260,10 +248,6 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
           0%, 100% { opacity: 1; }
           50% { opacity: 0; }
         }
-        @keyframes pulseGlow {
-          0%, 100% { transform: scale(1); opacity: 0.8; }
-          50% { transform: scale(1.03); opacity: 1; }
-        }
         .marquee-track {
           display: flex;
           gap: 48px;
@@ -275,27 +259,19 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
         }
       `}</style>
 
-      {/* Grid pattern */}
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          backgroundImage: `radial-gradient(${palette.rosewood}15 1px, transparent 1px)`,
-          backgroundSize: '30px 30px',
-          pointerEvents: 'none',
-          zIndex: 1,
-        }}
-      />
+      {/* Bauhaus Geometric Background Shapes (Exact Graphic Elements from reference image) */}
+      <div style={{ position: 'absolute', top: '5%', right: '2%', width: '120px', height: '120px', borderRadius: '50%', backgroundColor: 'rgba(255, 174, 25, 0.08)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: '18%', left: '-40px', width: '160px', height: '80px', borderRadius: '80px 80px 0 0', backgroundColor: 'rgba(11, 19, 43, 0.04)', pointerEvents: 'none' }} />
 
-      {/* ─── NAVIGATION BAR (HROne Style) ─── */}
+      {/* ─── NAVIGATION BAR ─── */}
       <header
         style={{
           position: 'sticky',
           top: 0,
           zIndex: 100,
-          backgroundColor: `${palette.cream}F2`,
+          backgroundColor: 'rgba(255, 255, 255, 0.92)',
           backdropFilter: 'blur(12px)',
-          borderBottom: `1px solid ${palette.rosewood}20`,
+          borderBottom: `1px solid ${palette.border}`,
         }}
       >
         <div
@@ -308,27 +284,30 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
             justifyContent: 'space-between',
           }}
         >
-          {/* Logo */}
+          {/* Bauhaus Geometric Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div
               style={{
                 width: '40px',
                 height: '40px',
-                borderRadius: '10px',
-                backgroundColor: palette.rosewood,
+                borderRadius: '12px',
+                backgroundColor: palette.gold,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: `0 4px 12px ${palette.rosewood}35`,
+                boxShadow: '0 4px 14px rgba(255, 174, 25, 0.35)',
+                position: 'relative',
+                overflow: 'hidden',
               }}
             >
-              <ShieldCheck size={24} color={palette.cream} />
+              <div style={{ position: 'absolute', width: '16px', height: '16px', borderRadius: '50%', backgroundColor: palette.primary, top: '4px', left: '4px' }} />
+              <div style={{ position: 'absolute', width: '16px', height: '16px', backgroundColor: '#FFFFFF', bottom: '4px', right: '4px', borderRadius: '0 8px 0 8px' }} />
             </div>
             <div>
-              <span style={{ fontSize: '1.55rem', fontWeight: 900, color: palette.charcoal, letterSpacing: '-0.03em' }}>
-                PeoplePay<span style={{ color: palette.rosewood }}>360</span>
+              <span style={{ fontSize: '1.55rem', fontWeight: 900, color: palette.primary, letterSpacing: '-0.03em' }}>
+                PeoplePay<span style={{ color: palette.gold }}>360</span>
               </span>
-              <span style={{ display: 'block', fontSize: '0.62rem', color: palette.rosewood, letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 800 }}>
+              <span style={{ display: 'block', fontSize: '0.62rem', color: palette.muted, letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 800 }}>
                 Enterprise HR & Payroll OS
               </span>
             </div>
@@ -336,16 +315,16 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
 
           {/* Nav Links */}
           <nav style={{ display: 'flex', alignItems: 'center', gap: '2.2rem' }}>
-            <a href="#platform" style={{ color: palette.charcoal, textDecoration: 'none', fontSize: '0.9rem', fontWeight: 700 }}>
+            <a href="#platform" style={{ color: palette.primary, textDecoration: 'none', fontSize: '0.9rem', fontWeight: 800 }}>
               Platform
             </a>
-            <a href="#features" style={{ color: palette.charcoal, textDecoration: 'none', fontSize: '0.9rem', fontWeight: 700 }}>
+            <a href="#features" style={{ color: palette.primary, textDecoration: 'none', fontSize: '0.9rem', fontWeight: 800 }}>
               Features
             </a>
-            <a href="#metrics" style={{ color: palette.charcoal, textDecoration: 'none', fontSize: '0.9rem', fontWeight: 700 }}>
+            <a href="#metrics" style={{ color: palette.primary, textDecoration: 'none', fontSize: '0.9rem', fontWeight: 800 }}>
               Metrics
             </a>
-            <a href="#faq" style={{ color: palette.charcoal, textDecoration: 'none', fontSize: '0.9rem', fontWeight: 700 }}>
+            <a href="#faq" style={{ color: palette.primary, textDecoration: 'none', fontSize: '0.9rem', fontWeight: 800 }}>
               FAQ
             </a>
           </nav>
@@ -354,16 +333,15 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
           <button
             onClick={onEnterLogin}
             style={{
-              backgroundColor: palette.rosewood,
-              color: palette.cream,
-              border: `2px solid ${palette.charcoal}`,
-              borderRadius: '9px',
+              backgroundColor: palette.primary,
+              color: '#FFFFFF',
+              border: `2px solid ${palette.primaryDark}`,
+              borderRadius: '10px',
               padding: '0.65rem 1.4rem',
               fontSize: '0.88rem',
               fontWeight: 800,
-              fontStyle: 'italic',
               cursor: 'pointer',
-              boxShadow: `0px 4px 0px ${palette.rosewoodDark}, 0px 6px 12px ${palette.rosewood}35`,
+              boxShadow: `0px 4px 0px ${palette.primaryDark}, 0px 6px 12px rgba(11, 19, 43, 0.25)`,
               transform: 'translateY(0)',
               transition: 'all 0.12s ease',
               display: 'flex',
@@ -372,15 +350,15 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = `0px 6px 0px ${palette.rosewoodDark}, 0px 8px 16px ${palette.rosewood}45`;
+              e.currentTarget.style.boxShadow = `0px 6px 0px ${palette.primaryDark}, 0px 8px 16px rgba(11, 19, 43, 0.35)`;
             }}
             onMouseDown={(e) => {
               e.currentTarget.style.transform = 'translateY(3px)';
-              e.currentTarget.style.boxShadow = `0px 1px 0px ${palette.rosewoodDark}`;
+              e.currentTarget.style.boxShadow = `0px 1px 0px ${palette.primaryDark}`;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = `0px 4px 0px ${palette.rosewoodDark}, 0px 6px 12px ${palette.rosewood}35`;
+              e.currentTarget.style.boxShadow = `0px 4px 0px ${palette.primaryDark}, 0px 6px 12px rgba(11, 19, 43, 0.25)`;
             }}
           >
             <span>Sign In to Workspace</span>
@@ -389,7 +367,7 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
         </div>
       </header>
 
-      {/* ─── MAIN HERO SECTION (HROne 2-Column Split: Copy + Direct Interactive Form Card) ─── */}
+      {/* ─── MAIN HERO SECTION: Copy + Direct Interactive Login Card ─── */}
       <section
         style={{
           position: 'relative',
@@ -415,17 +393,17 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.6rem',
-                backgroundColor: `${palette.rosewood}15`,
-                border: `1px solid ${palette.rosewood}40`,
+                backgroundColor: 'rgba(255, 174, 25, 0.15)',
+                border: '1px solid rgba(255, 174, 25, 0.4)',
                 padding: '0.45rem 1.15rem',
                 borderRadius: '999px',
-                color: palette.rosewood,
+                color: '#D97706',
                 fontSize: '0.8rem',
                 fontWeight: 800,
                 marginBottom: '1.75rem',
               }}
             >
-              <Sparkles size={15} color={palette.rosewood} />
+              <Sparkles size={15} color="#FFAE19" />
               <span>India's #1 Enterprise HRMS & Payroll OS &nbsp;·&nbsp; 50k+ Employees</span>
             </div>
 
@@ -436,7 +414,7 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
                 fontWeight: 900,
                 lineHeight: 1.1,
                 letterSpacing: '-0.04em',
-                color: palette.charcoal,
+                color: palette.primary,
                 marginBottom: '1.5rem',
               }}
             >
@@ -444,8 +422,8 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
               Software to Automate<br />
               <span
                 style={{
-                  color: palette.rosewood,
-                  borderBottom: `3px solid ${palette.rosewood}`,
+                  color: palette.gold,
+                  borderBottom: `4px solid ${palette.gold}`,
                   display: 'inline-block',
                 }}
               >
@@ -455,7 +433,7 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
                     display: 'inline-block',
                     width: '3px',
                     height: '0.9em',
-                    backgroundColor: palette.rosewood,
+                    backgroundColor: palette.gold,
                     marginLeft: '4px',
                     verticalAlign: 'middle',
                     animation: 'blink 0.8s infinite',
@@ -469,27 +447,27 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
               style={{
                 fontSize: '1.15rem',
                 lineHeight: 1.65,
-                color: palette.charcoal,
-                opacity: 0.85,
+                color: palette.muted,
                 maxWidth: '540px',
                 marginBottom: '1.25rem',
+                fontWeight: 600,
               }}
             >
               From hire to retire — PeoplePay360 delivers seamless payroll automation, biometric attendance verification, flexible salary structures, and instant PDF payslips.
             </p>
 
-            <p style={{ fontSize: '0.95rem', fontWeight: 800, color: palette.rosewood, marginBottom: '2.5rem' }}>
+            <p style={{ fontSize: '0.95rem', fontWeight: 800, color: palette.goldDark, marginBottom: '2.5rem' }}>
               Built for high-growth enterprises &nbsp;·&nbsp; AI-Powered & 100% Tax Compliant
             </p>
 
-            {/* Trust Ratings (Gartner & G2 style) */}
+            {/* Trust Ratings */}
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '1.75rem',
                 paddingTop: '1.25rem',
-                borderTop: `1px solid ${palette.rosewood}25`,
+                borderTop: `1px solid ${palette.border}`,
               }}
             >
               {/* Gartner */}
@@ -499,8 +477,8 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
                     width: '36px',
                     height: '36px',
                     borderRadius: '8px',
-                    backgroundColor: '#002856',
-                    color: '#fff',
+                    backgroundColor: '#0B132B',
+                    color: '#FFAE19',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -512,17 +490,16 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
                 </div>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '3px' }}>
-                    <span style={{ fontSize: '1.1rem', fontWeight: 900, color: palette.charcoal }}>4.9</span>
-                    <span style={{ fontSize: '0.75rem', color: palette.rosewood, fontWeight: 700 }}>/5</span>
+                    <span style={{ fontSize: '1.1rem', fontWeight: 900, color: palette.primary }}>4.9</span>
+                    <span style={{ fontSize: '0.75rem', color: palette.muted, fontWeight: 700 }}>/5</span>
                   </div>
                   <div style={{ fontSize: '0.7rem', color: '#D97706', fontWeight: 800 }}>
-                    ★★★★★ <span style={{ color: palette.charcoal, opacity: 0.7 }}>· Gartner 850+ reviews</span>
+                    ★★★★★ <span style={{ color: palette.muted }}>· Gartner 850+ reviews</span>
                   </div>
                 </div>
               </div>
 
-              {/* Divider */}
-              <div style={{ width: '1px', height: '36px', backgroundColor: `${palette.rosewood}30` }} />
+              <div style={{ width: '1px', height: '36px', backgroundColor: palette.border }} />
 
               {/* G2 */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -544,11 +521,11 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
                 </div>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '3px' }}>
-                    <span style={{ fontSize: '1.1rem', fontWeight: 900, color: palette.charcoal }}>4.8</span>
-                    <span style={{ fontSize: '0.75rem', color: palette.rosewood, fontWeight: 700 }}>/5</span>
+                    <span style={{ fontSize: '1.1rem', fontWeight: 900, color: palette.primary }}>4.8</span>
+                    <span style={{ fontSize: '0.75rem', color: palette.muted, fontWeight: 700 }}>/5</span>
                   </div>
                   <div style={{ fontSize: '0.7rem', color: '#D97706', fontWeight: 800 }}>
-                    ★★★★★ <span style={{ color: palette.charcoal, opacity: 0.7 }}>· G2 2,400+ reviews</span>
+                    ★★★★★ <span style={{ color: palette.muted }}>· G2 2,400+ reviews</span>
                   </div>
                 </div>
               </div>
@@ -561,8 +538,8 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
               style={{
                 backgroundColor: palette.white,
                 borderRadius: '20px',
-                border: `2px solid ${palette.rosewood}40`,
-                boxShadow: `0 20px 50px ${palette.charcoal}18`,
+                border: `1px solid ${palette.border}`,
+                boxShadow: '0 20px 40px -15px rgba(11, 19, 43, 0.1)',
                 padding: '2.25rem 2rem',
                 position: 'relative',
               }}
@@ -570,12 +547,12 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
               {/* Login Header */}
               <div style={{ marginBottom: '1.25rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
-                  <ShieldCheck size={22} color={palette.rosewood} />
-                  <h3 style={{ fontSize: '1.45rem', fontWeight: 900, color: palette.charcoal, margin: 0 }}>
+                  <ShieldCheck size={22} color={palette.gold} />
+                  <h3 style={{ fontSize: '1.45rem', fontWeight: 900, color: palette.primary, margin: 0 }}>
                     Sign In to Workspace
                   </h3>
                 </div>
-                <p style={{ fontSize: '0.85rem', color: palette.charcoal, opacity: 0.8, margin: 0 }}>
+                <p style={{ fontSize: '0.85rem', color: palette.muted, margin: 0, fontWeight: 600 }}>
                   Enter your corporate credentials or select a 1-click persona.
                 </p>
               </div>
@@ -587,10 +564,11 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
                     marginBottom: '1rem',
                     padding: '0.65rem 0.85rem',
                     borderRadius: '8px',
-                    backgroundColor: 'rgba(180, 35, 24, 0.08)',
-                    border: '1px solid rgba(180, 35, 24, 0.25)',
-                    color: '#B42318',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.25)',
+                    color: '#DC2626',
                     fontSize: '0.8rem',
+                    fontWeight: 700,
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.45rem',
@@ -604,11 +582,11 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
               {/* Login Form */}
               <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 800, color: palette.charcoal, marginBottom: '0.35rem', textTransform: 'uppercase' }}>
+                  <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 800, color: palette.primary, marginBottom: '0.35rem', textTransform: 'uppercase' }}>
                     Corporate Work Email *
                   </label>
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <Mail size={16} color={palette.rosewood} style={{ position: 'absolute', left: '0.85rem', pointerEvents: 'none', opacity: 0.8 }} />
+                    <Mail size={16} color={palette.muted} style={{ position: 'absolute', left: '0.85rem', pointerEvents: 'none' }} />
                     <input
                       type="email"
                       required
@@ -619,13 +597,13 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
                         width: '100%',
                         padding: '0.7rem 0.85rem 0.7rem 2.4rem',
                         borderRadius: '8px',
-                        border: `1.5px solid ${palette.greige}`,
-                        backgroundColor: palette.cream,
-                        color: palette.charcoal,
+                        border: `1.5px solid ${palette.border}`,
+                        backgroundColor: palette.bg,
+                        color: palette.primary,
                         fontSize: '0.88rem',
                         outline: 'none',
                         fontFamily: 'inherit',
-                        fontStyle: 'italic',
+                        fontWeight: 600,
                         boxSizing: 'border-box',
                       }}
                     />
@@ -634,15 +612,15 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
 
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-                    <label style={{ fontSize: '0.72rem', fontWeight: 800, color: palette.charcoal, textTransform: 'uppercase', margin: 0 }}>
+                    <label style={{ fontSize: '0.72rem', fontWeight: 800, color: palette.primary, textTransform: 'uppercase', margin: 0 }}>
                       Password *
                     </label>
-                    <span style={{ fontSize: '0.72rem', color: palette.rosewood, fontWeight: 700 }}>
+                    <span style={{ fontSize: '0.74rem', color: palette.goldDark, fontWeight: 800 }}>
                       Demo: admin123
                     </span>
                   </div>
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <Lock size={16} color={palette.rosewood} style={{ position: 'absolute', left: '0.85rem', pointerEvents: 'none', opacity: 0.8 }} />
+                    <Lock size={16} color={palette.muted} style={{ position: 'absolute', left: '0.85rem', pointerEvents: 'none' }} />
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
@@ -653,13 +631,12 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
                         width: '100%',
                         padding: '0.7rem 2.4rem 0.7rem 2.4rem',
                         borderRadius: '8px',
-                        border: `1.5px solid ${palette.greige}`,
-                        backgroundColor: palette.cream,
-                        color: palette.charcoal,
+                        border: `1.5px solid ${palette.border}`,
+                        backgroundColor: palette.bg,
+                        color: palette.primary,
                         fontSize: '0.88rem',
                         outline: 'none',
                         fontFamily: 'inherit',
-                        fontStyle: 'italic',
                         boxSizing: 'border-box',
                       }}
                     />
@@ -675,8 +652,7 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
                         padding: 0,
                         display: 'flex',
                         alignItems: 'center',
-                        color: palette.charcoal,
-                        opacity: 0.7,
+                        color: palette.muted,
                       }}
                     >
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -685,40 +661,39 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.76rem', color: palette.charcoal, cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.76rem', color: palette.muted, cursor: 'pointer', fontWeight: 600 }}>
                     <input
                       type="checkbox"
                       checked={rememberMe}
                       onChange={(e) => setRememberMe(e.target.checked)}
-                      style={{ cursor: 'pointer', accentColor: palette.rosewood }}
+                      style={{ cursor: 'pointer', accentColor: palette.primary }}
                     />
                     <span>Keep me signed in</span>
                   </label>
-                  <span style={{ fontSize: '0.75rem', color: '#2E7D5B', fontWeight: 800 }}>
+                  <span style={{ fontSize: '0.74rem', color: '#10B981', fontWeight: 800 }}>
                     ● 256-bit Secure
                   </span>
                 </div>
 
-                {/* 3D Extruded CTA Sign In Button */}
+                {/* 3D Extruded Button */}
                 <div style={{ paddingTop: '0.25rem' }}>
                   <button
                     type="submit"
                     disabled={submitting}
                     style={{
                       width: '100%',
-                      backgroundColor: palette.rosewood,
-                      color: palette.cream,
-                      border: `2px solid ${palette.charcoal}`,
+                      backgroundColor: palette.gold,
+                      color: palette.primary,
+                      border: `2px solid ${palette.primary}`,
                       borderRadius: '12px',
                       padding: '0.9rem',
                       fontSize: '1rem',
                       fontWeight: 900,
-                      fontStyle: 'italic',
                       textTransform: 'uppercase',
                       letterSpacing: '0.03em',
                       cursor: submitting ? 'wait' : 'pointer',
                       // 3D Shadow
-                      boxShadow: `0px 8px 0px ${palette.rosewoodDark}, 0px 10px 0px ${palette.charcoal}, 0px 18px 25px ${palette.rosewood}40`,
+                      boxShadow: `0px 6px 0px ${palette.primary}, 0px 12px 20px rgba(255, 174, 25, 0.35)`,
                       transform: 'translateY(0)',
                       transition: 'all 0.12s ease',
                       display: 'flex',
@@ -728,15 +703,15 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = `0px 10px 0px ${palette.rosewoodDark}, 0px 12px 0px ${palette.charcoal}, 0px 22px 30px ${palette.rosewood}55`;
+                      e.currentTarget.style.boxShadow = `0px 8px 0px ${palette.primary}, 0px 16px 24px rgba(255, 174, 25, 0.45)`;
                     }}
                     onMouseDown={(e) => {
-                      e.currentTarget.style.transform = 'translateY(6px)';
-                      e.currentTarget.style.boxShadow = `0px 2px 0px ${palette.rosewoodDark}, 0px 4px 0px ${palette.charcoal}`;
+                      e.currentTarget.style.transform = 'translateY(4px)';
+                      e.currentTarget.style.boxShadow = `0px 2px 0px ${palette.primary}`;
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = `0px 8px 0px ${palette.rosewoodDark}, 0px 10px 0px ${palette.charcoal}, 0px 18px 25px ${palette.rosewood}40`;
+                      e.currentTarget.style.boxShadow = `0px 6px 0px ${palette.primary}, 0px 12px 20px rgba(255, 174, 25, 0.35)`;
                     }}
                   >
                     <span>{submitting ? 'Authenticating...' : 'Sign In to Workspace'}</span>
@@ -746,9 +721,9 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
               </form>
 
               {/* 1-Click Demo Personas */}
-              <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: `1px solid ${palette.rosewood}25` }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem', fontWeight: 800, color: palette.rosewood, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.6rem' }}>
-                  <Sparkles size={12} color={palette.rosewood} />
+              <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: `1px solid ${palette.border}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem', fontWeight: 800, color: palette.primary, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.6rem' }}>
+                  <Sparkles size={12} color={palette.gold} />
                   <span>1-Click Instant Demo Personas</span>
                 </div>
 
@@ -761,25 +736,25 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
                       style={{
                         padding: '0.45rem 0.6rem',
                         borderRadius: '6px',
-                        backgroundColor: palette.cream,
-                        border: `1px solid ${palette.rosewood}30`,
-                        color: palette.charcoal,
+                        backgroundColor: palette.bg,
+                        border: `1px solid ${palette.border}`,
+                        color: palette.primary,
                         fontSize: '0.74rem',
                         cursor: 'pointer',
                         textAlign: 'left',
                         transition: 'all 0.15s ease',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = palette.rosewood;
-                        e.currentTarget.style.color = palette.cream;
+                        e.currentTarget.style.backgroundColor = palette.gold;
+                        e.currentTarget.style.color = palette.primary;
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = palette.cream;
-                        e.currentTarget.style.color = palette.charcoal;
+                        e.currentTarget.style.backgroundColor = palette.bg;
+                        e.currentTarget.style.color = palette.primary;
                       }}
                     >
                       <div style={{ fontWeight: 800 }}>{demo.role}</div>
-                      <div style={{ fontSize: '0.65rem', opacity: 0.75 }}>{demo.email}</div>
+                      <div style={{ fontSize: '0.65rem', color: palette.muted }}>{demo.email}</div>
                     </button>
                   ))}
                 </div>
@@ -789,18 +764,18 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
         </div>
       </section>
 
-      {/* ─── CLIENT LOGOS MARQUEE STRIP (HROne Style) ─── */}
+      {/* ─── CLIENT LOGOS MARQUEE STRIP ─── */}
       <section
         style={{
-          backgroundColor: palette.greige,
-          borderTop: `1px solid ${palette.rosewood}25`,
-          borderBottom: `1px solid ${palette.rosewood}25`,
+          backgroundColor: '#FFFFFF',
+          borderTop: `1px solid ${palette.border}`,
+          borderBottom: `1px solid ${palette.border}`,
           padding: '2.5rem 0',
           overflow: 'hidden',
           position: 'relative',
         }}
       >
-        <p style={{ textAlign: 'center', fontSize: '0.78rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', color: palette.rosewood, marginBottom: '1.5rem' }}>
+        <p style={{ textAlign: 'center', fontSize: '0.78rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', color: palette.muted, marginBottom: '1.5rem' }}>
           Trusted by 2,500+ Leading Enterprises Across India & Global Teams
         </p>
         <div style={{ overflow: 'hidden', width: '100%', position: 'relative' }}>
@@ -818,7 +793,6 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
               'Healthians',
               'Magicpin',
               'Vatika',
-              // duplicates for seamless loop
               'Haier',
               'Nippon Steel',
               'Kyocera',
@@ -837,8 +811,8 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
                 style={{
                   fontSize: '1.35rem',
                   fontWeight: 900,
-                  color: palette.charcoal,
-                  opacity: 0.6,
+                  color: palette.primary,
+                  opacity: 0.7,
                   letterSpacing: '-0.02em',
                   whiteSpace: 'nowrap',
                 }}
@@ -850,21 +824,21 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
         </div>
       </section>
 
-      {/* ─── INTERACTIVE PLATFORM TABS (HROne Signature Component) ─── */}
+      {/* ─── INTERACTIVE PLATFORM TABS ─── */}
       <section id="platform" style={{ padding: '6rem 2rem', maxWidth: '1240px', margin: '0 auto', position: 'relative', zIndex: 10 }}>
         <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
-          <p style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: palette.rosewood, marginBottom: '0.6rem' }}>
+          <p style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: palette.goldDark, marginBottom: '0.6rem' }}>
             Unified Architecture
           </p>
-          <h2 style={{ fontSize: 'clamp(2.2rem, 3.8vw, 3rem)', fontWeight: 900, color: palette.charcoal, margin: 0 }}>
-            Everything HR. <span style={{ color: palette.rosewood }}>One Platform.</span>
+          <h2 style={{ fontSize: 'clamp(2.2rem, 3.8vw, 3rem)', fontWeight: 900, color: palette.primary, margin: 0 }}>
+            Everything HR. <span style={{ color: palette.gold }}>One Platform.</span>
           </h2>
-          <p style={{ fontSize: '1.05rem', color: palette.charcoal, opacity: 0.8, maxWidth: '560px', margin: '0.75rem auto 0' }}>
+          <p style={{ fontSize: '1.05rem', color: palette.muted, maxWidth: '560px', margin: '0.75rem auto 0', fontWeight: 600 }}>
             Every module deeply synchronized in a unified operating system with zero data silos.
           </p>
         </div>
 
-        {/* 3-Column Interactive Layout: Tab List | Real App Browser Preview | Feature Details */}
+        {/* 3-Column Interactive Layout */}
         <div
           style={{
             display: 'grid',
@@ -885,15 +859,14 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
                   gap: '0.75rem',
                   padding: '0.85rem 1.25rem',
                   borderRadius: '12px',
-                  backgroundColor: activeTab === tab.id ? palette.rosewood : palette.white,
-                  color: activeTab === tab.id ? palette.cream : palette.charcoal,
-                  border: activeTab === tab.id ? `2px solid ${palette.charcoal}` : `1px solid ${palette.rosewood}25`,
+                  backgroundColor: activeTab === tab.id ? palette.primary : palette.white,
+                  color: activeTab === tab.id ? '#FFFFFF' : palette.primary,
+                  border: activeTab === tab.id ? `2px solid ${palette.primary}` : `1px solid ${palette.border}`,
                   fontSize: '0.95rem',
                   fontWeight: 800,
-                  fontStyle: 'italic',
                   cursor: 'pointer',
                   textAlign: 'left',
-                  boxShadow: activeTab === tab.id ? `0 4px 15px ${palette.rosewood}35` : 'none',
+                  boxShadow: activeTab === tab.id ? '0 4px 15px rgba(11, 19, 43, 0.2)' : 'none',
                   transition: 'all 0.15s ease',
                 }}
               >
@@ -908,20 +881,20 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
             style={{
               backgroundColor: palette.white,
               borderRadius: '20px',
-              border: `2px solid ${palette.rosewood}35`,
-              boxShadow: `0 20px 50px ${palette.charcoal}20`,
+              border: `1px solid ${palette.border}`,
+              boxShadow: '0 20px 40px rgba(11, 19, 43, 0.08)',
               overflow: 'hidden',
             }}
           >
             {/* Top Browser Bar */}
             <div
               style={{
-                backgroundColor: palette.greige,
+                backgroundColor: '#F8F9FA',
                 padding: '0.6rem 1rem',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.4rem',
-                borderBottom: `1px solid ${palette.rosewood}20`,
+                borderBottom: `1px solid ${palette.border}`,
               }}
             >
               <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#FF5F56' }} />
@@ -934,9 +907,10 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
                   borderRadius: '6px',
                   padding: '0.2rem 0.8rem',
                   fontSize: '0.72rem',
-                  color: palette.charcoal,
+                  color: palette.muted,
                   fontWeight: 700,
                   flex: 1,
+                  border: `1px solid ${palette.border}`,
                 }}
               >
                 app.peoplepay360.com/{platformTabs[activeTab].title.toLowerCase()}
@@ -944,17 +918,17 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
             </div>
 
             {/* Simulated Live UI Screen */}
-            <div style={{ padding: '1.75rem', backgroundColor: palette.cream }}>
+            <div style={{ padding: '1.75rem', backgroundColor: palette.bg }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-                <span style={{ fontSize: '1.1rem', fontWeight: 900, color: palette.charcoal }}>
+                <span style={{ fontSize: '1.1rem', fontWeight: 900, color: palette.primary }}>
                   {platformTabs[activeTab].screen.title}
                 </span>
                 <span
                   style={{
                     fontSize: '0.75rem',
                     fontWeight: 800,
-                    backgroundColor: `${palette.rosewood}18`,
-                    color: palette.rosewood,
+                    backgroundColor: 'rgba(255, 174, 25, 0.15)',
+                    color: '#D97706',
                     padding: '0.3rem 0.75rem',
                     borderRadius: '999px',
                   }}
@@ -969,23 +943,23 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
                   backgroundColor: palette.white,
                   borderRadius: '14px',
                   padding: '1.25rem',
-                  border: `1px solid ${palette.rosewood}20`,
+                  border: `1px solid ${palette.border}`,
                   marginBottom: '1.25rem',
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
                   <div>
-                    <div style={{ fontSize: '1rem', fontWeight: 800, color: palette.charcoal }}>
+                    <div style={{ fontSize: '1rem', fontWeight: 800, color: palette.primary }}>
                       {platformTabs[activeTab].screen.person.name}
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: palette.rosewood, fontWeight: 700 }}>
+                    <div style={{ fontSize: '0.75rem', color: palette.muted, fontWeight: 700 }}>
                       {platformTabs[activeTab].screen.person.role}
                     </div>
                   </div>
                   <span
                     style={{
-                      backgroundColor: '#2E7D5B18',
-                      color: '#2E7D5B',
+                      backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                      color: '#059669',
                       fontSize: '0.75rem',
                       fontWeight: 800,
                       padding: '0.25rem 0.6rem',
@@ -1000,14 +974,14 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
                 <div style={{ marginBottom: '1rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', fontWeight: 800, marginBottom: '0.3rem' }}>
                     <span>Processing Completion</span>
-                    <span style={{ color: palette.rosewood }}>{platformTabs[activeTab].screen.person.progress}</span>
+                    <span style={{ color: palette.primary }}>{platformTabs[activeTab].screen.person.progress}</span>
                   </div>
-                  <div style={{ height: '7px', borderRadius: '4px', backgroundColor: palette.greige, overflow: 'hidden' }}>
+                  <div style={{ height: '7px', borderRadius: '4px', backgroundColor: palette.bg, overflow: 'hidden' }}>
                     <div
                       style={{
                         height: '100%',
                         width: platformTabs[activeTab].screen.person.progress,
-                        backgroundColor: palette.rosewood,
+                        backgroundColor: palette.gold,
                         borderRadius: '4px',
                       }}
                     />
@@ -1017,8 +991,8 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
                 {/* Checklist */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
                   {platformTabs[activeTab].screen.tasks.map((task, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: palette.charcoal }}>
-                      <CheckCircle2 size={14} color="#2E7D5B" />
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: palette.primary, fontWeight: 600 }}>
+                      <CheckCircle2 size={14} color="#10B981" />
                       <span>{task}</span>
                     </div>
                   ))}
@@ -1027,19 +1001,19 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
 
               {/* Bottom Quick Stats */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div style={{ backgroundColor: palette.white, padding: '0.9rem', borderRadius: '10px', border: `1px solid ${palette.rosewood}20` }}>
-                  <div style={{ fontSize: '1.35rem', fontWeight: 900, color: palette.charcoal }}>
+                <div style={{ backgroundColor: palette.white, padding: '0.9rem', borderRadius: '10px', border: `1px solid ${palette.border}` }}>
+                  <div style={{ fontSize: '1.35rem', fontWeight: 900, color: palette.primary }}>
                     {platformTabs[activeTab].screen.metric1.value}
                   </div>
-                  <div style={{ fontSize: '0.72rem', color: palette.rosewood, fontWeight: 700 }}>
+                  <div style={{ fontSize: '0.72rem', color: palette.muted, fontWeight: 700 }}>
                     {platformTabs[activeTab].screen.metric1.label}
                   </div>
                 </div>
-                <div style={{ backgroundColor: palette.white, padding: '0.9rem', borderRadius: '10px', border: `1px solid ${palette.rosewood}20` }}>
-                  <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#2E7D5B' }}>
+                <div style={{ backgroundColor: palette.white, padding: '0.9rem', borderRadius: '10px', border: `1px solid ${palette.border}` }}>
+                  <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#10B981' }}>
                     {platformTabs[activeTab].screen.metric2.value}
                   </div>
-                  <div style={{ fontSize: '0.72rem', color: palette.rosewood, fontWeight: 700 }}>
+                  <div style={{ fontSize: '0.72rem', color: palette.muted, fontWeight: 700 }}>
                     {platformTabs[activeTab].screen.metric2.label}
                   </div>
                 </div>
@@ -1049,23 +1023,22 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
 
           {/* RIGHT: Module Information */}
           <div>
-            <h3 style={{ fontSize: '1.45rem', fontWeight: 900, color: palette.charcoal, lineHeight: 1.25, marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '1.45rem', fontWeight: 900, color: palette.primary, lineHeight: 1.25, marginBottom: '1rem' }}>
               {platformTabs[activeTab].heading}
             </h3>
-            <p style={{ fontSize: '0.95rem', lineHeight: 1.6, color: palette.charcoal, opacity: 0.85, marginBottom: '1.5rem' }}>
+            <p style={{ fontSize: '0.95rem', lineHeight: 1.6, color: palette.muted, marginBottom: '1.5rem', fontWeight: 600 }}>
               {platformTabs[activeTab].desc}
             </p>
             <button
               onClick={onEnterLogin}
               style={{
                 backgroundColor: 'transparent',
-                color: palette.rosewood,
-                border: `2px solid ${palette.rosewood}`,
+                color: palette.primary,
+                border: `2px solid ${palette.primary}`,
                 borderRadius: '8px',
                 padding: '0.6rem 1.2rem',
                 fontSize: '0.85rem',
                 fontWeight: 800,
-                fontStyle: 'italic',
                 cursor: 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -1079,7 +1052,7 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
         </div>
       </section>
 
-      {/* ─── STATS BY THE NUMBERS (HROne 4-Cell Grid) ─── */}
+      {/* ─── STATS BY THE NUMBERS ─── */}
       <section id="metrics" style={{ padding: '3rem 2rem 5rem', maxWidth: '1240px', margin: '0 auto' }}>
         <div
           style={{
@@ -1087,9 +1060,9 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
             gridTemplateColumns: 'repeat(4, 1fr)',
             backgroundColor: palette.white,
             borderRadius: '20px',
-            border: `2px solid ${palette.rosewood}35`,
+            border: `1px solid ${palette.border}`,
             overflow: 'hidden',
-            boxShadow: `0 15px 40px ${palette.charcoal}12`,
+            boxShadow: '0 15px 35px rgba(11, 19, 43, 0.05)',
           }}
         >
           {[
@@ -1103,16 +1076,16 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
               style={{
                 padding: '2.5rem 1.5rem',
                 textAlign: 'center',
-                borderRight: idx < 3 ? `1px solid ${palette.rosewood}20` : 'none',
+                borderRight: idx < 3 ? `1px solid ${palette.border}` : 'none',
               }}
             >
-              <div style={{ fontSize: '2.5rem', fontWeight: 900, color: palette.rosewood, letterSpacing: '-0.03em', marginBottom: '0.35rem' }}>
+              <div style={{ fontSize: '2.5rem', fontWeight: 900, color: idx === 1 ? palette.gold : palette.primary, letterSpacing: '-0.03em', marginBottom: '0.35rem' }}>
                 {stat.num}
               </div>
-              <div style={{ fontSize: '0.95rem', fontWeight: 800, color: palette.charcoal, marginBottom: '0.2rem' }}>
+              <div style={{ fontSize: '0.95rem', fontWeight: 800, color: palette.primary, marginBottom: '0.2rem' }}>
                 {stat.label}
               </div>
-              <div style={{ fontSize: '0.75rem', color: palette.charcoal, opacity: 0.7 }}>
+              <div style={{ fontSize: '0.75rem', color: palette.muted, fontWeight: 600 }}>
                 {stat.sub}
               </div>
             </div>
@@ -1120,27 +1093,26 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
         </div>
       </section>
 
-      {/* ─── CUSTOMER TESTIMONIAL SLIDER (HROne Style) ─── */}
-      <section style={{ backgroundColor: palette.greige, padding: '5.5rem 2rem', borderTop: `1px solid ${palette.rosewood}20`, borderBottom: `1px solid ${palette.rosewood}20` }}>
+      {/* ─── CUSTOMER TESTIMONIAL SLIDER ─── */}
+      <section style={{ backgroundColor: palette.white, padding: '5.5rem 2rem', borderTop: `1px solid ${palette.border}`, borderBottom: `1px solid ${palette.border}` }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#D97706', marginBottom: '1.25rem', fontSize: '1.2rem' }}>
             ★★★★★
           </div>
 
-          <blockquote style={{ fontSize: 'clamp(1.3rem, 2.4vw, 1.85rem)', fontWeight: 800, color: palette.charcoal, lineHeight: 1.45, margin: '0 0 2rem 0' }}>
+          <blockquote style={{ fontSize: 'clamp(1.3rem, 2.4vw, 1.85rem)', fontWeight: 800, color: palette.primary, lineHeight: 1.45, margin: '0 0 2rem 0' }}>
             "{testimonials[testiIndex].quote}"
           </blockquote>
 
           <div>
-            <div style={{ fontSize: '1.15rem', fontWeight: 900, color: palette.rosewood }}>
+            <div style={{ fontSize: '1.15rem', fontWeight: 900, color: palette.primary }}>
               {testimonials[testiIndex].name}
             </div>
-            <div style={{ fontSize: '0.85rem', color: palette.charcoal, opacity: 0.8, marginTop: '0.2rem' }}>
+            <div style={{ fontSize: '0.85rem', color: palette.muted, marginTop: '0.2rem', fontWeight: 600 }}>
               {testimonials[testiIndex].designation} &nbsp;·&nbsp; <strong>{testimonials[testiIndex].company}</strong>
             </div>
           </div>
 
-          {/* Prev/Next Buttons */}
           <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2rem' }}>
             <button
               onClick={() => setTestiIndex((prev) => (prev === 0 ? testimonials.length - 1 : prev - 1))}
@@ -1148,13 +1120,13 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
                 width: '42px',
                 height: '42px',
                 borderRadius: '50%',
-                backgroundColor: palette.white,
-                border: `1.5px solid ${palette.rosewood}35`,
+                backgroundColor: palette.bg,
+                border: `1.5px solid ${palette.border}`,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: palette.charcoal,
+                color: palette.primary,
               }}
             >
               <ChevronLeft size={20} />
@@ -1165,13 +1137,13 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
                 width: '42px',
                 height: '42px',
                 borderRadius: '50%',
-                backgroundColor: palette.rosewood,
-                border: `1.5px solid ${palette.charcoal}`,
+                backgroundColor: palette.primary,
+                border: `1.5px solid ${palette.primaryDark}`,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: palette.cream,
+                color: '#FFFFFF',
               }}
             >
               <ChevronRight size={20} />
@@ -1180,14 +1152,14 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
         </div>
       </section>
 
-      {/* ─── ACCORDION FAQ SECTION (HROne Style) ─── */}
+      {/* ─── ACCORDION FAQ SECTION ─── */}
       <section id="faq" style={{ padding: '6rem 2rem', maxWidth: '900px', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
-          <p style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: palette.rosewood, marginBottom: '0.5rem' }}>
+          <p style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: palette.goldDark, marginBottom: '0.5rem' }}>
             Got Questions?
           </p>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: 900, color: palette.charcoal, margin: 0 }}>
-            Frequently Asked <span style={{ color: palette.rosewood }}>Questions</span>
+          <h2 style={{ fontSize: '2.5rem', fontWeight: 900, color: palette.primary, margin: 0 }}>
+            Frequently Asked <span style={{ color: palette.gold }}>Questions</span>
           </h2>
         </div>
 
@@ -1198,7 +1170,7 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
               style={{
                 backgroundColor: palette.white,
                 borderRadius: '14px',
-                border: `1.5px solid ${openFaq === idx ? palette.rosewood : `${palette.rosewood}25`}`,
+                border: `1.5px solid ${openFaq === idx ? palette.gold : palette.border}`,
                 overflow: 'hidden',
                 transition: 'all 0.2s ease',
               }}
@@ -1216,15 +1188,14 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
                   textAlign: 'left',
                   cursor: 'pointer',
                   fontFamily: 'inherit',
-                  fontStyle: 'italic',
                 }}
               >
-                <span style={{ fontSize: '1.05rem', fontWeight: 800, color: palette.charcoal }}>
+                <span style={{ fontSize: '1.05rem', fontWeight: 800, color: palette.primary }}>
                   {faq.q}
                 </span>
                 <ChevronDown
                   size={20}
-                  color={palette.rosewood}
+                  color={palette.primary}
                   style={{
                     transform: openFaq === idx ? 'rotate(180deg)' : 'rotate(0deg)',
                     transition: 'transform 0.2s ease',
@@ -1234,7 +1205,7 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
               </button>
 
               {openFaq === idx && (
-                <div style={{ padding: '0 1.5rem 1.35rem', fontSize: '0.92rem', lineHeight: 1.65, color: palette.charcoal, opacity: 0.85 }}>
+                <div style={{ padding: '0 1.5rem 1.35rem', fontSize: '0.92rem', lineHeight: 1.65, color: palette.muted, fontWeight: 600 }}>
                   {faq.a}
                 </div>
               )}
@@ -1243,17 +1214,17 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
         </div>
       </section>
 
-      {/* ─── BOTTOM 3D CTA BANNER (HROne Style) ─── */}
+      {/* ─── BOTTOM 3D CTA BANNER ─── */}
       <section style={{ maxWidth: '1240px', margin: '0 auto 6rem', padding: '0 2rem' }}>
         <div
           style={{
-            backgroundColor: palette.rosewood,
+            backgroundColor: palette.primary,
             borderRadius: '24px',
             padding: '4.5rem 2rem',
             textAlign: 'center',
-            color: palette.cream,
-            border: `3px solid ${palette.charcoal}`,
-            boxShadow: `0px 14px 0px ${palette.charcoal}, 0px 25px 50px ${palette.rosewood}50`,
+            color: '#FFFFFF',
+            border: `3px solid ${palette.primaryDark}`,
+            boxShadow: `0px 14px 0px ${palette.primaryDark}, 0px 25px 50px rgba(11, 19, 43, 0.4)`,
             position: 'relative',
             overflow: 'hidden',
           }}
@@ -1261,26 +1232,25 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
           <h2 style={{ fontSize: 'clamp(2rem, 3.8vw, 3rem)', fontWeight: 900, marginBottom: '1rem', letterSpacing: '-0.02em' }}>
             Ready to Streamline Your HR & Payroll Operations?
           </h2>
-          <p style={{ fontSize: '1.1rem', maxWidth: '640px', margin: '0 auto 2.5rem', opacity: 0.9, lineHeight: 1.6 }}>
+          <p style={{ fontSize: '1.1rem', maxWidth: '640px', margin: '0 auto 2.5rem', opacity: 0.85, lineHeight: 1.6, fontWeight: 600 }}>
             Join 2,500+ enterprises using PeoplePay360 for accurate, error-free payruns and real-time attendance management.
           </p>
 
           <button
             onClick={onEnterLogin}
             style={{
-              backgroundColor: palette.cream,
-              color: palette.rosewood,
-              border: `2px solid ${palette.charcoal}`,
+              backgroundColor: palette.gold,
+              color: palette.primary,
+              border: `2px solid ${palette.primaryDark}`,
               borderRadius: '12px',
               padding: '1.15rem 3rem',
               fontSize: '1.15rem',
               fontWeight: 900,
-              fontStyle: 'italic',
               textTransform: 'uppercase',
               letterSpacing: '0.03em',
               cursor: 'pointer',
               // 3D Shadow
-              boxShadow: `0px 8px 0px ${palette.rosewoodDark}, 0px 10px 0px ${palette.charcoal}, 0px 16px 25px rgba(0,0,0,0.4)`,
+              boxShadow: `0px 8px 0px ${palette.goldDark}, 0px 10px 0px ${palette.primaryDark}, 0px 16px 25px rgba(0,0,0,0.4)`,
               transform: 'translateY(0)',
               transition: 'all 0.12s ease',
               display: 'inline-flex',
@@ -1289,15 +1259,15 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = `0px 10px 0px ${palette.rosewoodDark}, 0px 12px 0px ${palette.charcoal}, 0px 20px 30px rgba(0,0,0,0.5)`;
+              e.currentTarget.style.boxShadow = `0px 10px 0px ${palette.goldDark}, 0px 12px 0px ${palette.primaryDark}, 0px 20px 30px rgba(0,0,0,0.5)`;
             }}
             onMouseDown={(e) => {
               e.currentTarget.style.transform = 'translateY(6px)';
-              e.currentTarget.style.boxShadow = `0px 2px 0px ${palette.rosewoodDark}, 0px 4px 0px ${palette.charcoal}`;
+              e.currentTarget.style.boxShadow = `0px 2px 0px ${palette.goldDark}, 0px 4px 0px ${palette.primaryDark}`;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = `0px 8px 0px ${palette.rosewoodDark}, 0px 10px 0px ${palette.charcoal}, 0px 16px 25px rgba(0,0,0,0.4)`;
+              e.currentTarget.style.boxShadow = `0px 8px 0px ${palette.goldDark}, 0px 10px 0px ${palette.primaryDark}, 0px 16px 25px rgba(0,0,0,0.4)`;
             }}
           >
             <span>Proceed to Workspace Sign In</span>
@@ -1309,8 +1279,8 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
       {/* ─── FOOTER ─── */}
       <footer
         style={{
-          borderTop: `1px solid ${palette.rosewood}25`,
-          backgroundColor: palette.white,
+          borderTop: `1px solid ${palette.border}`,
+          backgroundColor: '#FFFFFF',
           padding: '2.5rem 2rem',
         }}
       >
@@ -1323,18 +1293,17 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
             justifyContent: 'space-between',
             alignItems: 'center',
             fontSize: '0.85rem',
-            color: palette.charcoal,
-            opacity: 0.85,
+            color: palette.muted,
             gap: '1rem',
           }}
         >
           <div>
-            © {new Date().getFullYear()} <span style={{ color: palette.rosewood, fontWeight: 900 }}>PeoplePay360 Inc</span>. All rights reserved.
+            © {new Date().getFullYear()} <span style={{ color: palette.primary, fontWeight: 900 }}>PeoplePay360 Inc</span>. All rights reserved.
           </div>
-          <div style={{ display: 'flex', gap: '1.5rem', fontWeight: 700 }}>
-            <span>• Alabaster & Vintage Rosewood Theme</span>
+          <div style={{ display: 'flex', gap: '1.5rem', fontWeight: 800 }}>
+            <span style={{ color: palette.primary }}>• Neo-Bauhaus Theme</span>
+            <span style={{ color: palette.gold }}>• Warm Gold & Midnight Navy</span>
             <span>• 3D Interactive UI</span>
-            <span>• Italic Typography</span>
           </div>
         </div>
       </footer>
