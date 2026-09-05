@@ -8,10 +8,9 @@ import {
   Coins,
   Sliders,
   LogOut,
-  Sparkles,
   UserCheck
 } from 'lucide-react';
-import { useAuth, DEMO_USERS } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 interface SidebarProps {
   activeTab: string;
@@ -19,7 +18,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
-  const { user, logout, login } = useAuth();
+  const { user, logout } = useAuth();
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -152,60 +151,6 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
           );
         })}
       </nav>
-
-      <div style={{
-        padding: '12px 14px',
-        margin: '0 12px 12px',
-        background: 'rgba(0, 0, 0, 0.15)',
-        borderRadius: 'var(--radius-md)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-      }}>
-        <div style={{
-          fontSize: '0.675rem',
-          fontWeight: 700,
-          color: '#94A3B8',
-          textTransform: 'uppercase',
-          letterSpacing: '0.06em',
-          marginBottom: '8px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-        }}>
-          <Sparkles size={12} color="#93C5FD" />
-          <span>Quick Switch Persona</span>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          {DEMO_USERS.map((demo) => {
-            const isCurrent = user?.email === demo.email;
-            return (
-              <button
-                key={demo.email}
-                onClick={() => login(demo.email, demo.password)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '5px 8px',
-                  borderRadius: 'var(--radius-xs)',
-                  background: isCurrent ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                  border: isCurrent ? '1px solid rgba(255, 255, 255, 0.25)' : '1px solid transparent',
-                  color: isCurrent ? '#FFFFFF' : '#94A3B8',
-                  fontSize: '0.725rem',
-                  cursor: 'pointer',
-                  fontWeight: isCurrent ? 600 : 400,
-                  transition: 'all 0.15s ease',
-                }}
-                title={`Switch to ${demo.role}`}
-              >
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {demo.badge}
-                </span>
-                {isCurrent && <UserCheck size={12} color="#93C5FD" />}
-              </button>
-            );
-          })}
-        </div>
-      </div>
 
       <div style={{
         padding: '16px 20px',

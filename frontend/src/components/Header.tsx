@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, ShieldCheck, Map, X } from 'lucide-react';
+import { Clock, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { apiRequest } from '../api';
 
@@ -11,7 +11,6 @@ export default function Header({ activeTab }: HeaderProps) {
   const { user } = useAuth();
   const [time, setTime] = useState(new Date());
   const [punchStatus, setPunchStatus] = useState<{ checkedIn: boolean; record: any } | null>(null);
-  const [showBlueprintModal, setShowBlueprintModal] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -39,18 +38,6 @@ export default function Header({ activeTab }: HeaderProps) {
 
   const current = titles[activeTab] || titles.dashboard;
 
-  const blueprintSteps = [
-    { num: '1', title: 'Login & Auth', desc: 'JWT + 4 Security Roles (Employee, HR Mgr, Payroll User, Admin)' },
-    { num: '2', title: 'Employee Master', desc: 'Master record with linked contracts, attendance, leaves & payslips' },
-    { num: '3', title: 'Running Contract', desc: 'Only 1 active running contract per employee (auto-expires older)' },
-    { num: '4', title: 'Attendance & Leaves', desc: 'Real-time punch clock, shift hours, overtime & leave allocations' },
-    { num: '5', title: 'Salary Rules Engine', desc: 'Basic, HRA 20%, Transport, Overtime formula, Unpaid leave & PF' },
-    { num: '6', title: 'Payrun Batching', desc: 'Scope period → Select eligible active contracts → Create Draft' },
-    { num: '7', title: 'Compute & Audit', desc: 'Run rule engine → Validate bank/contract flags → Mark Paid' },
-    { num: '8', title: 'Payslip & PDF', desc: 'Line-item breakdown + real-time PDF generation & dispatch' },
-    { num: '9', title: 'Executive Dashboard', desc: 'Updates net salary cost, attendance rate, leave pool & trend charts' },
-  ];
-
   return (
     <header style={{
       height: '74px',
@@ -75,29 +62,6 @@ export default function Header({ activeTab }: HeaderProps) {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-        <button
-          onClick={() => setShowBlueprintModal(true)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            background: 'rgba(30, 58, 95, 0.08)',
-            border: '1px solid rgba(30, 58, 95, 0.25)',
-            color: '#1E3A5F',
-            padding: '6px 12px',
-            borderRadius: 'var(--radius-full)',
-            fontSize: '0.775rem',
-            fontWeight: 700,
-            cursor: 'pointer',
-            transition: 'all 0.15s ease',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(30, 58, 95, 0.15)')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(30, 58, 95, 0.08)')}
-        >
-          <Map size={14} color="#1E3A5F" />
-          <span>Blueprint Flow</span>
-        </button>
-
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -154,101 +118,6 @@ export default function Header({ activeTab }: HeaderProps) {
           <span>{user?.roles?.[0] || 'User'}</span>
         </div>
       </div>
-
-      {showBlueprintModal && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '750px' }}>
-            <div className="modal-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Map size={20} color="#1E3A5F" />
-                <h3 style={{ fontSize: '1.2rem', color: '#1F2937' }}>PeoplePay360 Complete Blueprint Architecture</h3>
-              </div>
-              <button
-                style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer' }}
-                onClick={() => setShowBlueprintModal(false)}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <p style={{ fontSize: '0.85rem', color: '#64748B' }}>
-                This application is engineered according to the official PeoplePay360 modular monolith blueprint.
-              </p>
-
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
-              }}>
-                {blueprintSteps.map((step) => (
-                  <div
-                    key={step.num}
-                    style={{
-                      padding: '14px',
-                      borderRadius: 'var(--radius-md)',
-                      background: '#F8F9FA',
-                      border: '1px solid #E2E8F0',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '6px',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{
-                        width: '24px',
-                        height: '24px',
-                        borderRadius: '50%',
-                        background: '#1E3A5F',
-                        color: '#fff',
-                        fontSize: '0.75rem',
-                        fontWeight: 700,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}>
-                        {step.num}
-                      </span>
-                      <strong style={{ fontSize: '0.85rem', color: '#1F2937' }}>{step.title}</strong>
-                    </div>
-                    <p style={{ fontSize: '0.75rem', color: '#64748B', lineHeight: 1.4 }}>
-                      {step.desc}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{
-                padding: '16px',
-                background: 'rgba(30, 58, 95, 0.06)',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid rgba(30, 58, 95, 0.2)',
-                fontSize: '0.825rem',
-                color: '#1E3A5F',
-              }}>
-                <strong>Master Blueprint Chain:</strong>
-                <div style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '0.775rem',
-                  marginTop: '6px',
-                  fontWeight: 600,
-                }}>
-                  Employee (Master Record) ➔ Running Contract ➔ Working Schedule ➔ Attendance & Time Off ➔ Salary Engine ➔ Payrun Batch ➔ Compute ➔ Validate Audit ➔ Payslip PDF ➔ Dashboard
-                </div>
-              </div>
-            </div>
-
-            <div className="modal-footer">
-              <button
-                className="btn btn-primary"
-                onClick={() => setShowBlueprintModal(false)}
-              >
-                Close Blueprint Guide
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </header>
   );
 }
