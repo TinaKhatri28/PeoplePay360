@@ -40,9 +40,9 @@ export interface Employee {
 }
 
 export interface Contract {
-  id: number;
+  id: string | number;
   ref: string;
-  employee_id: number;
+  employee_id: string | number;
   employee_name?: string;
   start_date: string;
   end_date?: string | null;
@@ -50,8 +50,13 @@ export interface Contract {
   status: 'Running' | 'Expired' | 'Draft';
   department?: string | null;
   position?: string | null;
-  schedule_id?: number | null;
-  salary_structure_id?: number | null;
+  schedule_id?: string | number | null;
+  schedule_name?: string | null;
+  salary_structure_id?: string | number | null;
+  salary_structure_name?: string | null;
+  employee?: any;
+  salary_structure?: any;
+  schedule?: any;
 }
 
 export interface AttendanceRecord {

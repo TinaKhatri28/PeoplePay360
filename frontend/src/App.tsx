@@ -79,8 +79,8 @@ function MainApp() {
 
         <main style={{ flex: 1, padding: '28px 32px 60px', overflowY: 'auto' }}>
           {activeTab === 'dashboard' && (isEmployeeOnly ? <EmployeeDashboardView /> : <DashboardView onNavigate={setActiveTab} />)}
-          {activeTab === 'employees' && <EmployeesView />}
-          {activeTab === 'contracts' && <ContractsView />}
+          {activeTab === 'employees' && <EmployeesView onNavigate={setActiveTab} />}
+          {activeTab === 'contracts' && <ContractsView onNavigate={setActiveTab} />}
           {activeTab === 'attendance' && <AttendanceView />}
           {activeTab === 'timeoff' && <TimeOffView />}
           {activeTab === 'payroll' && <PayrollView />}

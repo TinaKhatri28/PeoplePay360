@@ -18,7 +18,14 @@ export class ContractRepository {
       where: { id, organization_id: organizationId },
       include: {
         employee: true,
-        salary_structure: true,
+        salary_structure: {
+          include: {
+            rules: {
+              where: { is_active: true },
+              orderBy: { sequence: 'asc' },
+            },
+          },
+        },
         schedule: true,
       },
     });

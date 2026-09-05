@@ -18,7 +18,11 @@ import { apiRequest } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { Employee, Department, WorkingSchedule } from '../types';
 
-export default function EmployeesView() {
+interface EmployeesViewProps {
+  onNavigate?: (tab: string) => void;
+}
+
+export default function EmployeesView({ onNavigate }: EmployeesViewProps = {}) {
   const { isHRManager } = useAuth();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -596,43 +600,83 @@ export default function EmployeesView() {
               )}
 
               {detailTab === 'contracts' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {empDetails?.contracts?.length === 0 ? (
-                    <div style={{ color: 'var(--text-subtle)', textAlign: 'center', padding: '24px' }}>
-                      No contracts found for this employee.
+                    <div style={{ color: '#64748B', textAlign: 'center', padding: '24px' }}>
+                      No employment contracts found for this employee.
                     </div>
                   ) : (
-                    empDetails?.contracts?.map((c) => (
-                      <div
-                        key={c.id}
-                        style={{
-                          padding: '14px',
-                          borderRadius: 'var(--radius-md)',
-                          background: 'rgba(255, 255, 255, 0.02)',
-                          border: '1px solid var(--border-subtle)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                        }}
-                      >
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{ fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{c.ref}</span>
-                            <span className={`badge ${c.status === 'Running' ? 'badge-success' : 'badge-neutral'}`}>
-                              {c.status}
-                            </span>
+                    empDetails?.contracts?.map((c) => {
+                      const formatDate = (dateStr?: string | null) => {
+                        if (!dateStr) return '—';
+                        try {
+                          const d = new Date(dateStr);
+                          if (isNaN(d.getTime())) return dateStr;
+                          const day = String(d.getUTCDate()).padStart(2, '0');
+                          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                          return `${day}-${months[d.getUTCMonth()]}-${d.getUTCFullYear()}`;
+                        } catch {
+                          return dateStr;
+                        }
+                      };
+
+                      return (
+                        <div
+                          key={c.id}
+                          style={{
+                            padding: '16px',
+                            borderRadius: 'var(--radius-md)',
+                            background: '#F8F9FA',
+                            border: '1px solid #E2E8F0',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            cursor: onNavigate ? 'pointer' : 'default',
+                            transition: 'all 0.15s ease',
+                          }}
+                          onClick={() => {
+                            if (onNavigate) {
+                              setSelectedEmployee(null);
+                              onNavigate('contracts');
+                            }
+                          }}
+                        >
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span style={{ fontWeight: 700, fontFamily: 'var(--font-mono)', color: '#1E3A5F' }}>
+                                {c.ref}
+                              </span>
+                              <span className={`badge ${
+                                c.status === 'Running' ? 'badge-success' :
+                                c.status === 'Expired' ? 'badge-neutral' : 'badge-warning'
+                              }`}>
+                                <span className="badge-dot" />
+                                {c.status}
+                              </span>
+                            </div>
+                            <div style={{ fontSize: '0.775rem', color: '#64748B', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>
+                              Period: {formatDate(c.start_date)} to {c.end_date ? formatDate(c.end_date) : 'Open-ended'}
+                            </div>
                           </div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                            Period: {c.start_date} to {c.end_date || 'Present (Open-ended)'}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#2E7D5B', fontFamily: 'var(--font-mono)' }}>
+                                ₹{Number(c.wage || 0).toLocaleString('en-IN')}
+                              </div>
+                              <span style={{ fontSize: '0.7rem', color: '#64748B' }}>per month</span>
+                            </div>
+                            {onNavigate && (
+                              <button
+                                className="btn btn-secondary"
+                                style={{ padding: '6px 12px', fontSize: '0.75rem', color: '#1E3A5F' }}
+                              >
+                                View Contract Form →
+                              </button>
+                            )}
                           </div>
                         </div>
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#a5b4fc' }}>
-                            ₹{c.wage?.toLocaleString('en-IN')} / mo
-                          </div>
-                        </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               )}
