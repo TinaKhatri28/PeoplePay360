@@ -247,7 +247,7 @@ export default function EmployeesView({ onNavigate }: EmployeesViewProps = {}) {
                   {emp.avatar_initials || emp.name.slice(0, 2).toUpperCase()}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main, #0f172a)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {emp.name}
                   </div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -518,7 +518,7 @@ export default function EmployeesView({ onNavigate }: EmployeesViewProps = {}) {
                   {selectedEmployee.avatar_initials || selectedEmployee.name.slice(0, 2)}
                 </div>
                 <div>
-                  <h3 style={{ fontSize: '1.15rem', color: '#fff' }}>{selectedEmployee.name}</h3>
+                  <h3 style={{ fontSize: '1.15rem', color: 'var(--text-main, #0f172a)' }}>{selectedEmployee.name}</h3>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                     {selectedEmployee.position} • {selectedEmployee.department_name || 'General'}
                   </div>

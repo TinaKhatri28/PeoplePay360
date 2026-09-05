@@ -47,7 +47,9 @@ export class ScheduleService {
         return {
           ...s,
           schedule: days,
+          days: days,
           weekly_hours: weeklyHours,
+          total_hours: weeklyHours,
         };
       });
     }, 300);
@@ -64,10 +66,13 @@ export class ScheduleService {
     } catch {
       days = [];
     }
+    const weeklyHours = this.calculateWeeklyHours(days);
     return {
       ...s,
       schedule: days,
-      weekly_hours: this.calculateWeeklyHours(days),
+      days: days,
+      weekly_hours: weeklyHours,
+      total_hours: weeklyHours,
     };
   }
 
@@ -93,7 +98,9 @@ export class ScheduleService {
     return {
       ...created,
       schedule: days,
+      days: days,
       weekly_hours: weeklyHours,
+      total_hours: weeklyHours,
     };
   }
 }

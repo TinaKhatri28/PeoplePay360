@@ -164,12 +164,16 @@ export interface Payslip {
 }
 
 export interface WorkingSchedule {
-  id: number;
+  id: string | number;
   name: string;
-  company: string;
+  company?: string;
   days_per_week: number;
-  total_hours: number;
-  days?: Array<{ day: string; start: string; end: string; breakHours?: number }>;
+  standard_hours?: number;
+  total_hours?: number;
+  weekly_hours?: number;
+  schedule_json?: string;
+  schedule?: Array<{ day: string; start?: string; end?: string; breakHours?: number; isOff?: boolean }>;
+  days?: Array<{ day: string; start?: string; end?: string; breakHours?: number; isOff?: boolean }>;
 }
 
 export interface DashboardData {

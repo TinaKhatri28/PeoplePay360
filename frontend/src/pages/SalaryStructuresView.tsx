@@ -113,8 +113,8 @@ export default function SalaryStructuresView() {
                 borderBottom: '1px solid var(--border-subtle)',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Layers size={20} color="#818cf8" />
-                  <h4 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#fff' }}>{st.name}</h4>
+                  <Layers size={20} color="var(--primary-light, #6366f1)" />
+                  <h4 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-main, #0f172a)' }}>{st.name}</h4>
                 </div>
 
                 {isPayrollAdmin && (
@@ -193,20 +193,35 @@ export default function SalaryStructuresView() {
         </div>
 
         <div className="grid-3">
-          {schedules.map((sc) => (
-            <div key={sc.id} className="card card-interactive">
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff' }}>{sc.name}</h4>
-                <span className="badge badge-info">{sc.days_per_week} Days/Wk</span>
+          {schedules.map((sc) => {
+            const daysList = (sc.schedule || sc.days || []) as Array<{ day: string; start?: string; end?: string; breakHours?: number }>;
+            const totalHours = sc.weekly_hours ?? sc.total_hours ?? (sc.days_per_week * (sc.standard_hours || 8));
+            const firstShift = daysList.find((d) => d.start && d.end);
+
+            return (
+              <div key={sc.id} className="card card-interactive" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                    <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main, #0f172a)' }}>{sc.name}</h4>
+                    <span className="badge badge-info">{sc.days_per_week} Days/Wk</span>
+                  </div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary-dark, #0f172a)', fontFamily: 'var(--font-mono)' }}>
+                    {totalHours} <span style={{ fontSize: '0.825rem', color: 'var(--text-subtle)', fontWeight: 500 }}>hrs/week</span>
+                  </div>
+                </div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '12px', borderTop: '1px solid var(--border-subtle, #e2e8f0)', paddingTop: '8px' }}>
+                  <div style={{ fontWeight: 600, color: 'var(--text-main, #334155)', marginBottom: '3px' }}>
+                    Days: {daysList.length > 0 ? daysList.map((d) => (d.day || '').slice(0, 3)).filter(Boolean).join(', ') : `${sc.days_per_week} days/week`}
+                  </div>
+                  {firstShift && (
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-subtle)' }}>
+                      Shift: {firstShift.start} – {firstShift.end} {firstShift.breakHours ? `(${firstShift.breakHours}h break)` : ''}
+                    </div>
+                  )}
+                </div>
               </div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#a5b4fc', fontFamily: 'var(--font-mono)' }}>
-                {sc.total_hours} <span style={{ fontSize: '0.8rem', color: 'var(--text-subtle)', fontWeight: 400 }}>hrs/week</span>
-              </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '8px' }}>
-                Standard shifts covering {sc.days?.map((d) => d.day.slice(0, 3)).join(', ')}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
