@@ -10,11 +10,14 @@ import {
   X,
   ChevronRight,
   ArrowLeft,
-  DollarSign
+  DollarSign,
+  LayoutDashboard,
+  Coins
 } from 'lucide-react';
 import { apiRequest, downloadPayslipPdf } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { Payrun, Payslip, Employee, SalaryStructure } from '../types';
+import PayrollDashboardView from '../components/PayrollDashboardView';
 
 export default function PayrollView() {
   const { isPayrollUser, isPayrollAdmin } = useAuth();
@@ -22,6 +25,7 @@ export default function PayrollView() {
   const [loading, setLoading] = useState(true);
   const [selectedPayrun, setSelectedPayrun] = useState<Payrun | null>(null);
   const [payrunDetails, setPayrunDetails] = useState<Payrun | null>(null);
+  const [payrollSubTab, setPayrollSubTab] = useState<'dashboard' | 'batches'>('dashboard');
 
   const [showNewModal, setShowNewModal] = useState(false);
   const [newYear, setNewYear] = useState<number>(2026);
@@ -200,27 +204,84 @@ export default function PayrollView() {
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '16px',
+            gap: '12px',
+            background: '#FFFFFF',
+            padding: '8px 12px',
+            borderRadius: 'var(--radius-lg)',
+            border: '1px solid #E2E8F0',
+            boxShadow: 'var(--shadow-sm)',
           }}>
-            <div>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1F2937' }}>Payroll Cycles & Batches</h2>
-              <p style={{ fontSize: '0.8rem', color: '#64748B' }}>
-                Track scheduled disbursements, compute salary rules, and generate payslips
-              </p>
-            </div>
+            <button
+              onClick={() => setPayrollSubTab('dashboard')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 16px',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                background: payrollSubTab === 'dashboard' ? '#1E3A5F' : 'transparent',
+                color: payrollSubTab === 'dashboard' ? '#FFFFFF' : '#64748B',
+                border: 'none',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <LayoutDashboard size={16} />
+              <span>Payroll Analytics Dashboard</span>
+            </button>
 
-            {isPayrollUser && (
-              <button
-                className="btn btn-primary"
-                onClick={() => setShowNewModal(true)}
-              >
-                <Plus size={16} />
-                <span>Create New Payrun</span>
-              </button>
-            )}
+            <button
+              onClick={() => setPayrollSubTab('batches')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 16px',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                background: payrollSubTab === 'batches' ? '#1E3A5F' : 'transparent',
+                color: payrollSubTab === 'batches' ? '#FFFFFF' : '#64748B',
+                border: 'none',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <Coins size={16} />
+              <span>Payrun Cycles & Batches ({payruns.length})</span>
+            </button>
           </div>
+
+          {payrollSubTab === 'dashboard' ? (
+            <PayrollDashboardView />
+          ) : (
+            <>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '16px',
+              }}>
+                <div>
+                  <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1F2937' }}>Payroll Cycles & Batches</h2>
+                  <p style={{ fontSize: '0.8rem', color: '#64748B' }}>
+                    Track scheduled disbursements, compute salary rules, and generate payslips
+                  </p>
+                </div>
+
+                {isPayrollUser && (
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => setShowNewModal(true)}
+                  >
+                    <Plus size={16} />
+                    <span>Create New Payrun</span>
+                  </button>
+                )}
+              </div>
 
           <div className="table-container">
             <table className="data-table">
@@ -273,7 +334,9 @@ export default function PayrollView() {
             </table>
           </div>
         </>
-      ) : (
+      )}
+    </>
+  ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={{
             display: 'flex',

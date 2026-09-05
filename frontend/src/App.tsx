@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -11,10 +11,23 @@ import TimeOffView from './pages/TimeOffView';
 import PayrollView from './pages/PayrollView';
 import SalaryStructuresView from './pages/SalaryStructuresView';
 import UsersView from './pages/UsersView';
+import EmployeeDashboardView from './components/EmployeeDashboardView';
 
 function MainApp() {
-  const { user, loading } = useAuth();
+  const { user, loading, isHRManager, isPayrollUser } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
+
+  const userRoles = user?.roles || [];
+  const isAdmin = userRoles.includes('HR Payroll Admin') || userRoles.includes('Admin');
+  const isManager = isAdmin || isHRManager;
+  const isStaff = isAdmin || isPayrollUser;
+  const isEmployeeOnly = !isManager && !isStaff;
+
+  useEffect(() => {
+    if (isStaff && !isManager && activeTab === 'dashboard') {
+      setActiveTab('payroll');
+    }
+  }, [user]);
 
   if (loading) {
     return (
@@ -60,7 +73,7 @@ function MainApp() {
         <Header activeTab={activeTab} />
 
         <main style={{ flex: 1, padding: '28px 32px 60px', overflowY: 'auto' }}>
-          {activeTab === 'dashboard' && <DashboardView onNavigate={setActiveTab} />}
+          {activeTab === 'dashboard' && (isEmployeeOnly ? <EmployeeDashboardView /> : <DashboardView onNavigate={setActiveTab} />)}
           {activeTab === 'employees' && <EmployeesView />}
           {activeTab === 'contracts' && <ContractsView />}
           {activeTab === 'attendance' && <AttendanceView />}

@@ -20,16 +20,24 @@ interface SidebarProps {
 export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
   const { user, logout } = useAuth();
 
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'employees', label: 'Employees', icon: Users },
-    { id: 'contracts', label: 'Contracts', icon: FileText },
-    { id: 'attendance', label: 'Attendance', icon: Clock },
-    { id: 'timeoff', label: 'Time Off & Leaves', icon: CalendarOff },
-    { id: 'payroll', label: 'Payroll Studio', icon: Coins, highlight: true },
-    { id: 'salary', label: 'Salary & Schedules', icon: Sliders },
-    { id: 'users', label: 'User Governance', icon: UserCheck },
+  const userRoles = user?.roles || [];
+  const isAdmin = userRoles.includes('HR Payroll Admin') || userRoles.includes('Admin');
+  const isHRManager = isAdmin || userRoles.includes('HR Manager');
+  const isPayrollStaff = isAdmin || userRoles.includes('HR Payroll User');
+  const isEmployeeOnly = !isHRManager && !isPayrollStaff;
+
+  const rawNavItems = [
+    { id: 'dashboard', label: isEmployeeOnly ? 'My Dashboard' : 'Dashboard', icon: LayoutDashboard },
+    { id: 'employees', label: 'Employees', icon: Users, allowed: isHRManager || isPayrollStaff },
+    { id: 'contracts', label: 'Contracts', icon: FileText, allowed: isHRManager || isPayrollStaff },
+    { id: 'attendance', label: isEmployeeOnly ? 'My Attendance' : 'Attendance', icon: Clock, allowed: true },
+    { id: 'timeoff', label: isEmployeeOnly ? 'My Leaves & Quotas' : 'Time Off & Leaves', icon: CalendarOff, allowed: true },
+    { id: 'payroll', label: isPayrollStaff ? 'Payroll Dashboard' : 'Payroll Details', icon: Coins, highlight: true, allowed: isHRManager || isPayrollStaff },
+    { id: 'salary', label: 'Salary & Schedules', icon: Sliders, allowed: isHRManager || isPayrollStaff },
+    { id: 'users', label: 'User Governance', icon: UserCheck, allowed: isHRManager },
   ];
+
+  const navItems = rawNavItems.filter(item => item.allowed);
 
   return (
     <aside style={{

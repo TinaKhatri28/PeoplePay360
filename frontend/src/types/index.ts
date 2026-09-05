@@ -167,12 +167,36 @@ export interface WorkingSchedule {
 export interface DashboardData {
   period: { year: number; month: number };
   netSalary: number;
+  netSalaryChange?: string;
   payslipCount: number;
+  paidCount?: number;
+  pendingCount?: number;
+  doneCount?: number;
+  warningCount?: number;
   avgSalary: number;
-  attendanceRate: number;
-  byDepartment: Array<{ name: string; total: number }>;
+  approvedTimeOffDays?: number;
+  attendanceHealth?: number;
+  attendanceRate?: number;
+  byDepartment: Array<{ name: string; total: number; headcount?: number }>;
   monthlyTrend: Array<{ label: string; total: number }>;
-  attendance: { present: number; absent: number; late: number; overtime: number };
-  leave: Array<{ name: string; approved: number; pending: number; remaining: number }>;
+  alerts?: {
+    missingBankCount: number;
+    duplicatePayslipWarning: number;
+    unvalidatedDrafts: number;
+    expiringContracts: number;
+  };
+  attendance: {
+    present: number;
+    absent: number;
+    late: number;
+    overtime: number;
+    missingCheckouts?: number;
+    manualEdits?: number;
+    coveragePct?: number;
+  };
+  timeOff?: Array<{ name: string; approvedDays: number; pending: number; remainingBalance: number | string; unit?: string }>;
+  leave?: Array<{ name: string; approved: number; pending: number; remaining: number }>;
+  departmentOverview?: Array<{ department: string; headcount: number; monthlySalary: number }>;
   payrunStatus: string;
+  modelsToAggregate?: string[];
 }
