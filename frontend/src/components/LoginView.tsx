@@ -1,6 +1,6 @@
 import React, { useState, FormEvent } from 'react';
-import { Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowRight, ArrowLeft, Sparkles, UserCheck, AlertCircle } from 'lucide-react';
-import { useAuth, DEMO_USERS } from '../context/AuthContext';
+import { Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowRight, ArrowLeft, AlertCircle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 interface LoginViewProps {
   onBackToLanding?: () => void;
@@ -36,20 +36,6 @@ export default function LoginView({ onBackToLanding }: LoginViewProps): React.JS
       await login(email, password);
     } catch (err: any) {
       setError(err.message || 'Invalid corporate credentials');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleDemoLogin = async (demoEmail: string, demoPass: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
-    setError(null);
-    setSubmitting(true);
-    try {
-      await login(demoEmail, demoPass);
-    } catch (err: any) {
-      setError(err.message || 'Failed to authenticate demo user');
     } finally {
       setSubmitting(false);
     }
@@ -268,7 +254,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps): React.JS
               </label>
               <a
                 href="#forgot"
-                onClick={(e) => { e.preventDefault(); alert('For demo login, please click one of the quick persona buttons below.'); }}
+                onClick={(e) => { e.preventDefault(); alert('Please contact your system administrator or HR department to reset your password.'); }}
                 style={{
                   fontSize: '0.75rem',
                   color: colors.secondary,
@@ -386,62 +372,6 @@ export default function LoginView({ onBackToLanding }: LoginViewProps): React.JS
             </button>
           </div>
         </form>
-
-        {/* Demo Quick Logins */}
-        <div style={{ marginTop: '1.75rem', paddingTop: '1.25rem', borderTop: `1px solid ${colors.border}` }}>
-          <div style={{
-            fontSize: '0.7rem',
-            fontWeight: 700,
-            color: colors.muted,
-            textTransform: 'uppercase',
-            letterSpacing: '0.06em',
-            marginBottom: '0.75rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.35rem',
-          }}>
-            <Sparkles size={13} color={colors.primary} />
-            <span>1-Click Demo Personas</span>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {DEMO_USERS.map((demo) => (
-              <button
-                key={demo.email}
-                type="button"
-                onClick={() => handleDemoLogin(demo.email, demo.password)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '0.5rem 0.75rem',
-                  borderRadius: '0.5rem',
-                  backgroundColor: colors.bg,
-                  border: `1px solid ${colors.border}`,
-                  color: colors.text,
-                  fontSize: '0.78rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                  textAlign: 'left',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = '#000000';
-                  e.currentTarget.style.backgroundColor = '#F1F5F9';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = colors.border;
-                  e.currentTarget.style.backgroundColor = colors.bg;
-                }}
-              >
-                <div>
-                  <div style={{ fontWeight: 700, color: colors.primary }}>{demo.role}</div>
-                  <div style={{ fontSize: '0.7rem', color: colors.muted }}>{demo.email}</div>
-                </div>
-                <UserCheck size={14} color={colors.secondary} />
-              </button>
-            ))}
-          </div>
-        </div>
 
         {/* Footer */}
         <div

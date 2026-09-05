@@ -25,7 +25,7 @@ import {
   Check,
   ChevronLeft
 } from 'lucide-react';
-import { useAuth, DEMO_USERS } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 interface LandingPageProps {
   onEnterLogin?: () => void;
@@ -53,19 +53,6 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
     }
   };
 
-  const handleQuickDemoLogin = async (demoEmail: string, demoPass: string) => {
-    setLoginEmail(demoEmail);
-    setLoginPassword(demoPass);
-    setAuthError(null);
-    setSubmitting(true);
-    try {
-      await login(demoEmail, demoPass);
-    } catch (err: any) {
-      setAuthError(err.message || 'Failed to authenticate demo user');
-    } finally {
-      setSubmitting(false);
-    }
-  };
   // White, Black & Silver Platinum Palette
   const palette = {
     cream: '#FFFFFF',
@@ -746,46 +733,6 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
                   </button>
                 </div>
               </form>
-
-              {/* 1-Click Demo Personas */}
-              <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: `1px solid ${palette.rosewood}25` }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem', fontWeight: 800, color: palette.rosewood, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.6rem' }}>
-                  <Sparkles size={12} color={palette.rosewood} />
-                  <span>1-Click Instant Demo Personas</span>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.45rem' }}>
-                  {DEMO_USERS.map((demo) => (
-                    <button
-                      key={demo.email}
-                      type="button"
-                      onClick={() => handleQuickDemoLogin(demo.email, demo.password)}
-                      style={{
-                        padding: '0.45rem 0.6rem',
-                        borderRadius: '6px',
-                        backgroundColor: palette.cream,
-                        border: `1px solid ${palette.rosewood}30`,
-                        color: palette.charcoal,
-                        fontSize: '0.74rem',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        transition: 'all 0.15s ease',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = palette.rosewood;
-                        e.currentTarget.style.color = palette.cream;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = palette.cream;
-                        e.currentTarget.style.color = palette.charcoal;
-                      }}
-                    >
-                      <div style={{ fontWeight: 800 }}>{demo.role}</div>
-                      <div style={{ fontSize: '0.65rem', opacity: 0.75 }}>{demo.email}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
         </div>
