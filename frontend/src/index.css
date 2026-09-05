@@ -3,17 +3,31 @@
    ========================================================================== */
 
 :root {
-  /* Primary & Brand */
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
-  --primary-light: rgba(99, 102, 241, 0.12);
-  --primary-glow: rgba(99, 102, 241, 0.35);
+  /* ==========================================================================
+     PeoplePay360 — Official Corporate Color System
+     ========================================================================== */
+  --color-primary: #1E3A5F;        /* Deep Navy */
+  --color-secondary: #3F5F7F;      /* Steel Blue */
+  --color-bg: #F8F9FA;             /* Warm White */
+  --color-card: #FFFFFF;           /* White */
+  --color-text-main: #1F2937;      /* Charcoal */
+  --color-text-secondary: #64748B; /* Slate Gray */
+  --color-success: #2E7D5B;        /* Muted Green */
+  --color-warning: #B7791F;        /* Amber */
+  --color-error: #B42318;          /* Deep Red */
+  --color-border: #E2E8F0;         /* Light Gray */
 
-  --secondary: #8b5cf6;
-  --accent-cyan: #06b6d4;
-  --accent-emerald: #10b981;
-  --accent-amber: #f59e0b;
-  --accent-rose: #f43f5e;
+  /* Primary & Brand */
+  --primary: #1E3A5F;
+  --primary-hover: #152B47;
+  --primary-light: rgba(30, 58, 95, 0.12);
+  --primary-glow: rgba(30, 58, 95, 0.35);
+
+  --secondary: #3F5F7F;
+  --accent-cyan: #3F5F7F;
+  --accent-emerald: #2E7D5B;
+  --accent-amber: #B7791F;
+  --accent-rose: #B42318;
 
   /* Surfaces & Backgrounds */
   --bg-app: #090d16;
