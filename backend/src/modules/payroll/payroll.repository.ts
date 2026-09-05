@@ -221,6 +221,30 @@ export class PayrollRepository {
     });
   }
 
+  /**
+   * ATOMIC STATUS TRANSITION (Row Lock / Compare-And-Swap):
+   * Transitions payrun to targetStatus ONLY IF current status is in allowedCurrentStatuses.
+   * Guarantees atomic mutual exclusion against concurrent compute requests.
+   */
+  async transitionPayrunStatus(
+    payrunId: string,
+    organizationId: string,
+    targetStatus: string,
+    allowedCurrentStatuses: string[]
+  ): Promise<number> {
+    const result = await prisma.payrun.updateMany({
+      where: {
+        id: payrunId,
+        organization_id: organizationId,
+        status: { in: allowedCurrentStatuses },
+      },
+      data: {
+        status: targetStatus,
+      },
+    });
+    return result.count;
+  }
+
   async findPayslipById(organizationId: string, payslipId: string) {
     return prisma.payslip.findFirst({
       where: { id: payslipId, organization_id: organizationId },

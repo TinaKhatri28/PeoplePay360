@@ -118,17 +118,32 @@ export class PayrollService {
    * Execute full payroll computation across all employees in the payrun
    */
   async computePayrun(organizationId: string, payrunId: string, actorUserId?: string) {
+    // Atomic Compare-And-Swap to prevent Race Condition 1 (Concurrent Payrun Computation)
+    const updatedCount = await this.repo.transitionPayrunStatus(
+      payrunId,
+      organizationId,
+      'Processing',
+      ['Draft', 'Computed']
+    );
+
+    if (updatedCount === 0) {
+      const existing = await this.repo.findPayrunById(organizationId, payrunId);
+      if (!existing) {
+        throw new NotFoundError(`Payrun with id ${payrunId} not found`);
+      }
+      if (existing.status === 'Processing') {
+        throw new ConflictError('Payrun computation is already in progress by another request');
+      }
+      if (existing.status === 'Paid') {
+        throw new ConflictError('Cannot recompute a payrun that has already been marked Paid');
+      }
+      throw new ConflictError(`Cannot compute payrun in status '${existing.status}'`);
+    }
+
     const run = await this.repo.findPayrunById(organizationId, payrunId);
     if (!run) {
       throw new NotFoundError(`Payrun with id ${payrunId} not found`);
     }
-
-    // State machine check
-    if (run.status === 'Paid') {
-      throw new ConflictError('Cannot recompute a payrun that has already been marked Paid');
-    }
-
-    await this.repo.updatePayrunStatus(payrunId, 'Processing');
 
     try {
       const employeeIds = run.payslips.map((s) => s.employee_id);

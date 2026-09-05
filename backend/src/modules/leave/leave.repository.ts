@@ -1,4 +1,5 @@
 import { prisma } from '../../config/database';
+import { InsufficientLeaveBalanceError, NotFoundError } from '../../shared/errors/app.error';
 
 export class LeaveRepository {
   async findAllTypes(organizationId: string) {
@@ -155,25 +156,40 @@ export class LeaveRepository {
         return req;
       }
 
-      // 2. If approving, deduct allocation
+      // 2. If approving, atomically deduct allocation with balance condition to prevent Race Condition 2
       if (params.newStatus === 'Approved' && params.allocationId && params.deductDuration) {
         const alloc = await tx.leaveAllocation.findFirst({
           where: { id: params.allocationId, organization_id: params.organizationId },
         });
 
         if (!alloc) {
-          throw new Error('Leave allocation not found');
+          throw new NotFoundError('Leave allocation not found');
         }
 
-        const newTaken = alloc.taken + params.deductDuration;
-        if (newTaken > alloc.allocated) {
-          throw new Error(`Insufficient leave balance. Available: ${alloc.allocated - alloc.taken}, requested: ${params.deductDuration}`);
+        const maxAllowedTaken = alloc.allocated - params.deductDuration;
+        if (alloc.taken > maxAllowedTaken) {
+          throw new InsufficientLeaveBalanceError(
+            `Insufficient leave balance. Available: ${alloc.allocated - alloc.taken}, requested: ${params.deductDuration}`
+          );
         }
 
-        await tx.leaveAllocation.update({
-          where: { id: alloc.id },
-          data: { taken: newTaken },
+        // Atomic conditional increment: eliminates race condition and prevents concurrent over-deduction
+        const updateResult = await tx.leaveAllocation.updateMany({
+          where: {
+            id: alloc.id,
+            organization_id: params.organizationId,
+            taken: { lte: maxAllowedTaken },
+          },
+          data: {
+            taken: { increment: params.deductDuration },
+          },
         });
+
+        if (updateResult.count === 0) {
+          throw new InsufficientLeaveBalanceError(
+            'Concurrent approval conflict: Insufficient leave balance available to approve this request.'
+          );
+        }
       }
 
       // 3. Update the request status
