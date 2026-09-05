@@ -621,8 +621,23 @@ export default function PayrollView() {
 
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <label className="form-label" style={{ marginBottom: 0 }}>
-                      Eligible Employees with Active Contracts ({eligible.length})
+                    <label className="form-label" style={{ marginBottom: 0, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        aria-label="Select all eligible employees"
+                        checked={eligible.length > 0 && selectedEmpIds.length === eligible.length}
+                        ref={(el) => {
+                          if (el) {
+                            el.indeterminate = selectedEmpIds.length > 0 && selectedEmpIds.length < eligible.length;
+                          }
+                        }}
+                        onChange={(e) => {
+                          if (e.target.checked) setSelectedEmpIds(eligible.map((emp) => emp.id));
+                          else setSelectedEmpIds([]);
+                        }}
+                        style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#1E3A5F' }}
+                      />
+                      <span>Eligible Employees ({selectedEmpIds.length}/{eligible.length})</span>
                     </label>
                     <button
                       type="button"

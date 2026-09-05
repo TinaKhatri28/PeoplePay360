@@ -16,7 +16,9 @@ import {
   Building2,
   UserCheck,
   Info,
-  ChevronRight
+  ChevronRight,
+  Download,
+  CheckSquare
 } from 'lucide-react';
 import { apiRequest } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -30,6 +32,10 @@ export default function AttendanceView() {
   const [loading, setLoading] = useState(true);
   const [punching, setPunching] = useState(false);
   const [punchMsg, setPunchMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Multi-Selection State for Employees / Records
+  const [selectedLogIds, setSelectedLogIds] = useState<string[]>([]);
+  const [bulkUpdating, setBulkUpdating] = useState(false);
 
   // Filters (Matching Excalidraw Screenshot 1)
   const [search, setSearch] = useState('');
@@ -240,6 +246,51 @@ export default function AttendanceView() {
     } catch (err: any) {
       alert(err.message || 'Failed to update attendance record');
     }
+  };
+
+  const handleBulkUpdateStatus = async (newStatus: 'Present' | 'Absent' | 'Late') => {
+    if (!selectedLogIds.length) return;
+    setBulkUpdating(true);
+    try {
+      await Promise.all(
+        selectedLogIds.map((id) =>
+          apiRequest(`/api/attendance/${id}`, {
+            method: 'PUT',
+            body: { status: newStatus },
+          })
+        )
+      );
+      setSelectedLogIds([]);
+      fetchData();
+      window.dispatchEvent(new Event('attendance-updated'));
+    } catch (err: any) {
+      alert(err.message || 'Failed to update selected attendance records');
+    } finally {
+      setBulkUpdating(false);
+    }
+  };
+
+  const handleExportSelectedCSV = () => {
+    const selectedRecords = filtered.filter((r) => selectedLogIds.includes(String(r.id)));
+    if (!selectedRecords.length) return;
+    const headers = ['Employee', 'Date', 'Check In', 'Check Out', 'Worked Hours', 'Overtime', 'Status'];
+    const rows = selectedRecords.map((r) => [
+      `"${r.employee_name || ''}"`,
+      `"${r.date || ''}"`,
+      `"${r.check_in || ''}"`,
+      `"${r.check_out || ''}"`,
+      r.worked_hours || 0,
+      r.overtime_hours || 0,
+      `"${r.status || ''}"`,
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `attendance_selected_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleCreateNewManual = async (e: FormEvent) => {
@@ -994,11 +1045,193 @@ export default function AttendanceView() {
         </div>
       </div>
 
+      {/* Bulk Selection Bar */}
+      {selectedLogIds.length > 0 && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '12px 18px',
+          background: '#1E3A5F',
+          color: '#FFFFFF',
+          borderRadius: 'var(--radius-md)',
+          boxShadow: '0 4px 14px rgba(30, 58, 95, 0.25)',
+          animation: 'fadeIn 0.2s ease',
+          flexWrap: 'wrap',
+          gap: '12px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minWidth: '24px',
+              height: '24px',
+              padding: '0 8px',
+              borderRadius: '6px',
+              background: 'rgba(255, 255, 255, 0.2)',
+              fontWeight: 700,
+              fontSize: '0.8rem',
+            }}>
+              {selectedLogIds.length}
+            </div>
+            <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>
+              {selectedLogIds.length} employee{selectedLogIds.length === 1 ? '' : 's'} / attendance record{selectedLogIds.length === 1 ? '' : 's'} selected
+            </span>
+            <button
+              type="button"
+              onClick={() => setSelectedLogIds([])}
+              style={{
+                background: 'none',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                color: '#FFFFFF',
+                borderRadius: 'var(--radius-xs)',
+                padding: '4px 10px',
+                fontSize: '0.75rem',
+                cursor: 'pointer',
+                fontWeight: 600,
+              }}
+            >
+              Clear Selection
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedLogIds(filtered.map((l) => String(l.id)))}
+              style={{
+                background: 'none',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                color: '#FFFFFF',
+                borderRadius: 'var(--radius-xs)',
+                padding: '4px 10px',
+                fontSize: '0.75rem',
+                cursor: 'pointer',
+                fontWeight: 600,
+              }}
+            >
+              Select All ({filtered.length})
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            {isHRManager && (
+              <>
+                <button
+                  type="button"
+                  disabled={bulkUpdating}
+                  onClick={() => handleBulkUpdateStatus('Present')}
+                  style={{
+                    background: '#2E7D5B',
+                    border: 'none',
+                    color: '#FFFFFF',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '6px 14px',
+                    fontSize: '0.8rem',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <CheckCircle2 size={14} />
+                  <span>Mark Present</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={bulkUpdating}
+                  onClick={() => handleBulkUpdateStatus('Late')}
+                  style={{
+                    background: '#D97706',
+                    border: 'none',
+                    color: '#FFFFFF',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '6px 14px',
+                    fontSize: '0.8rem',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                  }}
+                >
+                  Mark Late
+                </button>
+
+                <button
+                  type="button"
+                  disabled={bulkUpdating}
+                  onClick={() => handleBulkUpdateStatus('Absent')}
+                  style={{
+                    background: '#DC2626',
+                    border: 'none',
+                    color: '#FFFFFF',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '6px 14px',
+                    fontSize: '0.8rem',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                  }}
+                >
+                  Mark Absent
+                </button>
+              </>
+            )}
+
+            <button
+              type="button"
+              onClick={handleExportSelectedCSV}
+              style={{
+                background: 'rgba(255, 255, 255, 0.15)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                color: '#FFFFFF',
+                borderRadius: 'var(--radius-sm)',
+                padding: '6px 14px',
+                fontSize: '0.8rem',
+                cursor: 'pointer',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}
+            >
+              <Download size={14} />
+              <span>Export CSV</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Attendance Table */}
       <div className="table-container">
         <table className="data-table">
           <thead>
             <tr>
+              <th style={{ width: '48px', textAlign: 'center', padding: '12px 8px' }}>
+                <input
+                  type="checkbox"
+                  aria-label="Select all employees"
+                  checked={filtered.length > 0 && selectedLogIds.length === filtered.length}
+                  ref={(el) => {
+                    if (el) {
+                      el.indeterminate = selectedLogIds.length > 0 && selectedLogIds.length < filtered.length;
+                    }
+                  }}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedLogIds(filtered.map((log) => String(log.id)));
+                    } else {
+                      setSelectedLogIds([]);
+                    }
+                  }}
+                  style={{
+                    cursor: 'pointer',
+                    width: '18px',
+                    height: '18px',
+                    accentColor: '#1E3A5F',
+                    borderRadius: '4px',
+                    verticalAlign: 'middle',
+                  }}
+                  title="Select all employees"
+                />
+              </th>
               <th>Employee</th>
               <th>Date</th>
               <th>Check In</th>
@@ -1012,79 +1245,111 @@ export default function AttendanceView() {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={8} style={{ textAlign: 'center', padding: '36px', color: '#64748B' }}>
+                <td colSpan={9} style={{ textAlign: 'center', padding: '36px', color: '#64748B' }}>
                   No attendance records found matching your filters.
                 </td>
               </tr>
             ) : (
-              filtered.map((log) => (
-                <tr
-                  key={log.id}
-                  onClick={() => openRecordDetails(log)}
-                  style={{
-                    cursor: 'pointer',
-                    transition: 'background-color 0.15s ease',
-                  }}
-                  title="Click to open attendance details"
-                >
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontWeight: 700, color: '#1E3A5F' }}>{log.employee_name}</span>
-                      <ChevronRight size={14} color="#94A3B8" />
-                    </div>
-                  </td>
-                  <td>
-                    <span style={{ fontSize: '0.85rem', fontFamily: 'var(--font-mono)' }}>
-                      {formatDate(log.date)}
-                    </span>
-                  </td>
-                  <td>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: '#1F2937' }}>
-                      {formatTimeOnly(log.check_in)}
-                    </span>
-                  </td>
-                  <td>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: log.check_out ? '#1F2937' : '#94A3B8' }}>
-                      {log.check_out ? formatTimeOnly(log.check_out) : '—'}
-                    </span>
-                  </td>
-                  <td>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: log.worked_hours > 0 ? '#1E3A5F' : '#94A3B8' }}>
-                      {Number(log.worked_hours || 0).toFixed(2)}
-                    </span>
-                  </td>
-                  <td>
-                    <span style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontWeight: log.overtime_hours > 0 ? 700 : 400,
-                      color: log.overtime_hours > 0 ? '#2E7D5B' : '#94A3B8',
-                    }}>
-                      {log.overtime_hours > 0 ? `+${Number(log.overtime_hours).toFixed(2)} hrs` : '0.00'}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`badge ${
-                      log.status === 'Present' ? 'badge-success' :
-                      log.status === 'Late' ? 'badge-warning' : 'badge-danger'
-                    }`}>
-                      <span className="badge-dot" />
-                      {log.status}
-                    </span>
-                  </td>
-                  <td style={{ textAlign: 'right' }}>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openRecordDetails(log);
-                      }}
-                      className="btn btn-secondary"
-                      style={{ padding: '4px 10px', fontSize: '0.75rem', fontWeight: 600, color: '#1E3A5F' }}
+              filtered.map((log) => {
+                const isSelected = selectedLogIds.includes(String(log.id));
+                return (
+                  <tr
+                    key={log.id}
+                    onClick={() => openRecordDetails(log)}
+                    style={{
+                      cursor: 'pointer',
+                      transition: 'background-color 0.15s ease',
+                      backgroundColor: isSelected ? 'rgba(30, 58, 95, 0.05)' : undefined,
+                    }}
+                    title="Click to open attendance details"
+                  >
+                    <td
+                      style={{ width: '48px', textAlign: 'center', padding: '12px 8px' }}
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      View Details
-                    </button>
-                  </td>
-                </tr>
-              ))
+                      <input
+                        type="checkbox"
+                        aria-label={`Select ${log.employee_name}`}
+                        checked={isSelected}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          const idStr = String(log.id);
+                          if (e.target.checked) {
+                            setSelectedLogIds((prev) => [...prev, idStr]);
+                          } else {
+                            setSelectedLogIds((prev) => prev.filter((id) => id !== idStr));
+                          }
+                        }}
+                        style={{
+                          cursor: 'pointer',
+                          width: '18px',
+                          height: '18px',
+                          accentColor: '#1E3A5F',
+                          borderRadius: '4px',
+                          verticalAlign: 'middle',
+                        }}
+                        title={`Select ${log.employee_name}`}
+                      />
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontWeight: 700, color: '#1E3A5F' }}>{log.employee_name}</span>
+                        <ChevronRight size={14} color="#94A3B8" />
+                      </div>
+                    </td>
+                    <td>
+                      <span style={{ fontSize: '0.85rem', fontFamily: 'var(--font-mono)' }}>
+                        {formatDate(log.date)}
+                      </span>
+                    </td>
+                    <td>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: '#1F2937' }}>
+                        {formatTimeOnly(log.check_in)}
+                      </span>
+                    </td>
+                    <td>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: log.check_out ? '#1F2937' : '#94A3B8' }}>
+                        {log.check_out ? formatTimeOnly(log.check_out) : '—'}
+                      </span>
+                    </td>
+                    <td>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: log.worked_hours > 0 ? '#1E3A5F' : '#94A3B8' }}>
+                        {Number(log.worked_hours || 0).toFixed(2)}
+                      </span>
+                    </td>
+                    <td>
+                      <span style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontWeight: log.overtime_hours > 0 ? 700 : 400,
+                        color: log.overtime_hours > 0 ? '#2E7D5B' : '#94A3B8',
+                      }}>
+                        {log.overtime_hours > 0 ? `+${Number(log.overtime_hours).toFixed(2)} hrs` : '0.00'}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`badge ${
+                        log.status === 'Present' ? 'badge-success' :
+                        log.status === 'Late' ? 'badge-warning' : 'badge-danger'
+                      }`}>
+                        <span className="badge-dot" />
+                        {log.status}
+                      </span>
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openRecordDetails(log);
+                        }}
+                        className="btn btn-secondary"
+                        style={{ padding: '4px 10px', fontSize: '0.75rem', fontWeight: 600, color: '#1E3A5F' }}
+                      >
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

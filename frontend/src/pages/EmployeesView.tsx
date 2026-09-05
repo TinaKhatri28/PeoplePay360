@@ -12,7 +12,8 @@ import {
   X,
   CheckCircle2,
   LayoutGrid,
-  List
+  List,
+  Download
 } from 'lucide-react';
 import { apiRequest } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -31,6 +32,7 @@ export default function EmployeesView({ onNavigate }: EmployeesViewProps = {}) {
   const [search, setSearch] = useState('');
   const [selectedDept, setSelectedDept] = useState('All');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [selectedEmpIds, setSelectedEmpIds] = useState<number[]>([]);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
@@ -134,6 +136,30 @@ export default function EmployeesView({ onNavigate }: EmployeesViewProps = {}) {
     return true;
   });
 
+  const handleExportSelectedCSV = () => {
+    const selectedEmployees = filtered.filter((e) => selectedEmpIds.includes(e.id));
+    if (!selectedEmployees.length) return;
+    const headers = ['ID', 'Name', 'Email', 'Phone', 'Department', 'Position', 'Schedule', 'Status'];
+    const rows = selectedEmployees.map((e) => [
+      e.id,
+      `"${e.name || ''}"`,
+      `"${e.email || ''}"`,
+      `"${e.phone || ''}"`,
+      `"${e.department_name || ''}"`,
+      `"${e.position || ''}"`,
+      `"${e.schedule_name || ''}"`,
+      `"${e.status || ''}"`,
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `employees_selected_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (loading && !employees.length) {
     return <div style={{ padding: '20px', color: '#64748B' }}>Loading workforce directory...</div>;
   }
@@ -174,7 +200,7 @@ export default function EmployeesView({ onNavigate }: EmployeesViewProps = {}) {
 
           <div style={{
             display: 'flex',
-            background: 'rgba(255, 255, 255, 0.05)',
+            background: 'var(--bg-card)',
             borderRadius: 'var(--radius-md)',
             padding: '2px',
             border: '1px solid var(--border-subtle)',
@@ -221,76 +247,222 @@ export default function EmployeesView({ onNavigate }: EmployeesViewProps = {}) {
         )}
       </div>
 
+      {selectedEmpIds.length > 0 && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '12px 18px',
+          background: '#1E3A5F',
+          color: '#FFFFFF',
+          borderRadius: 'var(--radius-md)',
+          boxShadow: '0 4px 14px rgba(30, 58, 95, 0.25)',
+          animation: 'fadeIn 0.2s ease',
+          flexWrap: 'wrap',
+          gap: '12px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minWidth: '24px',
+              height: '24px',
+              padding: '0 8px',
+              borderRadius: '6px',
+              background: 'rgba(255, 255, 255, 0.2)',
+              fontWeight: 700,
+              fontSize: '0.8rem',
+            }}>
+              {selectedEmpIds.length}
+            </div>
+            <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>
+              {selectedEmpIds.length} employee{selectedEmpIds.length === 1 ? '' : 's'} selected
+            </span>
+            <button
+              type="button"
+              onClick={() => setSelectedEmpIds([])}
+              style={{
+                background: 'none',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                color: '#FFFFFF',
+                borderRadius: 'var(--radius-xs)',
+                padding: '4px 10px',
+                fontSize: '0.75rem',
+                cursor: 'pointer',
+                fontWeight: 600,
+              }}
+            >
+              Clear Selection
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedEmpIds(filtered.map((e) => e.id))}
+              style={{
+                background: 'none',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                color: '#FFFFFF',
+                borderRadius: 'var(--radius-xs)',
+                padding: '4px 10px',
+                fontSize: '0.75rem',
+                cursor: 'pointer',
+                fontWeight: 600,
+              }}
+            >
+              Select All ({filtered.length})
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              type="button"
+              onClick={handleExportSelectedCSV}
+              style={{
+                background: 'rgba(255, 255, 255, 0.15)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                color: '#FFFFFF',
+                borderRadius: 'var(--radius-sm)',
+                padding: '6px 14px',
+                fontSize: '0.8rem',
+                cursor: 'pointer',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}
+            >
+              <Download size={14} />
+              <span>Export CSV</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {viewMode === 'grid' ? (
         <div className="grid-3">
-          {filtered.map((emp) => (
-            <div
-              key={emp.id}
-              className="card card-interactive"
-              style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '14px' }}
-              onClick={() => openEmployeeDetail(emp)}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                <div style={{
-                  width: '46px',
-                  height: '46px',
-                  borderRadius: 'var(--radius-md)',
-                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+          {filtered.map((emp) => {
+            const isSelected = selectedEmpIds.includes(emp.id);
+            return (
+              <div
+                key={emp.id}
+                className="card card-interactive"
+                style={{
+                  cursor: 'pointer',
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 700,
-                  fontSize: '1rem',
-                  color: '#fff',
-                  boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
-                }}>
-                  {emp.avatar_initials || emp.name.slice(0, 2).toUpperCase()}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main, #0f172a)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {emp.name}
+                  flexDirection: 'column',
+                  gap: '14px',
+                  position: 'relative',
+                  border: isSelected ? '2px solid #1E3A5F' : undefined,
+                  backgroundColor: isSelected ? 'rgba(30, 58, 95, 0.03)' : undefined,
+                }}
+                onClick={() => openEmployeeDetail(emp)}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <input
+                    type="checkbox"
+                    aria-label={`Select ${emp.name}`}
+                    checked={isSelected}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      if (e.target.checked) setSelectedEmpIds((prev) => [...prev, emp.id]);
+                      else setSelectedEmpIds((prev) => prev.filter((id) => id !== emp.id));
+                    }}
+                    style={{
+                      cursor: 'pointer',
+                      width: '18px',
+                      height: '18px',
+                      accentColor: '#1E3A5F',
+                      borderRadius: '4px',
+                    }}
+                  />
+                  <div style={{
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: 'var(--radius-md)',
+                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 700,
+                    fontSize: '0.95rem',
+                    color: '#fff',
+                    boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
+                    flexShrink: 0,
+                  }}>
+                    {emp.avatar_initials || emp.name.slice(0, 2).toUpperCase()}
                   </div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Briefcase size={12} />
-                    <span>{emp.position || 'Employee'}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main, #0f172a)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {emp.name}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Briefcase size={12} />
+                      <span>{emp.position || 'Employee'}</span>
+                    </div>
                   </div>
+                  <span className={`badge ${emp.status === 'Active' ? 'badge-success' : 'badge-neutral'}`}>
+                    <span className="badge-dot" />
+                    {emp.status}
+                  </span>
                 </div>
-                <span className={`badge ${emp.status === 'Active' ? 'badge-success' : 'badge-neutral'}`}>
-                  <span className="badge-dot" />
-                  {emp.status}
-                </span>
-              </div>
 
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
-                padding: '10px 12px',
-                background: 'rgba(255, 255, 255, 0.02)',
-                borderRadius: 'var(--radius-md)',
-                fontSize: '0.78rem',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)' }}>
-                  <Mail size={13} color="#818cf8" />
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{emp.email}</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)' }}>
-                  <Building size={13} color="#06b6d4" />
-                  <span>{emp.department_name || 'Unassigned Department'}</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)' }}>
-                  <CreditCard size={13} color={emp.bank_account ? '#10b981' : '#f59e0b'} />
-                  <span>{emp.bank_account ? `Bank: ${emp.bank_account}` : 'No bank account linked'}</span>
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                  padding: '10px 12px',
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  borderRadius: 'var(--radius-md)',
+                  fontSize: '0.78rem',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)' }}>
+                    <Mail size={13} color="#818cf8" />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{emp.email}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)' }}>
+                    <Building size={13} color="#06b6d4" />
+                    <span>{emp.department_name || 'Unassigned Department'}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)' }}>
+                    <CreditCard size={13} color={emp.bank_account ? '#10b981' : '#f59e0b'} />
+                    <span>{emp.bank_account ? `Bank: ${emp.bank_account}` : 'No bank account linked'}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div className="table-container">
           <table className="data-table">
             <thead>
               <tr>
+                <th style={{ width: '48px', textAlign: 'center', padding: '12px 8px' }}>
+                  <input
+                    type="checkbox"
+                    aria-label="Select all employees"
+                    checked={filtered.length > 0 && selectedEmpIds.length === filtered.length}
+                    ref={(el) => {
+                      if (el) {
+                        el.indeterminate = selectedEmpIds.length > 0 && selectedEmpIds.length < filtered.length;
+                      }
+                    }}
+                    onChange={(e) => {
+                      if (e.target.checked) setSelectedEmpIds(filtered.map((e) => e.id));
+                      else setSelectedEmpIds([]);
+                    }}
+                    style={{
+                      cursor: 'pointer',
+                      width: '18px',
+                      height: '18px',
+                      accentColor: '#1E3A5F',
+                      borderRadius: '4px',
+                      verticalAlign: 'middle',
+                    }}
+                    title="Select all employees"
+                  />
+                </th>
                 <th>Employee</th>
                 <th>Department</th>
                 <th>Position</th>
@@ -301,50 +473,83 @@ export default function EmployeesView({ onNavigate }: EmployeesViewProps = {}) {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((emp) => (
-                <tr key={emp.id}>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '50%',
-                        background: '#6366f1',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontWeight: 700,
-                        fontSize: '0.75rem',
-                        color: '#fff',
-                      }}>
-                        {emp.avatar_initials || emp.name.slice(0, 2)}
-                      </div>
-                      <span style={{ fontWeight: 600 }}>{emp.name}</span>
-                    </div>
-                  </td>
-                  <td>{emp.department_name || '—'}</td>
-                  <td>{emp.position || '—'}</td>
-                  <td>
-                    <div>{emp.email}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>{emp.phone || '—'}</div>
-                  </td>
-                  <td>{emp.schedule_name || 'Standard'}</td>
-                  <td>
-                    <span className={`badge ${emp.status === 'Active' ? 'badge-success' : 'badge-neutral'}`}>
-                      <span className="badge-dot" />
-                      {emp.status}
-                    </span>
-                  </td>
-                  <td>
-                    <button
-                      className="btn btn-secondary btn-sm"
-                      onClick={() => openEmployeeDetail(emp)}
+              {filtered.map((emp) => {
+                const isSelected = selectedEmpIds.includes(emp.id);
+                return (
+                  <tr
+                    key={emp.id}
+                    style={{
+                      backgroundColor: isSelected ? 'rgba(30, 58, 95, 0.05)' : undefined,
+                      transition: 'background-color 0.15s ease',
+                    }}
+                  >
+                    <td
+                      style={{ width: '48px', textAlign: 'center', padding: '12px 8px' }}
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      View Profile
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                      <input
+                        type="checkbox"
+                        aria-label={`Select ${emp.name}`}
+                        checked={isSelected}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          if (e.target.checked) setSelectedEmpIds((prev) => [...prev, emp.id]);
+                          else setSelectedEmpIds((prev) => prev.filter((id) => id !== emp.id));
+                        }}
+                        style={{
+                          cursor: 'pointer',
+                          width: '18px',
+                          height: '18px',
+                          accentColor: '#1E3A5F',
+                          borderRadius: '4px',
+                          verticalAlign: 'middle',
+                        }}
+                        title={`Select ${emp.name}`}
+                      />
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          background: '#6366f1',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: 700,
+                          fontSize: '0.75rem',
+                          color: '#fff',
+                        }}>
+                          {emp.avatar_initials || emp.name.slice(0, 2)}
+                        </div>
+                        <span style={{ fontWeight: 600 }}>{emp.name}</span>
+                      </div>
+                    </td>
+                    <td>{emp.department_name || '—'}</td>
+                    <td>{emp.position || '—'}</td>
+                    <td>
+                      <div>{emp.email}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>{emp.phone || '—'}</div>
+                    </td>
+                    <td>{emp.schedule_name || 'Standard'}</td>
+                    <td>
+                      <span className={`badge ${emp.status === 'Active' ? 'badge-success' : 'badge-neutral'}`}>
+                        <span className="badge-dot" />
+                        {emp.status}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => openEmployeeDetail(emp)}
+                      >
+                        View Profile
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
