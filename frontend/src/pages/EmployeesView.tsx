@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, FormEvent } from 'react';
 import {
-  Users,
   Search,
   Plus,
   Mail,
-  Phone,
   Briefcase,
   Building,
   CreditCard,
@@ -13,30 +11,35 @@ import {
   FileText,
   X,
   CheckCircle2,
-  AlertCircle,
   LayoutGrid,
   List
 } from 'lucide-react';
 import { apiRequest } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { Employee, Department, WorkingSchedule } from '../types';
 
 export default function EmployeesView() {
   const { isHRManager } = useAuth();
-  const [employees, setEmployees] = useState([]);
-  const [departments, setDepartments] = useState([]);
-  const [schedules, setSchedules] = useState([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [schedules, setSchedules] = useState<WorkingSchedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedDept, setSelectedDept] = useState('All');
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'table'
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
-  // Modals
   const [showAddModal, setShowAddModal] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [empDetails, setEmpDetails] = useState(null);
-  const [detailTab, setDetailTab] = useState('overview'); // overview, contracts, attendance, timeoff, allocations
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [empDetails, setEmpDetails] = useState<{
+    full: any;
+    contracts: any[];
+    attendance: any[];
+    timeoff: any[];
+    allocations: any[];
+    payslips: any[];
+  } | null>(null);
+  const [detailTab, setDetailTab] = useState('overview');
 
-  // New Employee Form State
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -47,16 +50,16 @@ export default function EmployeesView() {
     work_location: 'Mumbai HQ',
     bank_account: '',
   });
-  const [formError, setFormError] = useState(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const fetchEmployees = async () => {
     try {
       const q = search ? `?search=${encodeURIComponent(search)}` : '';
       const [empData, deptData, schedData] = await Promise.all([
-        apiRequest(`/api/employees${q}`),
-        apiRequest('/api/employees/meta/departments'),
-        apiRequest('/api/schedules'),
+        apiRequest<Employee[]>(`/api/employees${q}`),
+        apiRequest<Department[]>('/api/employees/meta/departments'),
+        apiRequest<WorkingSchedule[]>('/api/schedules'),
       ]);
       setEmployees(empData);
       setDepartments(deptData);
@@ -72,7 +75,7 @@ export default function EmployeesView() {
     fetchEmployees();
   }, [search]);
 
-  const openEmployeeDetail = async (emp) => {
+  const openEmployeeDetail = async (emp: Employee) => {
     setSelectedEmployee(emp);
     setDetailTab('overview');
     try {
@@ -89,7 +92,7 @@ export default function EmployeesView() {
     }
   };
 
-  const handleCreateEmployee = async (e) => {
+  const handleCreateEmployee = async (e: FormEvent) => {
     e.preventDefault();
     setFormError(null);
     setSubmitting(true);
@@ -114,7 +117,7 @@ export default function EmployeesView() {
         bank_account: '',
       });
       fetchEmployees();
-    } catch (err) {
+    } catch (err: any) {
       setFormError(err.message || 'Failed to create employee');
     } finally {
       setSubmitting(false);
@@ -126,9 +129,12 @@ export default function EmployeesView() {
     return true;
   });
 
+  if (loading && !employees.length) {
+    return <div style={{ padding: '20px', color: '#64748B' }}>Loading workforce directory...</div>;
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Top Filter and Actions Bar */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -137,7 +143,6 @@ export default function EmployeesView() {
         gap: '16px',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: '280px' }}>
-          {/* Search */}
           <div style={{ position: 'relative', flex: 1 }}>
             <Search size={16} color="var(--text-subtle)" style={{ position: 'absolute', left: '14px', top: '12px' }} />
             <input
@@ -150,7 +155,6 @@ export default function EmployeesView() {
             />
           </div>
 
-          {/* Department Filter */}
           <select
             className="form-control"
             style={{ width: '180px' }}
@@ -163,7 +167,6 @@ export default function EmployeesView() {
             ))}
           </select>
 
-          {/* View Toggle */}
           <div style={{
             display: 'flex',
             background: 'rgba(255, 255, 255, 0.05)',
@@ -202,7 +205,6 @@ export default function EmployeesView() {
           </div>
         </div>
 
-        {/* Action Button */}
         {isHRManager && (
           <button
             className="btn btn-primary"
@@ -214,7 +216,6 @@ export default function EmployeesView() {
         )}
       </div>
 
-      {/* Grid or Table List */}
       {viewMode === 'grid' ? (
         <div className="grid-3">
           {filtered.map((emp) => (
@@ -344,7 +345,6 @@ export default function EmployeesView() {
         </div>
       )}
 
-      {/* Add Employee Modal */}
       {showAddModal && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -493,7 +493,6 @@ export default function EmployeesView() {
         </div>
       )}
 
-      {/* Employee Detail Drawer / Modal */}
       {selectedEmployee && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: '800px' }}>
@@ -528,7 +527,6 @@ export default function EmployeesView() {
               </button>
             </div>
 
-            {/* Sub-Tabs */}
             <div style={{
               display: 'flex',
               gap: '4px',

@@ -21,6 +21,12 @@ export class EmployeeService {
       manager_name: emp.manager ? `${emp.manager.first_name} ${emp.manager.last_name}` : null,
       schedule_name: emp.schedule?.name || null,
       running_contract: emp.contracts?.[0] || null,
+      counts: {
+        contracts: emp._count?.contracts ?? (emp.contracts ? emp.contracts.length : 0),
+        attendance: emp._count?.attendance ?? 0,
+        time_off: emp._count?.leave_requests ?? 0,
+        allocations: emp._count?.leave_allocations ?? 0,
+      },
     };
   }
 

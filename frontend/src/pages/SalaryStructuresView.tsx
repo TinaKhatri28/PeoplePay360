@@ -1,3 +1,4 @@
+<<<<<<< HEAD:frontend/src/pages/SalaryStructuresView.jsx
 import React, { useState, useEffect } from 'react';
 import {
   Sliders,
@@ -10,18 +11,22 @@ import {
   Calculator,
   Calendar
 } from 'lucide-react';
+=======
+import React, { useState, useEffect, FormEvent } from 'react';
+import { Plus, Trash2, X, Layers } from 'lucide-react';
+>>>>>>> 8b6891f392b2b3d91a1ee98cd4bd675cc7c9e38b:frontend/src/pages/SalaryStructuresView.tsx
 import { apiRequest } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { SalaryStructure, WorkingSchedule } from '../types';
 
 export default function SalaryStructuresView() {
   const { isPayrollAdmin } = useAuth();
-  const [structures, setStructures] = useState([]);
-  const [schedules, setSchedules] = useState([]);
+  const [structures, setStructures] = useState<SalaryStructure[]>([]);
+  const [schedules, setSchedules] = useState<WorkingSchedule[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // New Rule Modal
   const [showRuleModal, setShowRuleModal] = useState(false);
-  const [selectedStructId, setSelectedStructId] = useState(null);
+  const [selectedStructId, setSelectedStructId] = useState<number | null>(null);
   const [ruleForm, setRuleForm] = useState({
     name: '',
     category: 'Allowance',
@@ -36,8 +41,8 @@ export default function SalaryStructuresView() {
   const fetchData = async () => {
     try {
       const [structData, schedData] = await Promise.all([
-        apiRequest('/api/salary/structures'),
-        apiRequest('/api/schedules'),
+        apiRequest<SalaryStructure[]>('/api/salary/structures'),
+        apiRequest<WorkingSchedule[]>('/api/schedules'),
       ]);
       setStructures(structData);
       setSchedules(schedData);
@@ -52,7 +57,7 @@ export default function SalaryStructuresView() {
     fetchData();
   }, []);
 
-  const handleAddRule = async (e) => {
+  const handleAddRule = async (e: FormEvent) => {
     e.preventDefault();
     if (!selectedStructId) return;
     try {
@@ -70,24 +75,27 @@ export default function SalaryStructuresView() {
       });
       setShowRuleModal(false);
       fetchData();
-    } catch (err) {
+    } catch (err: any) {
       alert(err.message || 'Failed to add rule');
     }
   };
 
-  const handleDeleteRule = async (ruleId) => {
+  const handleDeleteRule = async (ruleId: number) => {
     if (!confirm('Are you sure you want to remove this salary rule?')) return;
     try {
       await apiRequest(`/api/salary/rules/${ruleId}`, { method: 'DELETE' });
       fetchData();
-    } catch (err) {
+    } catch (err: any) {
       alert(err.message || 'Failed to delete rule');
     }
   };
 
+  if (loading && !structures.length) {
+    return <div style={{ padding: '20px', color: '#64748B' }}>Loading salary structure configurations...</div>;
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-      {/* Salary Structures Section */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
           <div>
@@ -128,7 +136,6 @@ export default function SalaryStructuresView() {
                 )}
               </div>
 
-              {/* Rules Table */}
               <div className="table-container">
                 <table className="data-table">
                   <thead>
@@ -182,7 +189,6 @@ export default function SalaryStructuresView() {
         </div>
       </div>
 
-      {/* Working Schedules Section */}
       <div>
         <div style={{ marginBottom: '16px' }}>
           <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>Company Working Schedules</h3>
@@ -209,7 +215,6 @@ export default function SalaryStructuresView() {
         </div>
       </div>
 
-      {/* Add Rule Modal */}
       {showRuleModal && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -327,7 +332,7 @@ export default function SalaryStructuresView() {
                     type="number"
                     className="form-control"
                     value={ruleForm.sequence}
-                    onChange={(e) => setRuleForm({ ...ruleForm, sequence: e.target.value })}
+                    onChange={(e) => setRuleForm({ ...ruleForm, sequence: +e.target.value })}
                   />
                 </div>
               </div>

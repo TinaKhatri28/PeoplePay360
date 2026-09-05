@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, FormEvent } from 'react';
 import {
   Coins,
   Plus,
@@ -18,35 +18,31 @@ import {
 } from 'lucide-react';
 import { apiRequest, downloadPayslipPdf } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { Payrun, Payslip, Employee, SalaryStructure } from '../types';
 
 export default function PayrollView() {
   const { isPayrollUser, isPayrollAdmin } = useAuth();
-  const [payruns, setPayruns] = useState([]);
+  const [payruns, setPayruns] = useState<Payrun[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPayrun, setSelectedPayrun] = useState(null);
-  const [payrunDetails, setPayrunDetails] = useState(null);
+  const [selectedPayrun, setSelectedPayrun] = useState<Payrun | null>(null);
+  const [payrunDetails, setPayrunDetails] = useState<Payrun | null>(null);
 
-  // New Payrun Modal State
   const [showNewModal, setShowNewModal] = useState(false);
-  const [newYear, setNewYear] = useState(2026);
-  const [newMonth, setNewMonth] = useState(9); // September
-  const [eligible, setEligible] = useState([]);
-  const [selectedEmpIds, setSelectedEmpIds] = useState([]);
-  const [structures, setStructures] = useState([]);
-  const [selectedStructure, setSelectedStructure] = useState('');
+  const [newYear, setNewYear] = useState<number>(2026);
+  const [newMonth, setNewMonth] = useState<number>(9);
+  const [eligible, setEligible] = useState<Employee[]>([]);
+  const [selectedEmpIds, setSelectedEmpIds] = useState<number[]>([]);
+  const [structures, setStructures] = useState<SalaryStructure[]>([]);
+  const [selectedStructure, setSelectedStructure] = useState<string>('');
   const [loadingEligible, setLoadingEligible] = useState(false);
 
-  // Validation Report Modal State
-  const [validationReport, setValidationReport] = useState(null);
-
-  // Payslip Inspection Drawer State
-  const [inspectedSlip, setInspectedSlip] = useState(null);
-
+  const [validationReport, setValidationReport] = useState<{ valid?: number; total?: number; issues?: Array<{ type: string; message: string }> } | null>(null);
+  const [inspectedSlip, setInspectedSlip] = useState<Payslip | null>(null);
   const [processing, setProcessing] = useState(false);
 
   const fetchPayruns = async () => {
     try {
-      const data = await apiRequest('/api/payroll/payruns');
+      const data = await apiRequest<Payrun[]>('/api/payroll/payruns');
       setPayruns(data);
     } catch (err) {
       console.error(err);
@@ -55,9 +51,9 @@ export default function PayrollView() {
     }
   };
 
-  const fetchPayrunDetails = async (id) => {
+  const fetchPayrunDetails = async (id: number) => {
     try {
-      const data = await apiRequest(`/api/payroll/payruns/${id}`);
+      const data = await apiRequest<Payrun>(`/api/payroll/payruns/${id}`);
       setPayrunDetails(data);
     } catch (err) {
       console.error(err);
@@ -68,23 +64,22 @@ export default function PayrollView() {
     fetchPayruns();
   }, []);
 
-  const openPayrun = async (run) => {
-    setSelectedPayrun(run);
+  const openPayrun = async (run: Partial<Payrun> & { id: number }) => {
+    setSelectedPayrun(run as Payrun);
     fetchPayrunDetails(run.id);
   };
 
-  // Fetch eligible employees when new payrun modal changes period
   const fetchEligible = async () => {
     setLoadingEligible(true);
     try {
       const [elData, structData] = await Promise.all([
-        apiRequest(`/api/payroll/eligible-employees?year=${newYear}&month=${newMonth}`),
-        apiRequest('/api/salary/structures'),
+        apiRequest<Employee[]>(`/api/payroll/eligible-employees?year=${newYear}&month=${newMonth}`),
+        apiRequest<SalaryStructure[]>('/api/salary/structures'),
       ]);
       setEligible(elData);
-      setSelectedEmpIds(elData.map((e) => e.id)); // select all by default
+      setSelectedEmpIds(elData.map((e) => e.id));
       setStructures(structData);
-      if (structData.length > 0) setSelectedStructure(structData[0].id);
+      if (structData.length > 0) setSelectedStructure(String(structData[0].id));
     } catch (err) {
       console.error(err);
     } finally {
@@ -98,7 +93,7 @@ export default function PayrollView() {
     }
   }, [showNewModal, newYear, newMonth]);
 
-  const handleCreatePayrun = async (e) => {
+  const handleCreatePayrun = async (e: FormEvent) => {
     e.preventDefault();
     if (selectedEmpIds.length === 0) {
       alert('Please select at least one employee');
@@ -106,7 +101,7 @@ export default function PayrollView() {
     }
     setProcessing(true);
     try {
-      const res = await apiRequest('/api/payroll/payruns', {
+      const res = await apiRequest<{ id: number }>('/api/payroll/payruns', {
         method: 'POST',
         body: {
           period_year: +newYear,
@@ -119,14 +114,13 @@ export default function PayrollView() {
       setShowNewModal(false);
       await fetchPayruns();
       openPayrun({ id: res.id });
-    } catch (err) {
+    } catch (err: any) {
       alert(err.message || 'Failed to create payrun');
     } finally {
       setProcessing(false);
     }
   };
 
-  // Stepper Actions
   const handleCompute = async () => {
     if (!selectedPayrun) return;
     setProcessing(true);
@@ -134,7 +128,7 @@ export default function PayrollView() {
       await apiRequest(`/api/payroll/payruns/${selectedPayrun.id}/compute`, { method: 'POST' });
       await fetchPayrunDetails(selectedPayrun.id);
       await fetchPayruns();
-    } catch (err) {
+    } catch (err: any) {
       alert(err.message || 'Compute failed');
     } finally {
       setProcessing(false);
@@ -149,7 +143,7 @@ export default function PayrollView() {
       setValidationReport(report);
       await fetchPayrunDetails(selectedPayrun.id);
       await fetchPayruns();
-    } catch (err) {
+    } catch (err: any) {
       alert(err.message || 'Validation failed');
     } finally {
       setProcessing(false);
@@ -163,7 +157,7 @@ export default function PayrollView() {
       await apiRequest(`/api/payroll/payruns/${selectedPayrun.id}/mark-paid`, { method: 'POST' });
       await fetchPayrunDetails(selectedPayrun.id);
       await fetchPayruns();
-    } catch (err) {
+    } catch (err: any) {
       alert(err.message || 'Mark paid failed');
     } finally {
       setProcessing(false);
@@ -178,18 +172,18 @@ export default function PayrollView() {
       await fetchPayrunDetails(selectedPayrun.id);
       await fetchPayruns();
       alert('Digital payslips have been dispatched to employees!');
-    } catch (err) {
+    } catch (err: any) {
       alert(err.message || 'Send failed');
     } finally {
       setProcessing(false);
     }
   };
 
-  const handleDownloadPdf = async (slip) => {
+  const handleDownloadPdf = async (slip: Payslip) => {
     try {
-      const filename = `Payslip-${slip.employee_name.replace(/\s/g, '_')}-${payrunDetails.period_month}-${payrunDetails.period_year}.pdf`;
+      const filename = `Payslip-${slip.employee_name.replace(/\s/g, '_')}-${payrunDetails?.period_month}-${payrunDetails?.period_year}.pdf`;
       await downloadPayslipPdf(slip.id, filename);
-    } catch (err) {
+    } catch (err: any) {
       alert(err.message || 'Download failed');
     }
   };
@@ -199,12 +193,14 @@ export default function PayrollView() {
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
+  if (loading && !payruns.length) {
+    return <div style={{ padding: '20px', color: '#64748B' }}>Loading payroll studio...</div>;
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* View Switch: List of Payruns vs Selected Payrun Studio */}
       {!selectedPayrun ? (
         <>
-          {/* Top Bar */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -230,7 +226,6 @@ export default function PayrollView() {
             )}
           </div>
 
-          {/* Payruns Table */}
           <div className="table-container">
             <table className="data-table">
               <thead>
@@ -283,9 +278,7 @@ export default function PayrollView() {
           </div>
         </>
       ) : (
-        /* Selected Payrun Execution Studio */
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* Back Button and Header */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -304,8 +297,13 @@ export default function PayrollView() {
                 <span>All Payruns</span>
               </button>
               <div>
+<<<<<<< HEAD:frontend/src/pages/PayrollView.jsx
                 <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#fff' }}>
                   Payrun: {monthNames[payrunDetails?.period_month]} {payrunDetails?.period_year}
+=======
+                <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#1F2937' }}>
+                  Payrun: {monthNames[payrunDetails?.period_month || 0]} {payrunDetails?.period_year}
+>>>>>>> 8b6891f392b2b3d91a1ee98cd4bd675cc7c9e38b:frontend/src/pages/PayrollView.tsx
                 </h2>
                 <div style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>
                   Batch #{payrunDetails?.id} • {payrunDetails?.payslips?.length || 0} Employees Enrolled
@@ -313,7 +311,6 @@ export default function PayrollView() {
               </div>
             </div>
 
-            {/* Stepper Status Badge */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <span className={`badge badge-lg ${
                 payrunDetails?.status === 'Paid' ? 'badge-success' :
@@ -326,7 +323,6 @@ export default function PayrollView() {
             </div>
           </div>
 
-          {/* Stepper Workflow Visualizer & Controls */}
           <div className="card" style={{
             background: 'linear-gradient(135deg, rgba(19, 26, 43, 0.95) 0%, rgba(27, 38, 65, 0.85) 100%)',
             border: '1px solid rgba(99, 102, 241, 0.3)',
@@ -350,7 +346,6 @@ export default function PayrollView() {
                 </div>
               </div>
 
-              {/* Action Buttons based on stage */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 {payrunDetails?.status === 'Draft' && isPayrollUser && (
                   <button
@@ -423,7 +418,6 @@ export default function PayrollView() {
             </div>
           </div>
 
-          {/* Payslips Table */}
           <div className="card">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
               <h3 style={{ fontSize: '1rem', fontWeight: 700 }}>Employee Payslips</h3>
@@ -510,7 +504,6 @@ export default function PayrollView() {
         </div>
       )}
 
-      {/* New Payrun Creation Modal */}
       {showNewModal && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: '650px' }}>
@@ -565,7 +558,6 @@ export default function PayrollView() {
                   </select>
                 </div>
 
-                {/* Eligible Employees Checklist */}
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                     <label className="form-label" style={{ marginBottom: 0 }}>
@@ -661,7 +653,6 @@ export default function PayrollView() {
         </div>
       )}
 
-      {/* Validation Report Modal */}
       {validationReport && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -743,15 +734,20 @@ export default function PayrollView() {
         </div>
       )}
 
-      {/* Inspect Payslip Breakdown Drawer */}
       {inspectedSlip && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: '600px' }}>
             <div className="modal-header">
               <div>
+<<<<<<< HEAD:frontend/src/pages/PayrollView.jsx
                 <h3 style={{ fontSize: '1.15rem' }}>Payslip Itemization</h3>
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                   {inspectedSlip.employee_name} • {monthNames[payrunDetails?.period_month]} {payrunDetails?.period_year}
+=======
+                <h3 style={{ fontSize: '1.15rem', color: '#1F2937' }}>Payslip Itemization</h3>
+                <div style={{ fontSize: '0.8rem', color: '#64748B' }}>
+                  {inspectedSlip.employee_name} • {monthNames[payrunDetails?.period_month || 0]} {payrunDetails?.period_year}
+>>>>>>> 8b6891f392b2b3d91a1ee98cd4bd675cc7c9e38b:frontend/src/pages/PayrollView.tsx
                 </div>
               </div>
               <button
@@ -763,7 +759,6 @@ export default function PayrollView() {
             </div>
 
             <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {/* Warnings Banner if any */}
               {inspectedSlip.warnings?.length > 0 && (
                 <div style={{
                   padding: '10px 14px',
@@ -777,7 +772,6 @@ export default function PayrollView() {
                 </div>
               )}
 
-              {/* Line Items */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {inspectedSlip.lines?.map((line, idx) => (
                   <div
@@ -799,30 +793,42 @@ export default function PayrollView() {
                         fontSize: '0.7rem',
                         color: line.category === 'Deduction' ? '#fb7185' : '#818cf8',
                       }}>
-                        {line.category}
+                        [{line.category}]
                       </span>
                     </div>
                     <span style={{
                       fontFamily: 'var(--font-mono)',
+<<<<<<< HEAD:frontend/src/pages/PayrollView.jsx
                       fontWeight: 600,
                       color: line.category === 'Deduction' ? '#fb7185' : 'var(--text-main)',
+=======
+                      fontWeight: 700,
+                      color: line.category === 'Deduction' ? '#B42318' : '#1F2937',
+>>>>>>> 8b6891f392b2b3d91a1ee98cd4bd675cc7c9e38b:frontend/src/pages/PayrollView.tsx
                     }}>
-                      {line.category === 'Deduction' ? '-' : '+'}₹{Math.abs(line.amount).toLocaleString('en-IN')}
+                      {line.category === 'Deduction' ? '-' : ''}₹{Math.abs(line.amount).toLocaleString('en-IN')}
                     </span>
                   </div>
                 ))}
               </div>
 
-              {/* Summary Totals */}
               <div style={{
+<<<<<<< HEAD:frontend/src/pages/PayrollView.jsx
                 marginTop: '10px',
                 padding: '16px',
                 background: 'rgba(0, 0, 0, 0.25)',
                 borderRadius: 'var(--radius-md)',
+=======
+                padding: '14px',
+                background: 'rgba(30, 58, 95, 0.06)',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid rgba(30, 58, 95, 0.2)',
+>>>>>>> 8b6891f392b2b3d91a1ee98cd4bd675cc7c9e38b:frontend/src/pages/PayrollView.tsx
                 display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
+                justifyContent: 'space-between',
+                alignItems: 'center',
               }}>
+<<<<<<< HEAD:frontend/src/pages/PayrollView.jsx
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Gross Earnings:</span>
                   <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
@@ -845,25 +851,30 @@ export default function PayrollView() {
                 }}>
                   <span>Net Take-Home Pay:</span>
                   <span style={{ color: '#34d399', fontFamily: 'var(--font-mono)' }}>
+=======
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Net Take-Home Pay</div>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#2E7D5B', fontFamily: 'var(--font-mono)' }}>
+>>>>>>> 8b6891f392b2b3d91a1ee98cd4bd675cc7c9e38b:frontend/src/pages/PayrollView.tsx
                     ₹{inspectedSlip.net?.toLocaleString('en-IN')}
-                  </span>
+                  </div>
                 </div>
+                <button
+                  className="btn btn-outline-primary btn-sm"
+                  onClick={() => handleDownloadPdf(inspectedSlip)}
+                >
+                  <Download size={14} />
+                  <span>Download PDF Payslip</span>
+                </button>
               </div>
             </div>
 
             <div className="modal-footer">
               <button
-                className="btn btn-outline-primary"
-                onClick={() => handleDownloadPdf(inspectedSlip)}
-              >
-                <Download size={15} />
-                <span>Download Official PDF</span>
-              </button>
-              <button
                 className="btn btn-secondary"
                 onClick={() => setInspectedSlip(null)}
               >
-                Close
+                Close Breakdown
               </button>
             </div>
           </div>

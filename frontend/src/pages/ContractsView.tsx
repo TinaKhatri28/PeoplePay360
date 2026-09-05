@@ -1,3 +1,4 @@
+<<<<<<< HEAD:frontend/src/pages/ContractsView.jsx
 import React, { useState, useEffect } from 'react';
 import {
   FileText,
@@ -11,22 +12,27 @@ import {
   CreditCard,
   Briefcase
 } from 'lucide-react';
+=======
+import React, { useState, useEffect, FormEvent } from 'react';
+import { Plus, Search, X } from 'lucide-react';
+>>>>>>> 8b6891f392b2b3d91a1ee98cd4bd675cc7c9e38b:frontend/src/pages/ContractsView.tsx
 import { apiRequest } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { Contract, Employee, SalaryStructure, WorkingSchedule } from '../types';
 
 export default function ContractsView() {
   const { isPayrollUser } = useAuth();
-  const [contracts, setContracts] = useState([]);
-  const [employees, setEmployees] = useState([]);
-  const [structures, setStructures] = useState([]);
-  const [schedules, setSchedules] = useState([]);
+  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [structures, setStructures] = useState<SalaryStructure[]>([]);
+  const [schedules, setSchedules] = useState<WorkingSchedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('All');
   const [search, setSearch] = useState('');
 
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     employee_id: '',
@@ -41,10 +47,10 @@ export default function ContractsView() {
   const fetchData = async () => {
     try {
       const [cData, empData, structData, schedData] = await Promise.all([
-        apiRequest('/api/contracts'),
-        apiRequest('/api/employees'),
-        apiRequest('/api/salary/structures'),
-        apiRequest('/api/schedules'),
+        apiRequest<Contract[]>('/api/contracts'),
+        apiRequest<Employee[]>('/api/employees'),
+        apiRequest<SalaryStructure[]>('/api/salary/structures'),
+        apiRequest<WorkingSchedule[]>('/api/schedules'),
       ]);
       setContracts(cData);
       setEmployees(empData);
@@ -61,7 +67,7 @@ export default function ContractsView() {
     fetchData();
   }, []);
 
-  const handleCreateContract = async (e) => {
+  const handleCreateContract = async (e: FormEvent) => {
     e.preventDefault();
     setFormError(null);
     setSubmitting(true);
@@ -87,7 +93,7 @@ export default function ContractsView() {
         schedule_id: '',
       });
       fetchData();
-    } catch (err) {
+    } catch (err: any) {
       setFormError(err.message || 'Failed to create contract');
     } finally {
       setSubmitting(false);
@@ -105,9 +111,12 @@ export default function ContractsView() {
     return true;
   });
 
+  if (loading && !contracts.length) {
+    return <div style={{ padding: '20px', color: '#64748B' }}>Loading contract data...</div>;
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Action and Filter Controls */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -152,7 +161,6 @@ export default function ContractsView() {
         )}
       </div>
 
-      {/* Contracts Table */}
       <div className="table-container">
         <table className="data-table">
           <thead>
@@ -205,7 +213,6 @@ export default function ContractsView() {
         </table>
       </div>
 
-      {/* New Contract Modal */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -233,7 +240,6 @@ export default function ContractsView() {
                   </div>
                 )}
 
-                {/* Important Rule Callout */}
                 <div style={{
                   padding: '12px 14px',
                   borderRadius: 'var(--radius-md)',

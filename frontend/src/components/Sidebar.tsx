@@ -8,14 +8,22 @@ import {
   Coins,
   Sliders,
   LogOut,
+<<<<<<< HEAD:frontend/src/components/Sidebar.jsx
   Sparkles,
   ShieldAlert,
+=======
+>>>>>>> 8b6891f392b2b3d91a1ee98cd4bd675cc7c9e38b:frontend/src/components/Sidebar.tsx
   UserCheck
 } from 'lucide-react';
-import { useAuth, DEMO_USERS } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
-export default function Sidebar({ activeTab, setActiveTab }) {
-  const { user, logout, login } = useAuth();
+interface SidebarProps {
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+}
+
+export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
+  const { user, logout } = useAuth();
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -40,7 +48,6 @@ export default function Sidebar({ activeTab, setActiveTab }) {
       top: 0,
       zIndex: 40,
     }}>
-      {/* Brand Header */}
       <div style={{
         padding: '24px 20px',
         display: 'flex',
@@ -83,7 +90,6 @@ export default function Sidebar({ activeTab, setActiveTab }) {
         </div>
       </div>
 
-      {/* Navigation List */}
       <nav style={{ flex: 1, padding: '16px 12px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
         <div style={{
           fontSize: '0.675rem',
@@ -153,6 +159,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
         })}
       </nav>
 
+<<<<<<< HEAD:frontend/src/components/Sidebar.jsx
       {/* Demo Persona Quick Switcher */}
       <div style={{
         padding: '12px 14px',
@@ -209,6 +216,8 @@ export default function Sidebar({ activeTab, setActiveTab }) {
       </div>
 
       {/* User Footer */}
+=======
+>>>>>>> 8b6891f392b2b3d91a1ee98cd4bd675cc7c9e38b:frontend/src/components/Sidebar.tsx
       <div style={{
         padding: '16px 20px',
         borderTop: '1px solid var(--border-subtle)',

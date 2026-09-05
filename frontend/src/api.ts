@@ -1,40 +1,44 @@
-// API client utility for PeoplePay360
+import { User } from './types';
 
 const TOKEN_KEY = 'peoplepay360_token';
 const USER_KEY = 'peoplepay360_user';
 
-export function getToken() {
+export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
 }
 
-export function setToken(token) {
+export function setToken(token: string | null): void {
   if (token) localStorage.setItem(TOKEN_KEY, token);
   else localStorage.removeItem(TOKEN_KEY);
 }
 
-export function getStoredUser() {
+export function getStoredUser(): User | null {
   try {
     const raw = localStorage.getItem(USER_KEY);
     return raw ? JSON.parse(raw) : null;
-  } catch (e) {
+  } catch {
     return null;
   }
 }
 
-export function setStoredUser(user) {
+export function setStoredUser(user: User | null): void {
   if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
   else localStorage.removeItem(USER_KEY);
 }
 
-export async function apiRequest(endpoint, options = {}) {
+export interface ApiRequestOptions extends RequestInit {
+  body?: any;
+}
+
+export async function apiRequest<T = any>(endpoint: string, options: ApiRequestOptions = {}): Promise<T> {
   const token = getToken();
-  const headers = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...options.headers,
+    ...(options.headers as Record<string, string> || {}),
   };
 
-  const config = {
+  const config: RequestInit = {
     ...options,
     headers,
   };
@@ -45,36 +49,29 @@ export async function apiRequest(endpoint, options = {}) {
 
   const response = await fetch(endpoint, config);
 
-  if (response.status === 401) {
-    // If unauthorized, clear token if expired
-    if (!endpoint.includes('/api/auth/login')) {
-      // Don't wipe immediately on login failure
-    }
-  }
-
   const contentType = response.headers.get('content-type');
-  let data;
+  let data: any;
   if (contentType && contentType.includes('application/json')) {
     data = await response.json();
   } else if (contentType && contentType.includes('application/pdf')) {
     data = await response.blob();
-    return data;
+    return data as T;
   } else {
     data = await response.text();
   }
 
   if (!response.ok) {
     const errorMsg = data?.error || data?.message || `Request failed with status ${response.status}`;
-    const err = new Error(errorMsg);
+    const err: any = new Error(errorMsg);
     err.status = response.status;
     err.data = data;
     throw err;
   }
 
-  return data;
+  return data as T;
 }
 
-export async function downloadPayslipPdf(payslipId, filename = 'payslip.pdf') {
+export async function downloadPayslipPdf(payslipId: number, filename = 'payslip.pdf'): Promise<void> {
   const token = getToken();
   const response = await fetch(`/api/payroll/payslips/${payslipId}/pdf`, {
     headers: {

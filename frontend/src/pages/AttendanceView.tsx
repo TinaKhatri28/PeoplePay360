@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, FormEvent } from 'react';
 import {
   Clock,
   Play,
@@ -13,17 +13,17 @@ import {
 } from 'lucide-react';
 import { apiRequest } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { AttendanceRecord } from '../types';
 
 export default function AttendanceView() {
   const { user, isHRManager } = useAuth();
-  const [logs, setLogs] = useState([]);
-  const [myStatus, setMyStatus] = useState(null);
+  const [logs, setLogs] = useState<AttendanceRecord[]>([]);
+  const [myStatus, setMyStatus] = useState<{ checkedIn: boolean; record: AttendanceRecord | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [punching, setPunching] = useState(false);
-  const [punchMsg, setPunchMsg] = useState(null);
+  const [punchMsg, setPunchMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // Edit Modal State
-  const [editingRecord, setEditingRecord] = useState(null);
+  const [editingRecord, setEditingRecord] = useState<AttendanceRecord | null>(null);
   const [editForm, setEditForm] = useState({
     check_in: '',
     check_out: '',
@@ -33,10 +33,10 @@ export default function AttendanceView() {
 
   const fetchData = async () => {
     try {
-      const logsData = await apiRequest('/api/attendance');
+      const logsData = await apiRequest<AttendanceRecord[]>('/api/attendance');
       setLogs(logsData);
       if (user?.employee_id) {
-        const st = await apiRequest('/api/attendance/me/status');
+        const st = await apiRequest<{ checkedIn: boolean; record: AttendanceRecord | null }>('/api/attendance/me/status');
         setMyStatus(st);
       }
     } catch (err) {
@@ -50,20 +50,20 @@ export default function AttendanceView() {
     fetchData();
   }, [user]);
 
-  const handlePunch = async (action) => {
+  const handlePunch = async (action: 'in' | 'out') => {
     setPunching(true);
     setPunchMsg(null);
     try {
       if (action === 'in') {
         await apiRequest('/api/attendance/check-in', {
           method: 'POST',
-          body: { employee_id: user.employee_id },
+          body: { employee_id: user?.employee_id },
         });
         setPunchMsg({ type: 'success', text: 'Checked in successfully! Shift started.' });
       } else {
-        const res = await apiRequest('/api/attendance/check-out', {
+        const res = await apiRequest<{ worked_hours: number; overtime_hours: number }>('/api/attendance/check-out', {
           method: 'POST',
-          body: { employee_id: user.employee_id },
+          body: { employee_id: user?.employee_id },
         });
         setPunchMsg({
           type: 'success',
@@ -71,14 +71,14 @@ export default function AttendanceView() {
         });
       }
       fetchData();
-    } catch (err) {
+    } catch (err: any) {
       setPunchMsg({ type: 'error', text: err.message || 'Action failed' });
     } finally {
       setPunching(false);
     }
   };
 
-  const handleSaveEdit = async (e) => {
+  const handleSaveEdit = async (e: FormEvent) => {
     e.preventDefault();
     if (!editingRecord) return;
     try {
@@ -88,14 +88,17 @@ export default function AttendanceView() {
       });
       setEditingRecord(null);
       fetchData();
-    } catch (err) {
+    } catch (err: any) {
       alert(err.message || 'Failed to update record');
     }
   };
 
+  if (loading && !logs.length) {
+    return <div style={{ padding: '20px', color: '#64748B' }}>Loading attendance records...</div>;
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Live Punch Clock Widget (Personal) */}
       {user?.employee_id && (
         <div className="card" style={{
           background: 'linear-gradient(135deg, rgba(19, 26, 43, 0.95) 0%, rgba(27, 38, 65, 0.85) 100%)',
@@ -131,7 +134,7 @@ export default function AttendanceView() {
               {!myStatus?.checkedIn ? (
                 <button
                   className="btn btn-success btn-lg"
-                  disabled={punching || (myStatus?.record && myStatus.record.check_out)}
+                  disabled={punching || Boolean(myStatus?.record && myStatus.record.check_out)}
                   onClick={() => handlePunch('in')}
                   style={{ minWidth: '160px' }}
                 >
@@ -168,7 +171,6 @@ export default function AttendanceView() {
         </div>
       )}
 
-      {/* Attendance Logs Table */}
       <div className="card">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
           <div>
@@ -260,7 +262,6 @@ export default function AttendanceView() {
         </div>
       </div>
 
-      {/* Manual Correction Modal */}
       {editingRecord && (
         <div className="modal-overlay">
           <div className="modal-content">

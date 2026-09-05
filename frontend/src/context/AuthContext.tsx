@@ -1,7 +1,21 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { getToken, setToken, getStoredUser, setStoredUser, apiRequest } from '../api';
+import { User } from '../types';
 
-const AuthContext = createContext(null);
+export interface AuthContextType {
+  user: User | null;
+  token: string | null;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<User>;
+  logout: () => void;
+  hasRole: (role: string) => boolean;
+  isPayrollAdmin: boolean;
+  isPayrollUser: boolean;
+  isHRManager: boolean;
+  refreshUser: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType | null>(null);
 
 export const DEMO_USERS = [
   { role: 'Admin (Full Access)', email: 'admin@oxp.com', password: 'admin123', badge: 'HR Payroll Admin' },
@@ -9,9 +23,9 @@ export const DEMO_USERS = [
   { role: 'Employee', email: 'john@oxp.com', password: 'employee123', badge: 'Employee' },
 ];
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(getStoredUser());
-  const [token, setTokenState] = useState(getToken());
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(getStoredUser());
+  const [token, setTokenState] = useState<string | null>(getToken());
   const [loading, setLoading] = useState(true);
 
   const fetchCurrentUser = async () => {
@@ -21,16 +35,15 @@ export function AuthProvider({ children }) {
         return;
       }
       const data = await apiRequest('/api/auth/me');
-      const formatted = {
+      const formatted: User = {
         ...data,
         roles: data.roles || [],
         employee_name: data.employee?.name || data.email.split('@')[0],
       };
       setUser(formatted);
       setStoredUser(formatted);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Session restore error:', err);
-      // If unauthorized, clear
       if (err.status === 401 || err.status === 403) {
         logout();
       }
@@ -43,8 +56,8 @@ export function AuthProvider({ children }) {
     fetchCurrentUser();
   }, []);
 
-  const login = async (email, password) => {
-    const res = await apiRequest('/api/auth/login', {
+  const login = async (email: string, password: string): Promise<User> => {
+    const res = await apiRequest<{ token: string; user: User }>('/api/auth/login', {
       method: 'POST',
       body: { email, password },
     });
@@ -62,15 +75,15 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
-  const hasRole = (role) => {
+  const hasRole = (role: string): boolean => {
     if (!user || !user.roles) return false;
-    if (user.roles.includes('HR Payroll Admin')) return true; // Admin has all rights
+    if (user.roles.includes('HR Payroll Admin')) return true;
     return user.roles.includes(role);
   };
 
-  const isPayrollAdmin = user?.roles?.includes('HR Payroll Admin');
-  const isPayrollUser = isPayrollAdmin || user?.roles?.includes('HR Payroll User');
-  const isHRManager = isPayrollAdmin || user?.roles?.includes('HR Manager');
+  const isPayrollAdmin = Boolean(user?.roles?.includes('HR Payroll Admin'));
+  const isPayrollUser = isPayrollAdmin || Boolean(user?.roles?.includes('HR Payroll User'));
+  const isHRManager = isPayrollAdmin || Boolean(user?.roles?.includes('HR Manager'));
 
   return (
     <AuthContext.Provider
@@ -92,6 +105,10 @@ export function AuthProvider({ children }) {
   );
 }
 
-export function useAuth() {
-  return useContext(AuthContext);
+export function useAuth(): AuthContextType {
+  const ctx = useContext(AuthContext);
+  if (!ctx) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return ctx;
 }

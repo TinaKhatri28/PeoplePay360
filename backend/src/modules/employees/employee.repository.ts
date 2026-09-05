@@ -62,6 +62,14 @@ export class EmployeeRepository {
         contracts: {
           orderBy: { start_date: 'desc' },
         },
+        _count: {
+          select: {
+            contracts: true,
+            attendance: true,
+            leave_requests: true,
+            leave_allocations: true,
+          },
+        },
       },
     });
   }

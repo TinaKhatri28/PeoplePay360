@@ -11,21 +11,26 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { apiRequest } from '../api';
+import { DashboardData } from '../types';
 
-export default function DashboardView({ onNavigate }) {
-  const [year, setYear] = useState(2026);
-  const [month, setMonth] = useState(9); // September 2026
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+interface DashboardViewProps {
+  onNavigate: (tab: string) => void;
+}
+
+export default function DashboardView({ onNavigate }: DashboardViewProps) {
+  const [year, setYear] = useState<number>(2026);
+  const [month, setMonth] = useState<number>(9);
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchDashboard = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await apiRequest(`/api/dashboard?year=${year}&month=${month}`);
+      const res = await apiRequest<DashboardData>(`/api/dashboard?year=${year}&month=${month}`);
       setData(res);
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message || 'Failed to load dashboard data');
     } finally {
       setLoading(false);
@@ -69,7 +74,10 @@ export default function DashboardView({ onNavigate }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+<<<<<<< HEAD:frontend/src/pages/DashboardView.jsx
       {/* Filter and Period Selector Banner */}
+=======
+>>>>>>> 8b6891f392b2b3d91a1ee98cd4bd675cc7c9e38b:frontend/src/pages/DashboardView.tsx
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -144,9 +152,7 @@ export default function DashboardView({ onNavigate }) {
         </div>
       )}
 
-      {/* KPI Stat Cards */}
       <div className="grid-4">
-        {/* Net Payroll */}
         <div className="card card-interactive">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
             <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>Net Payroll Cost</span>
@@ -171,7 +177,6 @@ export default function DashboardView({ onNavigate }) {
           </div>
         </div>
 
-        {/* Payslips Count */}
         <div className="card card-interactive">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
             <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>Covered Employees</span>
@@ -196,7 +201,6 @@ export default function DashboardView({ onNavigate }) {
           </div>
         </div>
 
-        {/* Average Salary */}
         <div className="card card-interactive">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
             <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>Average Net Wage</span>
@@ -221,7 +225,6 @@ export default function DashboardView({ onNavigate }) {
           </div>
         </div>
 
-        {/* Attendance Rate */}
         <div className="card card-interactive">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
             <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>Attendance Rate</span>
@@ -247,9 +250,13 @@ export default function DashboardView({ onNavigate }) {
         </div>
       </div>
 
+<<<<<<< HEAD:frontend/src/pages/DashboardView.jsx
       {/* Visual Charts: Trend and Department Distribution */}
       <div className="grid-2">
         {/* Monthly Trend Visualizer */}
+=======
+      <div className="grid-2">
+>>>>>>> 8b6891f392b2b3d91a1ee98cd4bd675cc7c9e38b:frontend/src/pages/DashboardView.tsx
         <div className="card">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
             <div>
@@ -319,7 +326,10 @@ export default function DashboardView({ onNavigate }) {
           </div>
         </div>
 
+<<<<<<< HEAD:frontend/src/pages/DashboardView.jsx
         {/* Department Cost Distribution */}
+=======
+>>>>>>> 8b6891f392b2b3d91a1ee98cd4bd675cc7c9e38b:frontend/src/pages/DashboardView.tsx
         <div className="card">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
             <div>
@@ -380,9 +390,7 @@ export default function DashboardView({ onNavigate }) {
         </div>
       </div>
 
-      {/* Attendance & Leave Quick Status */}
       <div className="grid-2">
-        {/* Attendance Breakdown */}
         <div className="card">
           <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '16px' }}>
             Attendance Breakdown ({months.find((m) => m.value === month)?.name} {year})
@@ -430,7 +438,6 @@ export default function DashboardView({ onNavigate }) {
           </div>
         </div>
 
-        {/* Leave Balances Summary */}
         <div className="card">
           <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '16px' }}>
             Company Leave Pool Status

@@ -22,8 +22,25 @@ export class AttendanceService {
   async getMyStatus(organizationId: string, employeeId: string) {
     const today = new Date().toISOString().slice(0, 10);
     const record = await this.repo.findByEmployeeAndDate(organizationId, employeeId, today);
+    const emp = await prisma.employee.findUnique({ where: { id: employeeId } });
+
+    let elapsedMinutes = 0;
+    let elapsedFormatted = '0h00';
+    if (record && record.check_in && !record.check_out) {
+      const diffMs = Date.now() - new Date(record.check_in).getTime();
+      elapsedMinutes = Math.max(0, Math.floor(diffMs / 60000));
+      const hours = Math.floor(elapsedMinutes / 60);
+      const mins = elapsedMinutes % 60;
+      elapsedFormatted = `${hours}h${String(mins).padStart(2, '0')}`;
+    }
+
     return {
       checkedIn: !!(record && record.check_in && !record.check_out),
+      userName: emp ? `${emp.first_name} ${emp.last_name}` : 'User',
+      checkInTime: record?.check_in || null,
+      elapsedMinutes,
+      elapsedFormatted,
+      todayWorkedHours: record?.worked_hours || 0,
       record,
     };
   }

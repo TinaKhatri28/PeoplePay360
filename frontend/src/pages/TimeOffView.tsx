@@ -1,3 +1,4 @@
+<<<<<<< HEAD:frontend/src/pages/TimeOffView.jsx
 import React, { useState, useEffect } from 'react';
 import {
   CalendarOff,
@@ -9,19 +10,24 @@ import {
   Calendar,
   X
 } from 'lucide-react';
+=======
+import React, { useState, useEffect, FormEvent } from 'react';
+import { Plus, CheckCircle2, XCircle, X } from 'lucide-react';
+>>>>>>> 8b6891f392b2b3d91a1ee98cd4bd675cc7c9e38b:frontend/src/pages/TimeOffView.tsx
 import { apiRequest } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { TimeOffRequest, TimeOffAllocation } from '../types';
 
 export default function TimeOffView() {
   const { user, isHRManager } = useAuth();
-  const [requests, setRequests] = useState([]);
-  const [types, setTypes] = useState([]);
-  const [allocations, setAllocations] = useState([]);
-  const [myAllocations, setMyAllocations] = useState([]);
+  const [requests, setRequests] = useState<TimeOffRequest[]>([]);
+  const [types, setTypes] = useState<any[]>([]);
+  const [allocations, setAllocations] = useState<TimeOffAllocation[]>([]);
+  const [myAllocations, setMyAllocations] = useState<TimeOffAllocation[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [showModal, setShowModal] = useState(false);
-  const [formError, setFormError] = useState(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -34,16 +40,16 @@ export default function TimeOffView() {
   const fetchData = async () => {
     try {
       const [reqData, typeData, allocData] = await Promise.all([
-        apiRequest('/api/time-off/requests'),
-        apiRequest('/api/time-off/types'),
-        apiRequest('/api/time-off/allocations'),
+        apiRequest<TimeOffRequest[]>('/api/time-off/requests'),
+        apiRequest<any[]>('/api/time-off/types'),
+        apiRequest<TimeOffAllocation[]>('/api/time-off/allocations'),
       ]);
       setRequests(reqData);
       setTypes(typeData);
       setAllocations(allocData);
 
       if (user?.employee_id) {
-        const myAllocs = await apiRequest(`/api/employees/${user.employee_id}/allocations`);
+        const myAllocs = await apiRequest<TimeOffAllocation[]>(`/api/employees/${user.employee_id}/allocations`);
         setMyAllocations(myAllocs);
       }
     } catch (err) {
@@ -57,13 +63,12 @@ export default function TimeOffView() {
     fetchData();
   }, [user]);
 
-  // Compute duration in days
   const durationDays = Math.max(
     1,
-    Math.round((new Date(formData.end_date) - new Date(formData.start_date)) / 86400000) + 1
+    Math.round((new Date(formData.end_date).getTime() - new Date(formData.start_date).getTime()) / 86400000) + 1
   );
 
-  const handleRequestSubmit = async (e) => {
+  const handleRequestSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!formData.type_id) return;
     setFormError(null);
@@ -85,34 +90,37 @@ export default function TimeOffView() {
         reason: '',
       });
       fetchData();
-    } catch (err) {
+    } catch (err: any) {
       setFormError(err.message || 'Failed to submit leave request');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleApprove = async (id) => {
+  const handleApprove = async (id: number) => {
     try {
       await apiRequest(`/api/time-off/requests/${id}/approve`, { method: 'POST' });
       fetchData();
-    } catch (err) {
+    } catch (err: any) {
       alert(err.message || 'Approval failed');
     }
   };
 
-  const handleRefuse = async (id) => {
+  const handleRefuse = async (id: number) => {
     try {
       await apiRequest(`/api/time-off/requests/${id}/refuse`, { method: 'POST' });
       fetchData();
-    } catch (err) {
+    } catch (err: any) {
       alert(err.message || 'Refusal failed');
     }
   };
 
+  if (loading && !requests.length) {
+    return <div style={{ padding: '20px', color: '#64748B' }}>Loading leave requests...</div>;
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Leave Balances Header Cards */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
           <div>
@@ -167,7 +175,6 @@ export default function TimeOffView() {
         </div>
       </div>
 
-      {/* Requests Table */}
       <div className="card">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
           <div>
@@ -256,7 +263,6 @@ export default function TimeOffView() {
         </div>
       </div>
 
-      {/* Request Leave Modal */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -339,7 +345,7 @@ export default function TimeOffView() {
                   <label className="form-label">Reason / Notes</label>
                   <textarea
                     className="form-control"
-                    rows="3"
+                    rows={3}
                     placeholder="Provide brief context for your supervisor..."
                     value={formData.reason}
                     onChange={(e) => setFormData({ ...formData, reason: e.target.value })}

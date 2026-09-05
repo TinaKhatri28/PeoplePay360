@@ -53,10 +53,8 @@ function MainApp() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-app)' }}>
-      {/* Navigation Sidebar */}
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      {/* Main Layout Area */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         <Header activeTab={activeTab} />
 
