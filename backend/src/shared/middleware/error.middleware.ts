@@ -60,6 +60,38 @@ export const errorMiddleware = (
     return;
   }
 
+  // Prisma Known Request Error Mapping (P2002: Unique constraint, P2025: Record not found)
+  if (err.name === 'PrismaClientKnownRequestError' || err.code?.startsWith?.('P')) {
+    if (err.code === 'P2002') {
+      const target = Array.isArray(err.meta?.target) ? err.meta.target.join(', ') : err.meta?.target || 'field';
+      logger.warn({ requestId, code: 'CONFLICT', target, path: req.originalUrl }, 'Prisma unique constraint conflict');
+      res.status(409).json({
+        success: false,
+        error: {
+          code: 'CONFLICT',
+          message: `A resource with this ${target} already exists.`,
+          details: err.meta,
+        },
+        requestId,
+      });
+      return;
+    }
+
+    if (err.code === 'P2025') {
+      logger.warn({ requestId, code: 'NOT_FOUND', path: req.originalUrl }, 'Prisma record not found');
+      res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'The requested resource was not found.',
+          details: err.meta,
+        },
+        requestId,
+      });
+      return;
+    }
+  }
+
   // Unhandled / Internal Server Error
   logger.error({
     requestId,

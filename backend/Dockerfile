@@ -20,6 +20,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=4000
 
+# Install curl for HEALTHCHECK
+RUN apk add --no-cache curl
+
 COPY package*.json ./
 RUN npm ci --only=production
 
@@ -28,6 +31,15 @@ COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/dist ./dist
 
+# Set permissions for node non-root user
+RUN mkdir -p /app/data/uploads && chown -R node:node /app
+
+USER node
+
 EXPOSE 4000
 
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:4000/api/health || exit 1
+
 CMD ["node", "dist/server.js"]
+
