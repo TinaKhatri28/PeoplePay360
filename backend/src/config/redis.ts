@@ -21,6 +21,9 @@ try {
   redisClient.on('connect', () => {
     isRedisAvailable = true;
     logger.info('Connected to Redis server');
+    import('../jobs/queue').then(({ initializeQueues }) => {
+      initializeQueues();
+    }).catch(() => {});
   });
 
   redisClient.on('error', (err) => {

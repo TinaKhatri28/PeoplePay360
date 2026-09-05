@@ -75,4 +75,16 @@ describe('UserService (Separation of Concerns & Business Logic)', () => {
     expect(users[0].employee_name).toBe('Alice Smith');
     expect(users[0].email).toBe('alice@example.com');
   });
+
+  it('blocks self-promotion attempt with ForbiddenError', async () => {
+    const { ForbiddenError } = await import('../../../shared/errors/app.error');
+    mockRepo.findById.mockResolvedValueOnce({
+      id: 'usr_self',
+      role: 'HR Payroll Admin',
+    });
+
+    await expect(
+      service.updateUser('org_1', 'usr_self', { role: 'Admin' }, 'usr_self')
+    ).rejects.toThrow(ForbiddenError);
+  });
 });

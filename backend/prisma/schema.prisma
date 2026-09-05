@@ -126,6 +126,7 @@ model Employee {
   payslips        Payslip[]
 
   @@index([organization_id])
+  @@index([organization_id, status])
   @@index([email])
   @@index([status])
   @@map("employees")
@@ -155,6 +156,7 @@ model EmploymentContract {
   payslips            Payslip[]
 
   @@index([organization_id])
+  @@index([organization_id, status])
   @@index([employee_id])
   @@index([status])
   @@index([start_date, end_date])
@@ -181,6 +183,7 @@ model AttendanceRecord {
 
   @@unique([employee_id, date])
   @@index([organization_id])
+  @@index([organization_id, date])
   @@index([date])
   @@map("attendance_records")
 }
@@ -245,6 +248,7 @@ model LeaveRequest {
   leave_type      LeaveType    @relation(fields: [type_id], references: [id], onDelete: Cascade)
 
   @@index([organization_id])
+  @@index([organization_id, status])
   @@index([employee_id])
   @@index([status])
   @@map("leave_requests")
@@ -307,6 +311,7 @@ model Payrun {
 
   @@unique([organization_id, period_year, period_month])
   @@index([organization_id])
+  @@index([organization_id, status])
   @@index([period_year, period_month])
   @@map("payruns")
 }
@@ -334,6 +339,8 @@ model Payslip {
   lines           PayslipLine[]
 
   @@unique([payrun_id, employee_id])
+  @@index([organization_id])
+  @@index([organization_id, status])
   @@index([payrun_id])
   @@index([employee_id])
   @@map("payslips")

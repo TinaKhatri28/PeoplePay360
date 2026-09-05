@@ -41,22 +41,25 @@ export class DashboardService {
 
     const avgNetSalary = payslipCount > 0 ? Math.round(totalPayrollNet / payslipCount) : averageSalary;
 
-    // Department distribution
-    const departmentDistribution = data.departments.map((d) => {
-      let deptSalary = 0;
-      for (const emp of d.employees) {
-        if (emp.contracts && emp.contracts[0]) {
-          deptSalary += Number(emp.contracts[0].wage) || 0;
-        }
+    // Department distribution using SQL aggregated wage map
+    const deptWageMap = new Map<string, number>();
+    for (const g of data.deptSalaryGroup) {
+      if (g.department) {
+        deptWageMap.set(g.department, Number(g._sum.wage) || 0);
       }
-      if (deptSalary === 0 && d.employees.length > 0) {
-        deptSalary = Math.round(averageSalary * d.employees.length);
+    }
+
+    const departmentDistribution = data.departments.map((d) => {
+      const count = d._count?.employees || 0;
+      let deptSalary = deptWageMap.get(d.name) || 0;
+      if (deptSalary === 0 && count > 0) {
+        deptSalary = Math.round(averageSalary * count);
       }
       return {
         department: d.name,
         name: d.name,
-        employee_count: d.employees.length || 1,
-        headcount: d.employees.length || 1,
+        employee_count: count || 1,
+        headcount: count || 1,
         total_salary: +deptSalary.toFixed(2),
         total: +deptSalary.toFixed(2),
       };
@@ -88,12 +91,12 @@ export class DashboardService {
     let lateArrivals = 0;
     let overtimeShifts = 0;
 
-    for (const a of data.attendanceMonth) {
-      if (a.status === 'Present' || a.status === 'Approved') presentShifts++;
-      else if (a.status === 'Absent') absentDays++;
-      else if (a.status === 'Late') { lateArrivals++; presentShifts++; }
-      else if (a.status === 'Overtime') { overtimeShifts++; presentShifts++; }
-      else presentShifts++;
+    for (const a of data.attendanceMonthGroup) {
+      if (a.status === 'Present' || a.status === 'Approved') presentShifts += a._count;
+      else if (a.status === 'Absent') absentDays += a._count;
+      else if (a.status === 'Late') { lateArrivals += a._count; presentShifts += a._count; }
+      else if (a.status === 'Overtime') { overtimeShifts += a._count; presentShifts += a._count; }
+      else presentShifts += a._count;
     }
 
     if (presentShifts === 0 && absentDays === 0) {
@@ -113,26 +116,34 @@ export class DashboardService {
     let todayLate = 0;
     let todayAbsent = 0;
     let todayLogged = 0;
-    for (const item of data.attendanceGroup) {
+    for (const item of data.attendanceTodayGroup) {
       todayLogged += item._count;
       if (item.status === 'Present') todayPresent += item._count;
       else if (item.status === 'Late') todayLate += item._count;
       else if (item.status === 'Absent') todayAbsent += item._count;
     }
 
-    // Leave Types & Balances
+    // Leave Types & Balances from SQL aggregates
+    const reqApprovedMap = new Map<string, number>();
+    const reqPendingMap = new Map<string, number>();
+    for (const r of data.leaveRequestsGroup) {
+      if (r.status === 'Approved') {
+        reqApprovedMap.set(r.type_id, (reqApprovedMap.get(r.type_id) || 0) + (Number(r._sum.duration) || 0));
+      } else if (r.status === 'To Approve') {
+        reqPendingMap.set(r.type_id, (reqPendingMap.get(r.type_id) || 0) + (Number(r._sum.duration) || 0));
+      }
+    }
+
+    const allocMap = new Map<string, number>();
+    for (const a of data.leaveAllocationsGroup) {
+      allocMap.set(a.type_id, Number(a._sum.allocated) || 0);
+    }
+
     const leaveData = (data.leaveTypes && data.leaveTypes.length > 0)
       ? data.leaveTypes.map((lt) => {
-          let approved = 0;
-          let pending = 0;
-          for (const req of (lt.requests || [])) {
-            if (req.status === 'Approved') approved += (req.duration || 1);
-            else if (req.status === 'To Approve') pending += (req.duration || 1);
-          }
-          let allocated = 0;
-          for (const alc of (lt.allocations || [])) {
-            allocated += (alc.allocated || 0);
-          }
+          const approved = reqApprovedMap.get(lt.id) || 0;
+          const pending = reqPendingMap.get(lt.id) || 0;
+          let allocated = allocMap.get(lt.id) || 0;
           if (allocated === 0) allocated = 18;
           const remaining = Math.max(0, allocated - approved);
 

@@ -8,15 +8,20 @@ export class ContractController {
   getAll = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const orgId = req.organizationId || 'org_default';
-      const contracts = await this.service.getAllContracts(orgId);
+      const isPrivileged = req.user?.role === 'Admin' || req.user?.role === 'HR Manager' || req.user?.role === 'HR Payroll Admin' || req.user?.role === 'HR Payroll User';
 
-      // If regular Employee, only return their own contracts
-      if (req.user?.role === 'Employee') {
-        const myContracts = contracts.filter((c: any) => c.employee_id === req.user?.employeeId);
+      // If not privileged, strictly restrict query to caller's own employee ID at the DB layer
+      if (!isPrivileged) {
+        if (!req.user?.employeeId) {
+          res.json([]);
+          return;
+        }
+        const myContracts = await this.service.getAllContracts(orgId, req.user.employeeId);
         res.json(myContracts);
         return;
       }
 
+      const contracts = await this.service.getAllContracts(orgId);
       res.json(contracts);
     } catch (err) {
       next(err);
@@ -31,9 +36,9 @@ export class ContractController {
         throw new NotFoundError('Contract not found');
       }
 
-      // Check ownership if caller is an Employee
-      if (req.user?.role === 'Employee' && contract.employee_id !== req.user?.employeeId) {
-        throw new ForbiddenError('You are not authorized to view this contract');
+      const isPrivileged = req.user?.role === 'Admin' || req.user?.role === 'HR Manager' || req.user?.role === 'HR Payroll Admin' || req.user?.role === 'HR Payroll User';
+      if (!isPrivileged && contract.employee_id !== req.user?.employeeId) {
+        throw new ForbiddenError('You are not authorized to view another employee\'s contract');
       }
 
       res.json(contract);

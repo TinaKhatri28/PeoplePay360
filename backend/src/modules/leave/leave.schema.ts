@@ -7,7 +7,13 @@ export const createLeaveRequestSchema = z.object({
   end_date: z.string().min(1, 'End date is required'),
   duration: z.coerce.number().min(0.5, 'Duration must be at least 0.5 days'),
   reason: z.string().optional(),
-});
+}).refine(
+  (data) => new Date(data.start_date) <= new Date(data.end_date),
+  {
+    message: 'Leave start date must be before or equal to end date',
+    path: ['end_date'],
+  }
+);
 
 export const approveLeaveSchema = z.object({
   action: z.enum(['Approved', 'Refused', 'Cancelled']),

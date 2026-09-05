@@ -10,11 +10,14 @@ export class DashboardRepository {
       totalEmployees,
       activeEmployees,
       departments,
+      deptSalaryGroup,
       contractAggregate,
-      attendanceGroup,
-      attendanceMonth,
+      attendanceTodayGroup,
+      attendanceMonthGroup,
       pendingLeaves,
       leaveTypes,
+      leaveRequestsGroup,
+      leaveAllocationsGroup,
       payruns,
       missingBankCount,
       expiringContractsCount,
@@ -26,18 +29,21 @@ export class DashboardRepository {
         select: {
           id: true,
           name: true,
-          employees: {
-            where: { status: 'Active' },
+          _count: {
             select: {
-              id: true,
-              contracts: {
-                where: { status: 'Running' },
-                take: 1,
-                select: { wage: true },
-              },
+              employees: { where: { status: 'Active' } },
             },
           },
         },
+      }),
+      prisma.employmentContract.groupBy({
+        by: ['department'],
+        where: {
+          organization_id: organizationId,
+          status: 'Running',
+          department: { not: null },
+        },
+        _sum: { wage: true },
       }),
       prisma.employmentContract.aggregate({
         where: { organization_id: organizationId, status: 'Running' },
@@ -50,18 +56,13 @@ export class DashboardRepository {
         where: { organization_id: organizationId, date: today },
         _count: true,
       }),
-      prisma.attendanceRecord.findMany({
+      prisma.attendanceRecord.groupBy({
+        by: ['status'],
         where: {
           organization_id: organizationId,
-          OR: [
-            { date: { startsWith: monthPrefix } },
-            { date: { startsWith: `${year}-` } },
-          ],
+          date: { startsWith: monthPrefix },
         },
-        select: {
-          status: true,
-          date: true,
-        },
+        _count: true,
       }),
       prisma.leaveRequest.count({
         where: { organization_id: organizationId, status: 'To Approve' },
@@ -72,13 +73,17 @@ export class DashboardRepository {
           id: true,
           name: true,
           code: true,
-          requests: {
-            select: { status: true, duration: true },
-          },
-          allocations: {
-            select: { allocated: true, taken: true },
-          },
         },
+      }),
+      prisma.leaveRequest.groupBy({
+        by: ['type_id', 'status'],
+        where: { organization_id: organizationId },
+        _sum: { duration: true },
+      }),
+      prisma.leaveAllocation.groupBy({
+        by: ['type_id'],
+        where: { organization_id: organizationId },
+        _sum: { allocated: true, taken: true },
       }),
       prisma.payrun.findMany({
         where: { organization_id: organizationId },
@@ -116,11 +121,14 @@ export class DashboardRepository {
       totalEmployees,
       activeEmployees,
       departments,
+      deptSalaryGroup,
       contractAggregate,
-      attendanceGroup,
-      attendanceMonth,
+      attendanceTodayGroup,
+      attendanceMonthGroup,
       pendingLeaves,
       leaveTypes,
+      leaveRequestsGroup,
+      leaveAllocationsGroup,
       payruns,
       missingBankCount,
       expiringContractsCount,

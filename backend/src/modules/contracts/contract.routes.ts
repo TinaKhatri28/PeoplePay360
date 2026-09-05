@@ -9,8 +9,16 @@ const router = Router();
 
 router.use(authenticate);
 
-router.get('/', contractController.getAll);
-router.get('/:id', contractController.getById);
+router.get(
+  '/',
+  requireRole('Admin', 'HR Manager', 'HR Payroll Admin', 'HR Payroll User', 'Employee'),
+  contractController.getAll
+);
+router.get(
+  '/:id',
+  requireRole('Admin', 'HR Manager', 'HR Payroll Admin', 'HR Payroll User', 'Employee'),
+  contractController.getById
+);
 
 router.post(
   '/',

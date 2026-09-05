@@ -12,6 +12,7 @@ let pdfQueue: Queue | null = null;
 let emailQueue: Queue | null = null;
 
 export const initializeQueues = () => {
+  if (payrollQueue) return; // Idempotent: already initialized
   const redis = getRedisClient();
   if (redis && getIsRedisAvailable()) {
     try {

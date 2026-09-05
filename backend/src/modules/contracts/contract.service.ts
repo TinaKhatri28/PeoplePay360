@@ -26,8 +26,8 @@ export class ContractService {
     return start1 <= end2 && end1 >= start2;
   }
 
-  async getAllContracts(organizationId: string) {
-    const contracts = await this.repo.findAll(organizationId);
+  async getAllContracts(organizationId: string, employeeId?: string) {
+    const contracts = await this.repo.findAll(organizationId, employeeId);
     return contracts.map((c) => ({
       ...c,
       employee_name: c.employee ? `${c.employee.first_name} ${c.employee.last_name}` : 'Unknown',

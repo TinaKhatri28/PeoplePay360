@@ -71,21 +71,12 @@ export class PayrollService {
       throw new ConflictError(`A payrun for period ${month}/${year} already exists.`);
     }
 
-    const payrun = await this.repo.createPayrun({
-      organization_id: organizationId,
-      period_month: month,
-      period_year: year,
-      structure_id: data.structure_id || null,
-      status: 'Draft',
-    });
-
-    // Create draft payslips for all selected employees
+    // Prepare draft payslips for all selected employees
     const draftPayslips = [];
     for (const eid of employeeIds) {
       const contract = await this.calculation.getApplicableContract(organizationId, eid, year, month);
       draftPayslips.push({
         organization_id: organizationId,
-        payrun_id: payrun.id,
         employee_id: eid,
         contract_id: contract?.id || null,
         gross: 0,
@@ -97,9 +88,16 @@ export class PayrollService {
       });
     }
 
-    if (draftPayslips.length > 0) {
-      await this.repo.createDraftPayslips(draftPayslips);
-    }
+    const payrun = await this.repo.createPayrunWithDraftPayslipsTx(
+      {
+        organization_id: organizationId,
+        period_month: month,
+        period_year: year,
+        structure_id: data.structure_id || null,
+        status: 'Draft',
+      },
+      draftPayslips
+    );
 
     await this.audit.log({
       organizationId,
@@ -129,7 +127,7 @@ export class PayrollService {
 
     await this.repo.updatePayrunStatus(payrunId, 'Processing');
 
-    const computeAction = async () => {
+    try {
       const employeeIds = run.payslips.map((s) => s.employee_id);
       const resultMap = await this.calculation.calculateBatchPayroll(
         organizationId,
@@ -143,7 +141,16 @@ export class PayrollService {
       let totalDeductions = 0;
       let totalNet = 0;
 
-      const updatePromises = [];
+      const calculatedSlips: Array<{
+        payslipId: string;
+        contract_id: string | null;
+        gross: number;
+        deductions: number;
+        net: number;
+        lines_json: string;
+        warnings_json: string;
+        status: string;
+      }> = [];
 
       for (const slip of run.payslips) {
         const result = resultMap.get(slip.employee_id);
@@ -153,22 +160,20 @@ export class PayrollService {
         totalDeductions += result.totalDeductions;
         totalNet += result.netSalary;
 
-        updatePromises.push(
-          this.repo.updatePayslipCalculation(slip.id, {
-            contract_id: result.contractId,
-            gross: result.grossSalary,
-            deductions: result.totalDeductions,
-            net: result.netSalary,
-            lines_json: JSON.stringify(result.lines),
-            warnings_json: JSON.stringify(result.warnings),
-            status: 'Done',
-          })
-        );
+        calculatedSlips.push({
+          payslipId: slip.id,
+          contract_id: result.contractId,
+          gross: result.grossSalary,
+          deductions: result.totalDeductions,
+          net: result.netSalary,
+          lines_json: JSON.stringify(result.lines),
+          warnings_json: JSON.stringify(result.warnings),
+          status: 'Done',
+        });
       }
 
-      await Promise.all(updatePromises);
-
-      await this.repo.updatePayrunStatus(payrunId, 'Computed', {
+      // Execute atomic multi-row transaction for all payslips and payrun status
+      await this.repo.commitBatchPayrunCalculationTx(payrunId, calculatedSlips, {
         gross: +totalGross.toFixed(2),
         deductions: +totalDeductions.toFixed(2),
         net: +totalNet.toFixed(2),
@@ -182,10 +187,11 @@ export class PayrollService {
         resourceId: payrunId,
         details: { totalGross, totalNet, count: run.payslips.length },
       });
-    };
-
-    // Execute computation
-    await computeAction();
+    } catch (err) {
+      // Revert status from Processing to Draft if calculation fails
+      await this.repo.updatePayrunStatus(payrunId, 'Draft');
+      throw err;
+    }
 
     return { ok: true, computed: run.payslips.length };
   }

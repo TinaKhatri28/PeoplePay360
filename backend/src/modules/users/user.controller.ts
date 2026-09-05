@@ -27,7 +27,7 @@ export class UserController {
   update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const orgId = req.organizationId || 'org_default';
-      const result = await this.service.updateUser(orgId, req.params.id as string, req.body);
+      const result = await this.service.updateUser(orgId, req.params.id as string, req.body, req.user?.id);
       res.json(result);
     } catch (err) {
       next(err);

@@ -1,9 +1,12 @@
 import { prisma } from '../../config/database';
 
 export class ContractRepository {
-  async findAll(organizationId: string) {
+  async findAll(organizationId: string, employeeId?: string) {
+    const where: any = { organization_id: organizationId };
+    if (employeeId) where.employee_id = employeeId;
+
     return prisma.employmentContract.findMany({
-      where: { organization_id: organizationId },
+      where,
       include: {
         employee: true,
         salary_structure: true,

@@ -1,6 +1,6 @@
 import { userRepository, UserRepository } from './user.repository';
 import { authService, AuthService } from '../auth/auth.service';
-import { NotFoundError, ValidationError, ConflictError } from '../../shared/errors/app.error';
+import { NotFoundError, ValidationError, ConflictError, ForbiddenError } from '../../shared/errors/app.error';
 
 export const VALID_ROLES = ['Admin', 'HR Manager', 'HR Payroll Admin', 'HR Payroll User', 'Employee'] as const;
 export type ValidRole = typeof VALID_ROLES[number];
@@ -92,8 +92,17 @@ export class UserService {
       status?: string;
       password?: string;
       employee_id?: string | null;
-    }
+    },
+    actorUserId?: string
   ) {
+    if (actorUserId && actorUserId === id && (data.role || data.roles)) {
+      const targetRole = (data.role || data.roles) as string;
+      const currentUser = await this.repo.findById(organizationId, id);
+      if (currentUser && targetRole !== currentUser.role) {
+        throw new ForbiddenError('Users are not permitted to modify their own administrative role or self-promote');
+      }
+    }
+
     const updateData: any = {};
     if (data.roles || data.role) {
       const targetRole = (data.role || data.roles) as ValidRole;

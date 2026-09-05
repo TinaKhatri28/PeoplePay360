@@ -94,6 +94,98 @@ export class PayrollRepository {
     });
   }
 
+  /**
+   * ATOMIC TRANSACTION:
+   * Creates payrun and all associated draft payslips atomically.
+   */
+  async createPayrunWithDraftPayslipsTx(
+    payrunData: {
+      organization_id: string;
+      period_month: number;
+      period_year: number;
+      structure_id?: string | null;
+      status: string;
+    },
+    draftPayslips: Array<{
+      organization_id: string;
+      employee_id: string;
+      contract_id: string | null;
+      gross: number;
+      deductions: number;
+      net: number;
+      lines_json: string;
+      warnings_json: string;
+      status: string;
+    }>
+  ) {
+    return prisma.$transaction(async (tx) => {
+      const payrun = await tx.payrun.create({
+        data: payrunData,
+      });
+
+      if (draftPayslips.length > 0) {
+        const slipsWithPayrunId = draftPayslips.map((s) => ({
+          ...s,
+          payrun_id: payrun.id,
+        }));
+        await tx.payslip.createMany({
+          data: slipsWithPayrunId,
+          skipDuplicates: true,
+        });
+      }
+
+      return payrun;
+    });
+  }
+
+  /**
+   * ATOMIC TRANSACTION:
+   * Commits computed results for all payslips and updates the payrun totals in a single atomic transaction.
+   */
+  async commitBatchPayrunCalculationTx(
+    payrunId: string,
+    calculatedSlips: Array<{
+      payslipId: string;
+      contract_id: string | null;
+      gross: number;
+      deductions: number;
+      net: number;
+      lines_json: string;
+      warnings_json: string;
+      status: string;
+    }>,
+    totals: { gross: number; deductions: number; net: number }
+  ) {
+    return prisma.$transaction(async (tx) => {
+      for (const slip of calculatedSlips) {
+        await tx.payslip.update({
+          where: { id: slip.payslipId },
+          data: {
+            contract_id: slip.contract_id,
+            gross: slip.gross,
+            deductions: slip.deductions,
+            net: slip.net,
+            lines_json: slip.lines_json,
+            warnings_json: slip.warnings_json,
+            status: slip.status,
+          },
+        });
+      }
+
+      const updatedPayrun = await tx.payrun.update({
+        where: { id: payrunId },
+        data: {
+          status: 'Computed',
+          total_gross: totals.gross,
+          total_deductions: totals.deductions,
+          total_net: totals.net,
+        },
+      });
+
+      return updatedPayrun;
+    });
+  }
+
   async updatePayslipCalculation(
     payslipId: string,
     data: {
