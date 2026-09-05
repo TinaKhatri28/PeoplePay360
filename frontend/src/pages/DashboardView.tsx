@@ -74,10 +74,7 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-<<<<<<< HEAD:frontend/src/pages/DashboardView.jsx
       {/* Filter and Period Selector Banner */}
-=======
->>>>>>> 8b6891f392b2b3d91a1ee98cd4bd675cc7c9e38b:frontend/src/pages/DashboardView.tsx
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -250,13 +247,8 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
         </div>
       </div>
 
-<<<<<<< HEAD:frontend/src/pages/DashboardView.jsx
       {/* Visual Charts: Trend and Department Distribution */}
       <div className="grid-2">
-        {/* Monthly Trend Visualizer */}
-=======
-      <div className="grid-2">
->>>>>>> 8b6891f392b2b3d91a1ee98cd4bd675cc7c9e38b:frontend/src/pages/DashboardView.tsx
         <div className="card">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
             <div>
@@ -326,10 +318,7 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
           </div>
         </div>
 
-<<<<<<< HEAD:frontend/src/pages/DashboardView.jsx
         {/* Department Cost Distribution */}
-=======
->>>>>>> 8b6891f392b2b3d91a1ee98cd4bd675cc7c9e38b:frontend/src/pages/DashboardView.tsx
         <div className="card">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
             <div>

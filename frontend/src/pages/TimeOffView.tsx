@@ -1,5 +1,4 @@
-<<<<<<< HEAD:frontend/src/pages/TimeOffView.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, FormEvent } from 'react';
 import {
   CalendarOff,
   Plus,
@@ -10,10 +9,6 @@ import {
   Calendar,
   X
 } from 'lucide-react';
-=======
-import React, { useState, useEffect, FormEvent } from 'react';
-import { Plus, CheckCircle2, XCircle, X } from 'lucide-react';
->>>>>>> 8b6891f392b2b3d91a1ee98cd4bd675cc7c9e38b:frontend/src/pages/TimeOffView.tsx
 import { apiRequest } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { TimeOffRequest, TimeOffAllocation } from '../types';

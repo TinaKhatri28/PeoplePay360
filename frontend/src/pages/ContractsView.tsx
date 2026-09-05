@@ -1,5 +1,4 @@
-<<<<<<< HEAD:frontend/src/pages/ContractsView.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, FormEvent } from 'react';
 import {
   FileText,
   Plus,
@@ -12,10 +11,6 @@ import {
   CreditCard,
   Briefcase
 } from 'lucide-react';
-=======
-import React, { useState, useEffect, FormEvent } from 'react';
-import { Plus, Search, X } from 'lucide-react';
->>>>>>> 8b6891f392b2b3d91a1ee98cd4bd675cc7c9e38b:frontend/src/pages/ContractsView.tsx
 import { apiRequest } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { Contract, Employee, SalaryStructure, WorkingSchedule } from '../types';
