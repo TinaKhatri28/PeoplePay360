@@ -36,6 +36,13 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+    env:
+      NODE_ENV: test
+      DATABASE_URL: "postgresql://postgres:postgrespassword@localhost:5432/peoplepay360?schema=public"
+      JWT_SECRET: "ci-test-jwt-secret-key-super-secure-32chars"
+      JWT_REFRESH_SECRET: "ci-test-jwt-refresh-secret-key-super-secure-32chars"
+      REDIS_URL: "redis://localhost:6379"
+
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
