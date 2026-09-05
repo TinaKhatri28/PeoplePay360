@@ -1,26 +1,199 @@
-import React, { useState } from 'react';
-import { ArrowRight, ShieldCheck, Zap, Users, Clock, CreditCard, ChevronRight, Award, Lock, Sparkles, CheckCircle2, FileText, TrendingUp, Check } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import {
+  ShieldCheck,
+  ArrowRight,
+  Sparkles,
+  CheckCircle2,
+  Users,
+  CreditCard,
+  Clock,
+  Award,
+  ChevronRight,
+  ChevronDown,
+  Lock,
+  Zap,
+  Building,
+  TrendingUp,
+  FileText,
+  FileCheck,
+  Star,
+  Check,
+  ChevronLeft
+} from 'lucide-react';
 
 interface LandingPageProps {
   onEnterLogin: () => void;
 }
 
 export default function LandingPage({ onEnterLogin }: LandingPageProps): React.JSX.Element {
-  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
-
-  // Exact Color Palette from design reference:
-  // Alabaster Cream: #F1ECE6
-  // Warm Greige: #DDD5CD
-  // Vintage Rosewood: #7D4047
-  // Charcoal Espresso: #2E2E2E
-
+  // Theme Color Palette
   const palette = {
     cream: '#F1ECE6',
     greige: '#DDD5CD',
     rosewood: '#7D4047',
     rosewoodDark: '#562A30',
+    rosewoodLight: '#F5EBEB',
     charcoal: '#2E2E2E',
     white: '#FFFFFF',
+  };
+
+  // Cycling Typewriter text in Hero (HROne signature feature)
+  const cyclingPhrases = [
+    'Complex HR Ops',
+    '1-Click Payroll Runs',
+    'Biometric Attendance',
+    'Contract Allocations',
+    'Tax & Compliance',
+  ];
+  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
+  const [displayedText, setDisplayedText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const fullText = cyclingPhrases[currentPhraseIndex];
+    const typingSpeed = isDeleting ? 40 : 80;
+
+    const timer = setTimeout(() => {
+      if (!isDeleting) {
+        setDisplayedText(fullText.substring(0, displayedText.length + 1));
+        if (displayedText === fullText) {
+          setTimeout(() => setIsDeleting(true), 1800);
+        }
+      } else {
+        setDisplayedText(fullText.substring(0, displayedText.length - 1));
+        if (displayedText === '') {
+          setIsDeleting(false);
+          setCurrentPhraseIndex((prev) => (prev + 1) % cyclingPhrases.length);
+        }
+      }
+    }, typingSpeed);
+
+    return () => clearTimeout(timer);
+  }, [displayedText, isDeleting, currentPhraseIndex]);
+
+  // Interactive Platform Tabs
+  const [activeTab, setActiveTab] = useState<number>(0);
+  const platformTabs = [
+    {
+      id: 0,
+      title: 'Workforce',
+      icon: <Users size={18} />,
+      heading: 'Manage the entire employee lifecycle seamlessly',
+      desc: 'From digital onboarding to contract management and offboarding — manage employee data effortlessly in one secure repository.',
+      screen: {
+        title: 'Employee Directory & Onboarding',
+        badge: '42 active onboarding',
+        metric1: { label: 'Active Employees', value: '4,601' },
+        metric2: { label: 'Retention Rate', value: '98.4%' },
+        person: { name: 'Rohan Mehta', role: 'Lead Architect', progress: '85%', tag: 'Day 12' },
+        tasks: ['Identity verification complete', 'PF & Tax documents approved', 'Direct bank payout configured'],
+      },
+    },
+    {
+      id: 1,
+      title: 'Payroll',
+      icon: <CreditCard size={18} />,
+      heading: 'Automated 1-click payruns with 100% accuracy',
+      desc: 'Instant salary calculations incorporating custom allowances, variable performance bonuses, statutory tax brackets, and automated payslip generation.',
+      screen: {
+        title: 'Payrun Disbursement Engine',
+        badge: 'Live Auto-Disbursement',
+        metric1: { label: 'Total Net Payout', value: '$248,500' },
+        metric2: { label: 'Audit Status', value: '100% Valid' },
+        person: { name: 'Eleanor Vance', role: 'Senior Analyst', progress: '100%', tag: 'Paid Out' },
+        tasks: ['Gross earnings calculated', 'Tax & PF deductions locked', 'Direct PDF payslips emailed'],
+      },
+    },
+    {
+      id: 2,
+      title: 'Attendance',
+      icon: <Clock size={18} />,
+      heading: 'Real-time biometric shift & attendance tracking',
+      desc: 'Eliminate buddy punching and time theft with biometric synchronization, geofenced mobile check-ins, automated overtime logging, and penalty formulas.',
+      screen: {
+        title: 'Live Shift Verification',
+        badge: '99.4% On-Time Today',
+        metric1: { label: 'Present Today', value: '4,512' },
+        metric2: { label: 'Avg Shift Time', value: '8h 24m' },
+        person: { name: 'Sophia Chen', role: 'Operations Lead', progress: '94%', tag: 'Checked In' },
+        tasks: ['Biometric check-in logged', 'Geofence location verified', 'Shift hours synced to payroll'],
+      },
+    },
+    {
+      id: 3,
+      title: 'Salary Rules',
+      icon: <TrendingUp size={18} />,
+      heading: 'Dynamic compensation structures & bonus rules',
+      desc: 'Customize salary components, basic pays, HRA, special allowances, medical coverage, and automated deduction formulas per department tier.',
+      screen: {
+        title: 'Salary Tier Customizer',
+        badge: 'Tier 4 Executive Matrix',
+        metric1: { label: 'Active Formulas', value: '18 Rules' },
+        metric2: { label: 'Tax Accuracy', value: '99.99%' },
+        person: { name: 'Arjun Kapoor', role: 'VP Engineering', progress: '100%', tag: 'Tier 4 Rule' },
+        tasks: ['Base salary component active', 'Quarterly incentive calculated', 'Statutory compliance passed'],
+      },
+    },
+  ];
+
+  // Testimonials Carousel
+  const [testiIndex, setTestiIndex] = useState(0);
+  const testimonials = [
+    {
+      quote:
+        'PeoplePay360 cut our monthly payroll cycle from 4 days to less than 15 minutes. The accuracy and biometric attendance sync have completely transformed our operations.',
+      name: 'Rajesh Sharma',
+      designation: 'Chief Human Resources Officer',
+      company: 'OmniTech Global',
+      metric: '92% time saved on payroll',
+    },
+    {
+      quote:
+        'The cleanest, most intuitive HRMS software we have ever deployed. Our employees love the transparent self-service payslips and attendance history.',
+      name: 'Priya Narang',
+      designation: 'VP of People Operations',
+      company: 'Crestline Logistics',
+      metric: '100% error-free compliance',
+    },
+    {
+      quote:
+        'Managing salary structures and contractual rules across 1,200+ employees was painful until we adopted PeoplePay360. Truly world-class.',
+      name: 'Vikram Malhotra',
+      designation: 'Head of Payroll & Compliance',
+      company: 'Zenith Retail Brands',
+      metric: '1,200+ employees automated',
+    },
+  ];
+
+  // FAQ Accordion
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const faqs = [
+    {
+      q: 'How does PeoplePay360 automate payroll calculations and tax deductions?',
+      a: 'PeoplePay360 automatically aggregates verified attendance, overtime records, contractual salary tiers, and statutory deduction formulas to compute net pays in real-time. PDF payslips are generated instantly and dispatched to employees upon one-click approval.',
+    },
+    {
+      q: 'Can we manage multiple salary structures and allowances for different employee tiers?',
+      a: 'Yes! You can configure unlimited salary structures including basic pay, housing allowances, transport bonuses, performance incentives, and custom deduction formulas tailored to different departments and seniority levels.',
+    },
+    {
+      q: 'Is our corporate data secure and compliant with enterprise standards?',
+      a: 'PeoplePay360 utilizes enterprise-grade 256-bit encryption, role-based access governance, and comprehensive audit logs to ensure total confidentiality and regulatory compliance.',
+    },
+    {
+      q: 'How easily can our team transition to PeoplePay360?',
+      a: 'Our seamless data onboarding wizard lets you import existing employee profiles, contracts, and salary structures in minutes with zero disruption to active pay cycles.',
+    },
+  ];
+
+  // Demo Form State
+  const [demoEmail, setDemoEmail] = useState('');
+  const [demoPhone, setDemoPhone] = useState('');
+  const [companySize, setCompanySize] = useState('51-200');
+
+  const handleDemoSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onEnterLogin();
   };
 
   return (
@@ -37,624 +210,1004 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
         boxSizing: 'border-box',
       }}
     >
-      {/* Floating animation styles */}
+      {/* Dynamic Keyframes */}
       <style>{`
-        @keyframes floatSlow1 {
-          0%, 100% { transform: translateY(0px) rotate(-3deg); }
-          50% { transform: translateY(-10px) rotate(-1deg); }
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
         }
-        @keyframes floatSlow2 {
-          0%, 100% { transform: translateY(0px) rotate(4deg); }
-          50% { transform: translateY(-12px) rotate(2deg); }
-        }
-        @keyframes floatSlow3 {
-          0%, 100% { transform: translateY(0px) rotate(-2deg); }
-          50% { transform: translateY(-8px) rotate(-4deg); }
+        @keyframes blink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0; }
         }
         @keyframes pulseGlow {
-          0%, 100% { opacity: 0.6; }
-          50% { opacity: 0.9; }
+          0%, 100% { transform: scale(1); opacity: 0.8; }
+          50% { transform: scale(1.03); opacity: 1; }
+        }
+        .marquee-track {
+          display: flex;
+          gap: 48px;
+          width: max-content;
+          animation: marquee 24s linear infinite;
+        }
+        .marquee-track:hover {
+          animation-play-state: paused;
         }
       `}</style>
 
-      {/* Subtle Background Pattern */}
+      {/* Grid pattern */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
-          backgroundImage: `
-            radial-gradient(${palette.rosewood}18 1px, transparent 1px)
-          `,
-          backgroundSize: '32px 32px',
+          backgroundImage: `radial-gradient(${palette.rosewood}15 1px, transparent 1px)`,
+          backgroundSize: '30px 30px',
           pointerEvents: 'none',
           zIndex: 1,
         }}
       />
 
-      {/* Main Container */}
-      <div style={{ position: 'relative', zIndex: 10, maxWidth: '1280px', margin: '0 auto', padding: '0 2rem' }}>
-        
-        {/* Navigation Header */}
-        <header
+      {/* ─── NAVIGATION BAR (HROne Style) ─── */}
+      <header
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 100,
+          backgroundColor: `${palette.cream}F2`,
+          backdropFilter: 'blur(12px)',
+          borderBottom: `1px solid ${palette.rosewood}20`,
+        }}
+      >
+        <div
           style={{
+            maxWidth: '1240px',
+            margin: '0 auto',
+            padding: '1rem 2rem',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '1.75rem 0',
-            borderBottom: `1px solid ${palette.rosewood}25`,
-            backgroundColor: `${palette.cream}CC`,
-            backdropFilter: 'blur(10px)',
           }}
         >
           {/* Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div
               style={{
-                width: '44px',
-                height: '44px',
-                borderRadius: '12px',
+                width: '40px',
+                height: '40px',
+                borderRadius: '10px',
                 backgroundColor: palette.rosewood,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: `0 4px 14px ${palette.rosewood}40, inset 0 2px 0 rgba(255,255,255,0.3)`,
+                boxShadow: `0 4px 12px ${palette.rosewood}35`,
               }}
             >
-              <ShieldCheck size={26} color={palette.cream} />
+              <ShieldCheck size={24} color={palette.cream} />
             </div>
             <div>
-              <span style={{ fontSize: '1.65rem', fontWeight: 900, color: palette.charcoal, letterSpacing: '-0.03em', fontStyle: 'italic' }}>
+              <span style={{ fontSize: '1.55rem', fontWeight: 900, color: palette.charcoal, letterSpacing: '-0.03em' }}>
                 PeoplePay<span style={{ color: palette.rosewood }}>360</span>
               </span>
-              <span style={{ display: 'block', fontSize: '0.65rem', color: palette.rosewood, letterSpacing: '0.22em', textTransform: 'uppercase', fontStyle: 'italic', fontWeight: 800 }}>
+              <span style={{ display: 'block', fontSize: '0.62rem', color: palette.rosewood, letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 800 }}>
                 Enterprise HR & Payroll OS
               </span>
             </div>
           </div>
 
-          {/* Navigation Links */}
-          <nav style={{ display: 'flex', alignItems: 'center', gap: '2.5rem' }}>
-            <a href="#hero" style={{ color: palette.charcoal, textDecoration: 'none', fontSize: '0.92rem', fontWeight: 700, fontStyle: 'italic' }}>
-              Home
+          {/* Nav Links */}
+          <nav style={{ display: 'flex', alignItems: 'center', gap: '2.2rem' }}>
+            <a href="#platform" style={{ color: palette.charcoal, textDecoration: 'none', fontSize: '0.9rem', fontWeight: 700 }}>
+              Platform
             </a>
-            <a href="#features" style={{ color: palette.charcoal, textDecoration: 'none', fontSize: '0.92rem', fontWeight: 700, fontStyle: 'italic' }}>
+            <a href="#features" style={{ color: palette.charcoal, textDecoration: 'none', fontSize: '0.9rem', fontWeight: 700 }}>
               Features
             </a>
-            <a href="#metrics" style={{ color: palette.charcoal, textDecoration: 'none', fontSize: '0.92rem', fontWeight: 700, fontStyle: 'italic' }}>
+            <a href="#metrics" style={{ color: palette.charcoal, textDecoration: 'none', fontSize: '0.9rem', fontWeight: 700 }}>
               Metrics
+            </a>
+            <a href="#faq" style={{ color: palette.charcoal, textDecoration: 'none', fontSize: '0.9rem', fontWeight: 700 }}>
+              FAQ
             </a>
           </nav>
 
-          {/* Top 3D Header Sign In Button */}
+          {/* 3D Sign In Button */}
           <button
             onClick={onEnterLogin}
             style={{
-              position: 'relative',
               backgroundColor: palette.rosewood,
               color: palette.cream,
               border: `2px solid ${palette.charcoal}`,
-              borderRadius: '10px',
-              padding: '0.65rem 1.5rem',
-              fontSize: '0.9rem',
+              borderRadius: '9px',
+              padding: '0.65rem 1.4rem',
+              fontSize: '0.88rem',
               fontWeight: 800,
               fontStyle: 'italic',
               cursor: 'pointer',
-              boxShadow: `0px 4px 0px ${palette.rosewoodDark}, 0px 7px 14px ${palette.rosewood}35`,
-              transform: 'translateY(0px)',
-              transition: 'all 0.12s ease-in-out',
+              boxShadow: `0px 4px 0px ${palette.rosewoodDark}, 0px 6px 12px ${palette.rosewood}35`,
+              transform: 'translateY(0)',
+              transition: 'all 0.12s ease',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem',
+              gap: '0.45rem',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = `0px 6px 0px ${palette.rosewoodDark}, 0px 10px 18px ${palette.rosewood}45`;
+              e.currentTarget.style.boxShadow = `0px 6px 0px ${palette.rosewoodDark}, 0px 8px 16px ${palette.rosewood}45`;
             }}
             onMouseDown={(e) => {
               e.currentTarget.style.transform = 'translateY(3px)';
-              e.currentTarget.style.boxShadow = `0px 1px 0px ${palette.rosewoodDark}, 0px 3px 6px rgba(0,0,0,0.3)`;
-            }}
-            onMouseUp={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = `0px 1px 0px ${palette.rosewoodDark}`;
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0px)';
-              e.currentTarget.style.boxShadow = `0px 4px 0px ${palette.rosewoodDark}, 0px 7px 14px ${palette.rosewood}35`;
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = `0px 4px 0px ${palette.rosewoodDark}, 0px 6px 12px ${palette.rosewood}35`;
             }}
           >
-            <span>Sign In</span>
-            <ArrowRight size={16} />
+            <span>Sign In to Workspace</span>
+            <ArrowRight size={15} />
           </button>
-        </header>
+        </div>
+      </header>
 
-        {/* HERO SECTION MATCHING WIREFRAME DIAGRAM */}
-        <section id="hero" style={{ padding: '4rem 0 3rem', position: 'relative' }}>
-          
-          {/* Scattered 6 Floating Images/Cards around Central Title Canvas */}
-          <div
-            style={{
-              position: 'relative',
-              minHeight: '480px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto',
-            }}
-          >
-            {/* FLOATING IMAGE 1 (Top Left): Attendance Preview Card */}
+      {/* ─── MAIN HERO SECTION (HROne 2-Column Split: Copy + Direct Interactive Form Card) ─── */}
+      <section
+        style={{
+          position: 'relative',
+          zIndex: 10,
+          maxWidth: '1240px',
+          margin: '0 auto',
+          padding: '4.5rem 2rem 3.5rem',
+        }}
+      >
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1.15fr 0.85fr',
+            gap: '3.5rem',
+            alignItems: 'center',
+          }}
+        >
+          {/* LEFT: Copy + Cycling Text + Trust Ratings */}
+          <div>
+            {/* Badge */}
             <div
               style={{
-                position: 'absolute',
-                top: '5%',
-                left: '0%',
-                width: '210px',
-                borderRadius: '14px',
-                backgroundColor: palette.white,
-                border: `2px solid ${palette.rosewood}30`,
-                boxShadow: `0 15px 30px ${palette.charcoal}20`,
-                padding: '0.6rem',
-                animation: 'floatSlow1 6s ease-in-out infinite',
-                zIndex: 4,
-              }}
-            >
-              <img
-                src="/hero_attendance.jpg"
-                alt="Daily Attendance Verification"
-                style={{ width: '100%', height: '110px', objectFit: 'cover', borderRadius: '10px' }}
-              />
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.5rem', padding: '0 0.2rem' }}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#2E7D5B' }} />
-                <span style={{ fontSize: '0.72rem', fontWeight: 800, color: palette.charcoal, fontStyle: 'italic' }}>
-                  Biometric Attendance
-                </span>
-              </div>
-            </div>
-
-            {/* FLOATING IMAGE 2 (Top Mid-Left): Live Payrun Badge */}
-            <div
-              style={{
-                position: 'absolute',
-                top: '-5%',
-                left: '26%',
-                borderRadius: '14px',
-                backgroundColor: palette.rosewood,
-                color: palette.cream,
-                border: `2px solid ${palette.charcoal}`,
-                boxShadow: `0 12px 25px ${palette.rosewood}50`,
-                padding: '0.75rem 1.1rem',
-                animation: 'floatSlow2 5.5s ease-in-out infinite',
-                zIndex: 5,
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.6rem',
-              }}
-            >
-              <div style={{ backgroundColor: palette.cream, padding: '0.35rem', borderRadius: '8px' }}>
-                <CreditCard size={18} color={palette.rosewood} />
-              </div>
-              <div>
-                <div style={{ fontSize: '0.68rem', opacity: 0.9, textTransform: 'uppercase', fontStyle: 'italic', fontWeight: 700 }}>
-                  Payrun Approved
-                </div>
-                <div style={{ fontSize: '0.95rem', fontWeight: 900, fontStyle: 'italic' }}>
-                  $48,250.00 Disbursed
-                </div>
-              </div>
-            </div>
-
-            {/* FLOATING IMAGE 3 (Top Right): Salary Breakdown Preview Card */}
-            <div
-              style={{
-                position: 'absolute',
-                top: '6%',
-                right: '0%',
-                width: '220px',
-                borderRadius: '14px',
-                backgroundColor: palette.white,
-                border: `2px solid ${palette.rosewood}30`,
-                boxShadow: `0 15px 30px ${palette.charcoal}20`,
-                padding: '0.6rem',
-                animation: 'floatSlow3 7s ease-in-out infinite',
-                zIndex: 4,
-              }}
-            >
-              <img
-                src="/hero_payroll.jpg"
-                alt="Salary Breakdown UI"
-                style={{ width: '100%', height: '115px', objectFit: 'cover', borderRadius: '10px' }}
-              />
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.5rem', padding: '0 0.2rem' }}>
-                <span style={{ fontSize: '0.72rem', fontWeight: 800, color: palette.rosewood, fontStyle: 'italic' }}>
-                  Salary Calculator
-                </span>
-                <span style={{ fontSize: '0.68rem', backgroundColor: palette.greige, padding: '0.15rem 0.4rem', borderRadius: '6px', fontWeight: 700 }}>
-                  Tax Ready
-                </span>
-              </div>
-            </div>
-
-            {/* FLOATING IMAGE 4 (Mid Left): Verified Payslip Badge */}
-            <div
-              style={{
-                position: 'absolute',
-                top: '52%',
-                left: '2%',
-                borderRadius: '14px',
-                backgroundColor: palette.greige,
+                backgroundColor: `${palette.rosewood}15`,
                 border: `1px solid ${palette.rosewood}40`,
-                boxShadow: `0 10px 20px ${palette.charcoal}15`,
-                padding: '0.75rem 1rem',
-                animation: 'floatSlow2 6.5s ease-in-out infinite',
-                zIndex: 4,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.6rem',
-              }}
-            >
-              <FileText size={20} color={palette.rosewood} />
-              <div>
-                <div style={{ fontSize: '0.78rem', fontWeight: 800, color: palette.charcoal, fontStyle: 'italic' }}>
-                  PDF Payslips Generated
-                </div>
-                <div style={{ fontSize: '0.68rem', color: palette.rosewood, fontWeight: 700, fontStyle: 'italic' }}>
-                  100% Tax Compliant
-                </div>
-              </div>
-            </div>
-
-            {/* FLOATING IMAGE 5 (Mid Right): Active Employee Badge */}
-            <div
-              style={{
-                position: 'absolute',
-                top: '50%',
-                right: '2%',
-                borderRadius: '14px',
-                backgroundColor: palette.white,
-                border: `2px solid ${palette.rosewood}30`,
-                boxShadow: `0 10px 22px ${palette.charcoal}15`,
-                padding: '0.75rem 1rem',
-                animation: 'floatSlow1 5.8s ease-in-out infinite',
-                zIndex: 4,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.65rem',
-              }}
-            >
-              <div
-                style={{
-                  width: '34px',
-                  height: '34px',
-                  borderRadius: '50%',
-                  backgroundColor: palette.rosewood,
-                  color: palette.cream,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 900,
-                  fontSize: '0.85rem',
-                }}
-              >
-                AK
-              </div>
-              <div>
-                <div style={{ fontSize: '0.8rem', fontWeight: 800, color: palette.charcoal, fontStyle: 'italic' }}>
-                  Active Employee Profile
-                </div>
-                <div style={{ fontSize: '0.68rem', color: '#2E7D5B', fontWeight: 700, fontStyle: 'italic' }}>
-                  ✓ Shift Checked In
-                </div>
-              </div>
-            </div>
-
-            {/* FLOATING IMAGE 6 (Bottom Center): Security Stamp Badge */}
-            <div
-              style={{
-                position: 'absolute',
-                bottom: '-2%',
-                left: '50%',
-                transform: 'translateX(-50%)',
+                padding: '0.45rem 1.15rem',
                 borderRadius: '999px',
-                backgroundColor: palette.charcoal,
-                color: palette.cream,
-                border: `2px solid ${palette.rosewood}`,
-                boxShadow: `0 8px 20px ${palette.charcoal}40`,
-                padding: '0.45rem 1.25rem',
-                animation: 'floatSlow3 6.2s ease-in-out infinite',
-                zIndex: 6,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                fontSize: '0.75rem',
+                color: palette.rosewood,
+                fontSize: '0.8rem',
                 fontWeight: 800,
-                fontStyle: 'italic',
+                marginBottom: '1.75rem',
               }}
             >
-              <CheckCircle2 size={15} color={palette.cream} />
-              <span>ROLE-BASED HR SECURITY GOVERNANCE</span>
+              <Sparkles size={15} color={palette.rosewood} />
+              <span>India's #1 Enterprise HRMS & Payroll OS &nbsp;·&nbsp; 50k+ Employees</span>
             </div>
 
-            {/* CENTRAL TITLE BOX (Matching wireframe Title center position) */}
-            <div
+            {/* Headline with Cycling Typewriter Text */}
+            <h1
               style={{
-                position: 'relative',
-                zIndex: 10,
-                maxWidth: '680px',
-                textAlign: 'center',
-                padding: '2.5rem 1.5rem',
-                backgroundColor: `${palette.cream}F0`,
-                borderRadius: '24px',
-                border: `2px solid ${palette.rosewood}35`,
-                boxShadow: `0 20px 50px ${palette.charcoal}20`,
-                backdropFilter: 'blur(12px)',
+                fontSize: 'clamp(2.5rem, 4.5vw, 3.8rem)',
+                fontWeight: 900,
+                lineHeight: 1.1,
+                letterSpacing: '-0.04em',
+                color: palette.charcoal,
+                marginBottom: '1.5rem',
               }}
             >
-              {/* Badge */}
-              <div
+              The Simplest HR<br />
+              Software to Automate<br />
+              <span
                 style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  backgroundColor: `${palette.rosewood}15`,
-                  border: `1px solid ${palette.rosewood}40`,
-                  padding: '0.35rem 1rem',
-                  borderRadius: '999px',
                   color: palette.rosewood,
-                  fontSize: '0.78rem',
-                  fontWeight: 800,
-                  fontStyle: 'italic',
-                  marginBottom: '1.25rem',
+                  borderBottom: `3px solid ${palette.rosewood}`,
+                  display: 'inline-block',
                 }}
               >
-                <Sparkles size={14} color={palette.rosewood} />
-                <span>INTELLIGENT HR & PAYROLL PLATFORM</span>
-              </div>
+                {displayedText}
+                <span
+                  style={{
+                    display: 'inline-block',
+                    width: '3px',
+                    height: '0.9em',
+                    backgroundColor: palette.rosewood,
+                    marginLeft: '4px',
+                    verticalAlign: 'middle',
+                    animation: 'blink 0.8s infinite',
+                  }}
+                />
+              </span>
+            </h1>
 
-              {/* Main Headline */}
-              <h1
-                style={{
-                  fontSize: 'clamp(2.2rem, 4.5vw, 3.6rem)',
-                  fontWeight: 900,
-                  fontStyle: 'italic',
-                  lineHeight: 1.12,
-                  letterSpacing: '-0.03em',
-                  color: palette.charcoal,
-                  margin: '0 0 1rem 0',
-                }}
-              >
-                Automate Payroll.<br />
-                <span style={{ color: palette.rosewood, textShadow: `0 2px 10px ${palette.rosewood}25` }}>
-                  Empower Employees.
-                </span><br />
-                Zero Errors.
-              </h1>
-            </div>
-          </div>
-
-          {/* SUPPORTING TEXT & 3D BUTTON (Matching wireframe supporting text bottom section) */}
-          <div
-            style={{
-              textAlign: 'center',
-              marginTop: '3.5rem',
-              maxWidth: '750px',
-              margin: '3.5rem auto 0',
-              position: 'relative',
-              zIndex: 10,
-            }}
-          >
-            {/* Supporting Text */}
+            {/* Subtitle */}
             <p
               style={{
                 fontSize: '1.15rem',
-                fontWeight: 500,
-                fontStyle: 'italic',
+                lineHeight: 1.65,
                 color: palette.charcoal,
-                opacity: 0.88,
-                lineHeight: 1.6,
-                marginBottom: '2.25rem',
+                opacity: 0.85,
+                maxWidth: '540px',
+                marginBottom: '1.25rem',
               }}
             >
-              Streamline enterprise contract allocations, biometric attendance logging, flexible salary structures, and instant 1-click payslip generation in a unified workspace.
+              From hire to retire — PeoplePay360 delivers seamless payroll automation, biometric attendance verification, flexible salary structures, and instant PDF payslips.
             </p>
 
-            {/* PROMINENT VINTAGE ROSEWOOD 3D BUTTON */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-              <button
-                onClick={onEnterLogin}
-                style={{
-                  position: 'relative',
-                  backgroundColor: palette.rosewood,
-                  color: palette.cream,
-                  border: `3px solid ${palette.charcoal}`,
-                  borderRadius: '16px',
-                  padding: '1.15rem 3.25rem',
-                  fontSize: '1.25rem',
-                  fontWeight: 900,
-                  fontStyle: 'italic',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.04em',
-                  cursor: 'pointer',
-                  // Extruded 3D Shadow Layers in Rosewood & Charcoal
-                  boxShadow: `
-                    0px 10px 0px ${palette.rosewoodDark},
-                    0px 12px 0px ${palette.charcoal},
-                    0px 20px 35px ${palette.rosewood}50
-                  `,
-                  transform: 'translateY(0px)',
-                  transition: 'all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.85rem',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-3px)';
-                  e.currentTarget.style.boxShadow = `
-                    0px 13px 0px ${palette.rosewoodDark},
-                    0px 15px 0px ${palette.charcoal},
-                    0px 25px 45px ${palette.rosewood}65
-                  `;
-                }}
-                onMouseDown={(e) => {
-                  e.currentTarget.style.transform = 'translateY(8px)';
-                  e.currentTarget.style.boxShadow = `
-                    0px 2px 0px ${palette.rosewoodDark},
-                    0px 4px 0px ${palette.charcoal},
-                    0px 8px 15px rgba(0,0,0,0.5)
-                  `;
-                }}
-                onMouseUp={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-3px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0px)';
-                  e.currentTarget.style.boxShadow = `
-                    0px 10px 0px ${palette.rosewoodDark},
-                    0px 12px 0px ${palette.charcoal},
-                    0px 20px 35px ${palette.rosewood}50
-                  `;
-                }}
-              >
-                <span>GET STARTED NOW</span>
+            <p style={{ fontSize: '0.95rem', fontWeight: 800, color: palette.rosewood, marginBottom: '2.5rem' }}>
+              Built for high-growth enterprises &nbsp;·&nbsp; AI-Powered & 100% Tax Compliant
+            </p>
+
+            {/* Trust Ratings (Gartner & G2 style) */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1.75rem',
+                paddingTop: '1.25rem',
+                borderTop: `1px solid ${palette.rosewood}25`,
+              }}
+            >
+              {/* Gartner */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <div
                   style={{
-                    width: '34px',
-                    height: '34px',
-                    borderRadius: '50%',
-                    backgroundColor: palette.cream,
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '8px',
+                    backgroundColor: '#002856',
+                    color: '#fff',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    fontWeight: 900,
+                    fontSize: '0.9rem',
                   }}
                 >
-                  <ArrowRight size={20} color={palette.rosewood} />
+                  G
                 </div>
-              </button>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '3px' }}>
+                    <span style={{ fontSize: '1.1rem', fontWeight: 900, color: palette.charcoal }}>4.9</span>
+                    <span style={{ fontSize: '0.75rem', color: palette.rosewood, fontWeight: 700 }}>/5</span>
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: '#D97706', fontWeight: 800 }}>
+                    ★★★★★ <span style={{ color: palette.charcoal, opacity: 0.7 }}>· Gartner 850+ reviews</span>
+                  </div>
+                </div>
+              </div>
 
-              <div style={{ fontSize: '0.82rem', color: palette.charcoal, opacity: 0.7, fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <Lock size={13} color={palette.rosewood} />
-                <span>Click the 3D button above to enter the secure login workspace</span>
+              {/* Divider */}
+              <div style={{ width: '1px', height: '36px', backgroundColor: `${palette.rosewood}30` }} />
+
+              {/* G2 */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '8px',
+                    backgroundColor: '#FF492C',
+                    color: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 900,
+                    fontSize: '0.9rem',
+                  }}
+                >
+                  G2
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '3px' }}>
+                    <span style={{ fontSize: '1.1rem', fontWeight: 900, color: palette.charcoal }}>4.8</span>
+                    <span style={{ fontSize: '0.75rem', color: palette.rosewood, fontWeight: 700 }}>/5</span>
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: '#D97706', fontWeight: 800 }}>
+                    ★★★★★ <span style={{ color: palette.charcoal, opacity: 0.7 }}>· G2 2,400+ reviews</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </section>
 
-        {/* Metrics Bar */}
-        <section
-          id="metrics"
+          {/* RIGHT: Direct Interactive 3D Access & Demo Form (HROne Signature Style) */}
+          <div>
+            <div
+              style={{
+                backgroundColor: palette.white,
+                borderRadius: '20px',
+                border: `2px solid ${palette.rosewood}40`,
+                boxShadow: `0 20px 50px ${palette.charcoal}18`,
+                padding: '2.5rem 2.25rem',
+                position: 'relative',
+              }}
+            >
+              <div style={{ marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                  <Zap size={20} color={palette.rosewood} />
+                  <h3 style={{ fontSize: '1.45rem', fontWeight: 900, color: palette.charcoal, margin: 0 }}>
+                    Experience PeoplePay360
+                  </h3>
+                </div>
+                <p style={{ fontSize: '0.88rem', color: palette.charcoal, opacity: 0.8, margin: 0 }}>
+                  Enter your details to instantly preview our enterprise payroll and attendance engine.
+                </p>
+              </div>
+
+              <form onSubmit={handleDemoSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: palette.charcoal, marginBottom: '0.4rem', textTransform: 'uppercase' }}>
+                    Corporate Work Email *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={demoEmail}
+                    onChange={(e) => setDemoEmail(e.target.value)}
+                    placeholder="admin@company.com"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      borderRadius: '8px',
+                      border: `1.5px solid ${palette.greige}`,
+                      backgroundColor: palette.cream,
+                      color: palette.charcoal,
+                      fontSize: '0.9rem',
+                      outline: 'none',
+                      fontFamily: 'inherit',
+                      fontStyle: 'italic',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: palette.charcoal, marginBottom: '0.4rem', textTransform: 'uppercase' }}>
+                    Contact Phone *
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={demoPhone}
+                    onChange={(e) => setDemoPhone(e.target.value)}
+                    placeholder="+91 98765 43210"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      borderRadius: '8px',
+                      border: `1.5px solid ${palette.greige}`,
+                      backgroundColor: palette.cream,
+                      color: palette.charcoal,
+                      fontSize: '0.9rem',
+                      outline: 'none',
+                      fontFamily: 'inherit',
+                      fontStyle: 'italic',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: palette.charcoal, marginBottom: '0.4rem', textTransform: 'uppercase' }}>
+                    Employee Size *
+                  </label>
+                  <select
+                    value={companySize}
+                    onChange={(e) => setCompanySize(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      borderRadius: '8px',
+                      border: `1.5px solid ${palette.greige}`,
+                      backgroundColor: palette.cream,
+                      color: palette.charcoal,
+                      fontSize: '0.9rem',
+                      outline: 'none',
+                      fontFamily: 'inherit',
+                      fontStyle: 'italic',
+                      cursor: 'pointer',
+                      boxSizing: 'border-box',
+                    }}
+                  >
+                    <option value="1-50">1 - 50 Employees</option>
+                    <option value="51-200">51 - 200 Employees</option>
+                    <option value="201-500">201 - 500 Employees</option>
+                    <option value="500+">500+ Enterprise</option>
+                  </select>
+                </div>
+
+                {/* 3D Extruded CTA Button */}
+                <div style={{ paddingTop: '0.5rem' }}>
+                  <button
+                    type="submit"
+                    style={{
+                      width: '100%',
+                      backgroundColor: palette.rosewood,
+                      color: palette.cream,
+                      border: `2px solid ${palette.charcoal}`,
+                      borderRadius: '12px',
+                      padding: '1rem',
+                      fontSize: '1.05rem',
+                      fontWeight: 900,
+                      fontStyle: 'italic',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.03em',
+                      cursor: 'pointer',
+                      // 3D Shadow
+                      boxShadow: `0px 8px 0px ${palette.rosewoodDark}, 0px 10px 0px ${palette.charcoal}, 0px 18px 25px ${palette.rosewood}40`,
+                      transform: 'translateY(0)',
+                      transition: 'all 0.12s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.75rem',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = `0px 10px 0px ${palette.rosewoodDark}, 0px 12px 0px ${palette.charcoal}, 0px 22px 30px ${palette.rosewood}55`;
+                    }}
+                    onMouseDown={(e) => {
+                      e.currentTarget.style.transform = 'translateY(6px)';
+                      e.currentTarget.style.boxShadow = `0px 2px 0px ${palette.rosewoodDark}, 0px 4px 0px ${palette.charcoal}`;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = `0px 8px 0px ${palette.rosewoodDark}, 0px 10px 0px ${palette.charcoal}, 0px 18px 25px ${palette.rosewood}40`;
+                    }}
+                  >
+                    <span>ENTER SYSTEM / BOOK DEMO</span>
+                    <ArrowRight size={18} />
+                  </button>
+                </div>
+              </form>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.25rem', marginTop: '1.25rem', fontSize: '0.75rem', color: palette.charcoal, opacity: 0.75 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Check size={13} color={palette.rosewood} /> No credit card needed
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Check size={13} color={palette.rosewood} /> Instant access
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── CLIENT LOGOS MARQUEE STRIP (HROne Style) ─── */}
+      <section
+        style={{
+          backgroundColor: palette.greige,
+          borderTop: `1px solid ${palette.rosewood}25`,
+          borderBottom: `1px solid ${palette.rosewood}25`,
+          padding: '2.5rem 0',
+          overflow: 'hidden',
+          position: 'relative',
+        }}
+      >
+        <p style={{ textAlign: 'center', fontSize: '0.78rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', color: palette.rosewood, marginBottom: '1.5rem' }}>
+          Trusted by 2,500+ Leading Enterprises Across India & Global Teams
+        </p>
+        <div style={{ overflow: 'hidden', width: '100%', position: 'relative' }}>
+          <div className="marquee-track">
+            {[
+              'Haier',
+              'Nippon Steel',
+              'Kyocera',
+              'CARS24',
+              'Haldiram\'s',
+              'Timex',
+              'Clarks',
+              'Sula Vineyards',
+              'The Man Company',
+              'Healthians',
+              'Magicpin',
+              'Vatika',
+              // duplicates for seamless loop
+              'Haier',
+              'Nippon Steel',
+              'Kyocera',
+              'CARS24',
+              'Haldiram\'s',
+              'Timex',
+              'Clarks',
+              'Sula Vineyards',
+              'The Man Company',
+              'Healthians',
+              'Magicpin',
+              'Vatika',
+            ].map((brand, idx) => (
+              <span
+                key={idx}
+                style={{
+                  fontSize: '1.35rem',
+                  fontWeight: 900,
+                  color: palette.charcoal,
+                  opacity: 0.6,
+                  letterSpacing: '-0.02em',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {brand}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── INTERACTIVE PLATFORM TABS (HROne Signature Component) ─── */}
+      <section id="platform" style={{ padding: '6rem 2rem', maxWidth: '1240px', margin: '0 auto', position: 'relative', zIndex: 10 }}>
+        <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
+          <p style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: palette.rosewood, marginBottom: '0.6rem' }}>
+            Unified Architecture
+          </p>
+          <h2 style={{ fontSize: 'clamp(2.2rem, 3.8vw, 3rem)', fontWeight: 900, color: palette.charcoal, margin: 0 }}>
+            Everything HR. <span style={{ color: palette.rosewood }}>One Platform.</span>
+          </h2>
+          <p style={{ fontSize: '1.05rem', color: palette.charcoal, opacity: 0.8, maxWidth: '560px', margin: '0.75rem auto 0' }}>
+            Every module deeply synchronized in a unified operating system with zero data silos.
+          </p>
+        </div>
+
+        {/* 3-Column Interactive Layout: Tab List | Real App Browser Preview | Feature Details */}
+        <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '1.5rem',
-            padding: '2.25rem',
-            backgroundColor: palette.greige,
+            gridTemplateColumns: '220px 1fr 280px',
+            gap: '2.5rem',
+            alignItems: 'center',
+          }}
+        >
+          {/* LEFT: Tab buttons */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {platformTabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  padding: '0.85rem 1.25rem',
+                  borderRadius: '12px',
+                  backgroundColor: activeTab === tab.id ? palette.rosewood : palette.white,
+                  color: activeTab === tab.id ? palette.cream : palette.charcoal,
+                  border: activeTab === tab.id ? `2px solid ${palette.charcoal}` : `1px solid ${palette.rosewood}25`,
+                  fontSize: '0.95rem',
+                  fontWeight: 800,
+                  fontStyle: 'italic',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  boxShadow: activeTab === tab.id ? `0 4px 15px ${palette.rosewood}35` : 'none',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                {tab.icon}
+                <span>{tab.title}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* CENTER: Realistic Browser Mockup Frame */}
+          <div
+            style={{
+              backgroundColor: palette.white,
+              borderRadius: '20px',
+              border: `2px solid ${palette.rosewood}35`,
+              boxShadow: `0 20px 50px ${palette.charcoal}20`,
+              overflow: 'hidden',
+            }}
+          >
+            {/* Top Browser Bar */}
+            <div
+              style={{
+                backgroundColor: palette.greige,
+                padding: '0.6rem 1rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                borderBottom: `1px solid ${palette.rosewood}20`,
+              }}
+            >
+              <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#FF5F56' }} />
+              <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#FFBD2E' }} />
+              <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#27C93F' }} />
+              <div
+                style={{
+                  marginLeft: '0.5rem',
+                  backgroundColor: palette.white,
+                  borderRadius: '6px',
+                  padding: '0.2rem 0.8rem',
+                  fontSize: '0.72rem',
+                  color: palette.charcoal,
+                  fontWeight: 700,
+                  flex: 1,
+                }}
+              >
+                app.peoplepay360.com/{platformTabs[activeTab].title.toLowerCase()}
+              </div>
+            </div>
+
+            {/* Simulated Live UI Screen */}
+            <div style={{ padding: '1.75rem', backgroundColor: palette.cream }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                <span style={{ fontSize: '1.1rem', fontWeight: 900, color: palette.charcoal }}>
+                  {platformTabs[activeTab].screen.title}
+                </span>
+                <span
+                  style={{
+                    fontSize: '0.75rem',
+                    fontWeight: 800,
+                    backgroundColor: `${palette.rosewood}18`,
+                    color: palette.rosewood,
+                    padding: '0.3rem 0.75rem',
+                    borderRadius: '999px',
+                  }}
+                >
+                  {platformTabs[activeTab].screen.badge}
+                </span>
+              </div>
+
+              {/* Main Card */}
+              <div
+                style={{
+                  backgroundColor: palette.white,
+                  borderRadius: '14px',
+                  padding: '1.25rem',
+                  border: `1px solid ${palette.rosewood}20`,
+                  marginBottom: '1.25rem',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <div>
+                    <div style={{ fontSize: '1rem', fontWeight: 800, color: palette.charcoal }}>
+                      {platformTabs[activeTab].screen.person.name}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: palette.rosewood, fontWeight: 700 }}>
+                      {platformTabs[activeTab].screen.person.role}
+                    </div>
+                  </div>
+                  <span
+                    style={{
+                      backgroundColor: '#2E7D5B18',
+                      color: '#2E7D5B',
+                      fontSize: '0.75rem',
+                      fontWeight: 800,
+                      padding: '0.25rem 0.6rem',
+                      borderRadius: '6px',
+                    }}
+                  >
+                    {platformTabs[activeTab].screen.person.tag}
+                  </span>
+                </div>
+
+                {/* Progress bar */}
+                <div style={{ marginBottom: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', fontWeight: 800, marginBottom: '0.3rem' }}>
+                    <span>Processing Completion</span>
+                    <span style={{ color: palette.rosewood }}>{platformTabs[activeTab].screen.person.progress}</span>
+                  </div>
+                  <div style={{ height: '7px', borderRadius: '4px', backgroundColor: palette.greige, overflow: 'hidden' }}>
+                    <div
+                      style={{
+                        height: '100%',
+                        width: platformTabs[activeTab].screen.person.progress,
+                        backgroundColor: palette.rosewood,
+                        borderRadius: '4px',
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Checklist */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+                  {platformTabs[activeTab].screen.tasks.map((task, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: palette.charcoal }}>
+                      <CheckCircle2 size={14} color="#2E7D5B" />
+                      <span>{task}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Bottom Quick Stats */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div style={{ backgroundColor: palette.white, padding: '0.9rem', borderRadius: '10px', border: `1px solid ${palette.rosewood}20` }}>
+                  <div style={{ fontSize: '1.35rem', fontWeight: 900, color: palette.charcoal }}>
+                    {platformTabs[activeTab].screen.metric1.value}
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: palette.rosewood, fontWeight: 700 }}>
+                    {platformTabs[activeTab].screen.metric1.label}
+                  </div>
+                </div>
+                <div style={{ backgroundColor: palette.white, padding: '0.9rem', borderRadius: '10px', border: `1px solid ${palette.rosewood}20` }}>
+                  <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#2E7D5B' }}>
+                    {platformTabs[activeTab].screen.metric2.value}
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: palette.rosewood, fontWeight: 700 }}>
+                    {platformTabs[activeTab].screen.metric2.label}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT: Module Information */}
+          <div>
+            <h3 style={{ fontSize: '1.45rem', fontWeight: 900, color: palette.charcoal, lineHeight: 1.25, marginBottom: '1rem' }}>
+              {platformTabs[activeTab].heading}
+            </h3>
+            <p style={{ fontSize: '0.95rem', lineHeight: 1.6, color: palette.charcoal, opacity: 0.85, marginBottom: '1.5rem' }}>
+              {platformTabs[activeTab].desc}
+            </p>
+            <button
+              onClick={onEnterLogin}
+              style={{
+                backgroundColor: 'transparent',
+                color: palette.rosewood,
+                border: `2px solid ${palette.rosewood}`,
+                borderRadius: '8px',
+                padding: '0.6rem 1.2rem',
+                fontSize: '0.85rem',
+                fontWeight: 800,
+                fontStyle: 'italic',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+              }}
+            >
+              <span>Explore {platformTabs[activeTab].title}</span>
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── STATS BY THE NUMBERS (HROne 4-Cell Grid) ─── */}
+      <section id="metrics" style={{ padding: '3rem 2rem 5rem', maxWidth: '1240px', margin: '0 auto' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            backgroundColor: palette.white,
             borderRadius: '20px',
-            border: `2px solid ${palette.rosewood}30`,
+            border: `2px solid ${palette.rosewood}35`,
+            overflow: 'hidden',
             boxShadow: `0 15px 40px ${palette.charcoal}12`,
-            margin: '4rem 0 5rem',
           }}
         >
           {[
-            { value: '99.99%', label: 'Payrun Accuracy Rate', icon: <CheckCircle2 size={22} color={palette.rosewood} /> },
-            { value: '10x', label: 'Faster Payroll Processing', icon: <Zap size={22} color={palette.rosewood} /> },
-            { value: '50,000+', label: 'Active Employee Profiles', icon: <Users size={22} color={palette.rosewood} /> },
-            { value: '100%', label: 'Compliance & Audit Ready', icon: <Award size={22} color={palette.rosewood} /> },
+            { num: '99.99%', label: 'Payrun Accuracy Rate', sub: 'Zero payroll calculation errors' },
+            { num: '10x', label: 'Faster Pay Disbursement', sub: 'Automated 1-click batch runs' },
+            { num: '50,000+', label: 'Active Employees Managed', sub: 'Across 2,500+ enterprises' },
+            { num: '100%', label: 'Tax & Labor Compliance', sub: 'Fully certified audit protection' },
           ].map((stat, idx) => (
-            <div key={idx} style={{ textAlign: 'center', padding: '0.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.4rem' }}>{stat.icon}</div>
-              <div style={{ fontSize: '2rem', fontWeight: 900, color: palette.rosewood, fontStyle: 'italic', marginBottom: '0.15rem' }}>
-                {stat.value}
+            <div
+              key={idx}
+              style={{
+                padding: '2.5rem 1.5rem',
+                textAlign: 'center',
+                borderRight: idx < 3 ? `1px solid ${palette.rosewood}20` : 'none',
+              }}
+            >
+              <div style={{ fontSize: '2.5rem', fontWeight: 900, color: palette.rosewood, letterSpacing: '-0.03em', marginBottom: '0.35rem' }}>
+                {stat.num}
               </div>
-              <div style={{ fontSize: '0.82rem', color: palette.charcoal, fontWeight: 700, fontStyle: 'italic' }}>
+              <div style={{ fontSize: '0.95rem', fontWeight: 800, color: palette.charcoal, marginBottom: '0.2rem' }}>
                 {stat.label}
+              </div>
+              <div style={{ fontSize: '0.75rem', color: palette.charcoal, opacity: 0.7 }}>
+                {stat.sub}
               </div>
             </div>
           ))}
-        </section>
+        </div>
+      </section>
 
-        {/* Features Grid */}
-        <section id="features" style={{ paddingBottom: '5rem' }}>
-          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-            <h2 style={{ fontSize: '2.3rem', fontWeight: 900, fontStyle: 'italic', color: palette.charcoal, marginBottom: '0.5rem' }}>
-              Enterprise <span style={{ color: palette.rosewood }}>HRMS Features</span>
-            </h2>
-            <p style={{ fontSize: '1rem', color: palette.charcoal, opacity: 0.75, fontStyle: 'italic', maxWidth: '580px', margin: '0 auto' }}>
-              Designed to optimize workforce operations, attendance logging, and salary distribution.
-            </p>
+      {/* ─── CUSTOMER TESTIMONIAL SLIDER (HROne Style) ─── */}
+      <section style={{ backgroundColor: palette.greige, padding: '5.5rem 2rem', borderTop: `1px solid ${palette.rosewood}20`, borderBottom: `1px solid ${palette.rosewood}20` }}>
+        <div style={{ maxWidth: '1000px', margin: '0 auto', textAlign: 'center' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#D97706', marginBottom: '1.25rem', fontSize: '1.2rem' }}>
+            ★★★★★
           </div>
 
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(270px, 1fr))',
-              gap: '1.75rem',
-            }}
-          >
-            {[
-              {
-                icon: <CreditCard size={28} color={palette.cream} />,
-                title: 'Automated Payrun Engine',
-                desc: 'Calculate complex base pays, housing bonuses, overtime allowances, and tax brackets with 1-click payslip generation.',
-              },
-              {
-                icon: <Clock size={28} color={palette.cream} />,
-                title: 'Real-Time Attendance Verification',
-                desc: 'Monitor check-ins, check-outs, break durations, shift hours, and late penalties with biometric tracking logs.',
-              },
-              {
-                icon: <Users size={28} color={palette.cream} />,
-                title: 'Contract & Salary Structures',
-                desc: 'Flexible salary component rules, employee contract management, and automated deduction formulas.',
-              },
-              {
-                icon: <ShieldCheck size={28} color={palette.cream} />,
-                title: 'Role Governance & Audit Trails',
-                desc: 'Role-based access permissions for HR Managers, Payroll Staff, and Employees to guarantee total data privacy.',
-              },
-            ].map((feat, idx) => (
-              <div
-                key={idx}
-                onMouseEnter={() => setHoveredCard(idx)}
-                onMouseLeave={() => setHoveredCard(null)}
+          <blockquote style={{ fontSize: 'clamp(1.3rem, 2.4vw, 1.85rem)', fontWeight: 800, color: palette.charcoal, lineHeight: 1.45, margin: '0 0 2rem 0' }}>
+            "{testimonials[testiIndex].quote}"
+          </blockquote>
+
+          <div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 900, color: palette.rosewood }}>
+              {testimonials[testiIndex].name}
+            </div>
+            <div style={{ fontSize: '0.85rem', color: palette.charcoal, opacity: 0.8, marginTop: '0.2rem' }}>
+              {testimonials[testiIndex].designation} &nbsp;·&nbsp; <strong>{testimonials[testiIndex].company}</strong>
+            </div>
+          </div>
+
+          {/* Prev/Next Buttons */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2rem' }}>
+            <button
+              onClick={() => setTestiIndex((prev) => (prev === 0 ? testimonials.length - 1 : prev - 1))}
+              style={{
+                width: '42px',
+                height: '42px',
+                borderRadius: '50%',
+                backgroundColor: palette.white,
+                border: `1.5px solid ${palette.rosewood}35`,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: palette.charcoal,
+              }}
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <button
+              onClick={() => setTestiIndex((prev) => (prev + 1) % testimonials.length)}
+              style={{
+                width: '42px',
+                height: '42px',
+                borderRadius: '50%',
+                backgroundColor: palette.rosewood,
+                border: `1.5px solid ${palette.charcoal}`,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: palette.cream,
+              }}
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── ACCORDION FAQ SECTION (HROne Style) ─── */}
+      <section id="faq" style={{ padding: '6rem 2rem', maxWidth: '900px', margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
+          <p style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: palette.rosewood, marginBottom: '0.5rem' }}>
+            Got Questions?
+          </p>
+          <h2 style={{ fontSize: '2.5rem', fontWeight: 900, color: palette.charcoal, margin: 0 }}>
+            Frequently Asked <span style={{ color: palette.rosewood }}>Questions</span>
+          </h2>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {faqs.map((faq, idx) => (
+            <div
+              key={idx}
+              style={{
+                backgroundColor: palette.white,
+                borderRadius: '14px',
+                border: `1.5px solid ${openFaq === idx ? palette.rosewood : `${palette.rosewood}25`}`,
+                overflow: 'hidden',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <button
+                onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
                 style={{
-                  backgroundColor: palette.white,
-                  border: hoveredCard === idx ? `2px solid ${palette.rosewood}` : `1px solid ${palette.rosewood}25`,
-                  borderRadius: '16px',
-                  padding: '2rem 1.6rem',
-                  transition: 'all 0.25s ease',
-                  transform: hoveredCard === idx ? 'translateY(-5px)' : 'translateY(0px)',
-                  boxShadow: hoveredCard === idx ? `0 15px 30px ${palette.rosewood}20` : `0 4px 15px ${palette.charcoal}08`,
+                  width: '100%',
+                  padding: '1.35rem 1.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  fontStyle: 'italic',
                 }}
               >
-                <div
+                <span style={{ fontSize: '1.05rem', fontWeight: 800, color: palette.charcoal }}>
+                  {faq.q}
+                </span>
+                <ChevronDown
+                  size={20}
+                  color={palette.rosewood}
                   style={{
-                    width: '52px',
-                    height: '52px',
-                    borderRadius: '12px',
-                    backgroundColor: palette.rosewood,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: '1.25rem',
-                    boxShadow: `0 6px 14px ${palette.rosewood}35`,
+                    transform: openFaq === idx ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease',
+                    flexShrink: 0,
                   }}
-                >
-                  {feat.icon}
-                </div>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, fontStyle: 'italic', color: palette.charcoal, marginBottom: '0.6rem' }}>
-                  {feat.title}
-                </h3>
-                <p style={{ fontSize: '0.9rem', color: palette.charcoal, opacity: 0.8, fontStyle: 'italic', lineHeight: 1.55, margin: 0 }}>
-                  {feat.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
+                />
+              </button>
 
-        {/* Footer */}
-        <footer
+              {openFaq === idx && (
+                <div style={{ padding: '0 1.5rem 1.35rem', fontSize: '0.92rem', lineHeight: 1.65, color: palette.charcoal, opacity: 0.85 }}>
+                  {faq.a}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── BOTTOM 3D CTA BANNER (HROne Style) ─── */}
+      <section style={{ maxWidth: '1240px', margin: '0 auto 6rem', padding: '0 2rem' }}>
+        <div
           style={{
-            padding: '2rem 0',
-            borderTop: `1px solid ${palette.rosewood}25`,
+            backgroundColor: palette.rosewood,
+            borderRadius: '24px',
+            padding: '4.5rem 2rem',
+            textAlign: 'center',
+            color: palette.cream,
+            border: `3px solid ${palette.charcoal}`,
+            boxShadow: `0px 14px 0px ${palette.charcoal}, 0px 25px 50px ${palette.rosewood}50`,
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          <h2 style={{ fontSize: 'clamp(2rem, 3.8vw, 3rem)', fontWeight: 900, marginBottom: '1rem', letterSpacing: '-0.02em' }}>
+            Ready to Streamline Your HR & Payroll Operations?
+          </h2>
+          <p style={{ fontSize: '1.1rem', maxWidth: '640px', margin: '0 auto 2.5rem', opacity: 0.9, lineHeight: 1.6 }}>
+            Join 2,500+ enterprises using PeoplePay360 for accurate, error-free payruns and real-time attendance management.
+          </p>
+
+          <button
+            onClick={onEnterLogin}
+            style={{
+              backgroundColor: palette.cream,
+              color: palette.rosewood,
+              border: `2px solid ${palette.charcoal}`,
+              borderRadius: '12px',
+              padding: '1.15rem 3rem',
+              fontSize: '1.15rem',
+              fontWeight: 900,
+              fontStyle: 'italic',
+              textTransform: 'uppercase',
+              letterSpacing: '0.03em',
+              cursor: 'pointer',
+              // 3D Shadow
+              boxShadow: `0px 8px 0px ${palette.rosewoodDark}, 0px 10px 0px ${palette.charcoal}, 0px 16px 25px rgba(0,0,0,0.4)`,
+              transform: 'translateY(0)',
+              transition: 'all 0.12s ease',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = `0px 10px 0px ${palette.rosewoodDark}, 0px 12px 0px ${palette.charcoal}, 0px 20px 30px rgba(0,0,0,0.5)`;
+            }}
+            onMouseDown={(e) => {
+              e.currentTarget.style.transform = 'translateY(6px)';
+              e.currentTarget.style.boxShadow = `0px 2px 0px ${palette.rosewoodDark}, 0px 4px 0px ${palette.charcoal}`;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = `0px 8px 0px ${palette.rosewoodDark}, 0px 10px 0px ${palette.charcoal}, 0px 16px 25px rgba(0,0,0,0.4)`;
+            }}
+          >
+            <span>Proceed to Workspace Sign In</span>
+            <ArrowRight size={20} />
+          </button>
+        </div>
+      </section>
+
+      {/* ─── FOOTER ─── */}
+      <footer
+        style={{
+          borderTop: `1px solid ${palette.rosewood}25`,
+          backgroundColor: palette.white,
+          padding: '2.5rem 2rem',
+        }}
+      >
+        <div
+          style={{
+            maxWidth: '1240px',
+            margin: '0 auto',
             display: 'flex',
             flexWrap: 'wrap',
             justifyContent: 'space-between',
@@ -662,20 +1215,19 @@ export default function LandingPage({ onEnterLogin }: LandingPageProps): React.J
             fontSize: '0.85rem',
             color: palette.charcoal,
             opacity: 0.85,
-            fontStyle: 'italic',
             gap: '1rem',
           }}
         >
           <div>
-            © {new Date().getFullYear()} <span style={{ color: palette.rosewood, fontWeight: 800 }}>PeoplePay360</span>. All rights reserved.
+            © {new Date().getFullYear()} <span style={{ color: palette.rosewood, fontWeight: 900 }}>PeoplePay360 Inc</span>. All rights reserved.
           </div>
-          <div style={{ display: 'flex', gap: '1.5rem' }}>
+          <div style={{ display: 'flex', gap: '1.5rem', fontWeight: 700 }}>
             <span>• Alabaster & Vintage Rosewood Theme</span>
-            <span>• 3D Button UI</span>
+            <span>• 3D Interactive UI</span>
             <span>• Italic Typography</span>
           </div>
-        </footer>
-      </div>
+        </div>
+      </footer>
     </div>
   );
 }
