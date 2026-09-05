@@ -193,6 +193,63 @@ export default function LoginView({ onBackToLanding }: LoginViewProps): React.JS
           </div>
         )}
 
+        {/* Quick Demo Sign-In Personas */}
+        <div style={{ marginBottom: '1.25rem' }}>
+          <div style={{ fontSize: '0.675rem', fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>
+            Quick Persona Sign-In:
+          </div>
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => { setEmail('admin@oxp.com'); setPassword('admin123'); }}
+              style={{
+                padding: '4px 10px',
+                borderRadius: '6px',
+                fontSize: '0.72rem',
+                fontWeight: 600,
+                border: email === 'admin@oxp.com' ? '1px solid #1E3A5F' : '1px solid #E2E8F0',
+                background: email === 'admin@oxp.com' ? 'rgba(30, 58, 95, 0.08)' : '#FFFFFF',
+                color: email === 'admin@oxp.com' ? '#1E3A5F' : '#64748B',
+                cursor: 'pointer',
+              }}
+            >
+              👑 Admin (Sara)
+            </button>
+            <button
+              type="button"
+              onClick={() => { setEmail('smitha5@gmail.com'); setPassword('smitha123'); }}
+              style={{
+                padding: '4px 10px',
+                borderRadius: '6px',
+                fontSize: '0.72rem',
+                fontWeight: 600,
+                border: email === 'smitha5@gmail.com' ? '1px solid #2E7D5B' : '1px solid #E2E8F0',
+                background: email === 'smitha5@gmail.com' ? 'rgba(46, 125, 91, 0.08)' : '#FFFFFF',
+                color: email === 'smitha5@gmail.com' ? '#2E7D5B' : '#64748B',
+                cursor: 'pointer',
+              }}
+            >
+              💼 Employee (Smitha)
+            </button>
+            <button
+              type="button"
+              onClick={() => { setEmail('john@oxp.com'); setPassword('employee123'); }}
+              style={{
+                padding: '4px 10px',
+                borderRadius: '6px',
+                fontSize: '0.72rem',
+                fontWeight: 600,
+                border: email === 'john@oxp.com' ? '1px solid #D97706' : '1px solid #E2E8F0',
+                background: email === 'john@oxp.com' ? 'rgba(217, 119, 6, 0.08)' : '#FFFFFF',
+                color: email === 'john@oxp.com' ? '#D97706' : '#64748B',
+                cursor: 'pointer',
+              }}
+            >
+              💼 Employee (John)
+            </button>
+          </div>
+        </div>
+
         {/* Form */}
         <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {/* Email Field */}

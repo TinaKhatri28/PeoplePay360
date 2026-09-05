@@ -19,6 +19,8 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export const DEMO_USERS = [
   { role: 'Admin (Full Access)', email: 'admin@oxp.com', password: 'admin123', badge: 'HR Payroll Admin' },
+  { role: 'Employee (Smitha)', email: 'smitha5@gmail.com', password: 'smitha123', badge: 'Employee' },
+  { role: 'Employee (John)', email: 'john@oxp.com', password: 'employee123', badge: 'Employee' },
   { role: 'Payroll Specialist', email: 'aarav@oxp.com', password: 'payroll123', badge: 'HR Payroll User' },
 ];
 
@@ -36,8 +38,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await apiRequest('/api/auth/me');
       const formatted: User = {
         ...data,
+        employee_id: data.employeeId || data.employee_id || null,
         roles: data.roles || [],
-        employee_name: data.employee?.name || data.email.split('@')[0],
+        employee_name: data.employee?.name || data.name || data.email.split('@')[0],
       };
       setUser(formatted);
       setStoredUser(formatted);
@@ -56,15 +59,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string): Promise<User> => {
-    const res = await apiRequest<{ token: string; user: User }>('/api/auth/login', {
+    const res = await apiRequest<{ token: string; user: any }>('/api/auth/login', {
       method: 'POST',
       body: { email, password },
     });
+    const formatted: User = {
+      ...res.user,
+      employee_id: res.user.employeeId || res.user.employee_id || null,
+      roles: res.user.roles || [],
+      employee_name: res.user.name || res.user.email.split('@')[0],
+    };
     setToken(res.token);
     setTokenState(res.token);
-    setStoredUser(res.user);
-    setUser(res.user);
-    return res.user;
+    setStoredUser(formatted);
+    setUser(formatted);
+    return formatted;
   };
 
   const logout = () => {

@@ -39,6 +39,9 @@ export default function AttendanceView() {
   const [selectedLogIds, setSelectedLogIds] = useState<string[]>([]);
   const [bulkUpdating, setBulkUpdating] = useState(false);
 
+  // Active Punch Persona (defaults to current user's linked employee, or selectable for HR Admin testing)
+  const [punchTargetEmpId, setPunchTargetEmpId] = useState<string>('');
+
   useEffect(() => {
     if (!toastMessage) return;
     const timer = setTimeout(() => {
@@ -132,8 +135,13 @@ export default function AttendanceView() {
       setLogs(logsData || []);
       setEmployees(empsData || []);
 
-      if (user?.employee_id) {
-        const st = await apiRequest<{ checkedIn: boolean; record: AttendanceRecord | null }>('/api/attendance/me/status');
+      const currentId = user?.employee_id || (user as any)?.employeeId;
+      const targetId = punchTargetEmpId || (currentId ? String(currentId) : (empsData[0]?.id ? String(empsData[0].id) : ''));
+      if (targetId) {
+        setPunchTargetEmpId(targetId);
+        const st = await apiRequest<{ checkedIn: boolean; record: AttendanceRecord | null }>(
+          `/api/attendance/me/status?employee_id=${targetId}`
+        ).catch(() => null);
         setMyStatus(st);
       }
     } catch (err) {
@@ -150,6 +158,20 @@ export default function AttendanceView() {
     return () => window.removeEventListener('attendance-updated', handleUpdated);
   }, [user]);
 
+  // When punchTargetEmpId changes for HR Manager, refresh punch clock status
+  useEffect(() => {
+    if (!punchTargetEmpId) return;
+    const fetchStatus = async () => {
+      try {
+        const st = await apiRequest<{ checkedIn: boolean; record: AttendanceRecord | null }>(
+          `/api/attendance/me/status?employee_id=${punchTargetEmpId}`
+        ).catch(() => null);
+        setMyStatus(st);
+      } catch {}
+    };
+    fetchStatus();
+  }, [punchTargetEmpId]);
+
   const openRecordDetails = async (record: AttendanceRecord) => {
     setSelectedRecord(record);
     setLoadingDetail(true);
@@ -164,26 +186,35 @@ export default function AttendanceView() {
   };
 
   const handlePunch = async (action: 'in' | 'out') => {
+    const effectiveEmpId = punchTargetEmpId || user?.employee_id || (user as any)?.employeeId;
+    if (!effectiveEmpId) {
+      setPunchMsg({ type: 'error', text: 'No employee profile selected for punch clock.' });
+      return;
+    }
     setPunching(true);
     setPunchMsg(null);
     try {
       if (action === 'in') {
         await apiRequest('/api/attendance/check-in', {
           method: 'POST',
-          body: { employee_id: user?.employee_id },
+          body: { employee_id: effectiveEmpId },
         });
         setPunchMsg({ type: 'success', text: 'Checked in successfully! Shift started.' });
       } else {
         const res = await apiRequest<{ worked_hours: number; overtime_hours: number }>('/api/attendance/check-out', {
           method: 'POST',
-          body: { employee_id: user?.employee_id },
+          body: { employee_id: effectiveEmpId },
         });
         setPunchMsg({
           type: 'success',
           text: `Checked out successfully. Shift total: ${res.worked_hours}h (Overtime: ${res.overtime_hours}h)`,
         });
       }
-      fetchData();
+      await fetchData();
+      const st = await apiRequest<{ checkedIn: boolean; record: AttendanceRecord | null }>(
+        `/api/attendance/me/status?employee_id=${effectiveEmpId}`
+      ).catch(() => null);
+      setMyStatus(st);
       window.dispatchEvent(new Event('attendance-updated'));
     } catch (err: any) {
       setPunchMsg({ type: 'error', text: err.message || 'Action failed' });
@@ -942,8 +973,8 @@ export default function AttendanceView() {
   // =========================================================================
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Self-Service Punch Card for logged-in employee */}
-      {user?.employee_id && (
+      {/* Self-Service Punch Card for logged-in employee / HR Admin Persona Simulator */}
+      {(user?.employee_id || (user as any)?.employeeId || isHRManager) && (
         <div style={{
           background: '#FFFFFF',
           borderRadius: 'var(--radius-lg)',
@@ -959,7 +990,7 @@ export default function AttendanceView() {
             gap: '20px',
           }}>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px', flexWrap: 'wrap' }}>
                 <Clock size={20} color="#1E3A5F" />
                 <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#1E3A5F', margin: 0 }}>
                   Self-Service Punch Clock
@@ -968,11 +999,27 @@ export default function AttendanceView() {
                   <span className="badge-dot" />
                   {myStatus?.checkedIn ? 'Active Shift' : 'Off Clock'}
                 </span>
+
+                {isHRManager && employees.length > 0 && (
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginLeft: '12px' }}>
+                    <span style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600 }}>Employee:</span>
+                    <select
+                      className="form-control"
+                      style={{ width: '180px', padding: '4px 8px', fontSize: '0.8rem', height: '30px' }}
+                      value={punchTargetEmpId}
+                      onChange={(e) => setPunchTargetEmpId(e.target.value)}
+                    >
+                      {employees.map((e) => (
+                        <option key={e.id} value={String(e.id)}>{e.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
               <p style={{ fontSize: '0.8rem', color: '#64748B', margin: 0 }}>
                 {myStatus?.checkedIn && myStatus.record?.check_in
                   ? `Shift began at ${formatTimeOnly(myStatus.record.check_in)} today`
-                  : 'You have not checked in for today yet.'}
+                  : 'No active shift recorded for today yet. Click Check In to start.'}
               </p>
             </div>
 
@@ -980,7 +1027,7 @@ export default function AttendanceView() {
               {!myStatus?.checkedIn ? (
                 <button
                   className="btn btn-primary"
-                  disabled={punching}
+                  disabled={punching || !punchTargetEmpId}
                   onClick={() => handlePunch('in')}
                   style={{ minWidth: '160px', padding: '10px 18px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                 >
@@ -990,7 +1037,7 @@ export default function AttendanceView() {
               ) : (
                 <button
                   className="btn btn-secondary"
-                  disabled={punching}
+                  disabled={punching || !punchTargetEmpId}
                   onClick={() => handlePunch('out')}
                   style={{
                     minWidth: '160px',

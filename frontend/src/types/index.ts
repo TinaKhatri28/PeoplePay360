@@ -1,10 +1,12 @@
 // Shared TypeScript Interfaces for PeoplePay360
 
 export interface User {
-  id: number;
+  id: string | number;
   email: string;
   roles: string[];
-  employee_id?: number | null;
+  role?: string;
+  employee_id?: string | number | null;
+  employeeId?: string | number | null;
   employee_name?: string | null;
   status?: string;
 }

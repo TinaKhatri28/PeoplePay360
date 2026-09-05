@@ -42,7 +42,10 @@ export class AttendanceController {
   getMyStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const orgId = req.organizationId || 'org_default';
-      const employeeId = req.user?.employeeId;
+      const isPrivileged = req.user?.role === 'Admin' || req.user?.role === 'HR Manager';
+      const employeeId = (isPrivileged && req.query.employee_id)
+        ? (req.query.employee_id as string)
+        : req.user?.employeeId;
       if (!employeeId) {
         res.json({ checkedIn: false, record: null });
         return;
