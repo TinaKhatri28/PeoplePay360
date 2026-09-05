@@ -8,7 +8,8 @@ import {
   Coins,
   Sliders,
   LogOut,
-  UserCheck
+  UserCheck,
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -32,7 +33,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
     { id: 'contracts', label: 'Contracts', icon: FileText, allowed: isHRManager || isPayrollStaff },
     { id: 'attendance', label: isEmployeeOnly ? 'My Attendance' : 'Attendance', icon: Clock, allowed: true },
     { id: 'timeoff', label: isEmployeeOnly ? 'My Leaves & Quotas' : 'Time Off & Leaves', icon: CalendarOff, allowed: true },
-    { id: 'payroll', label: isPayrollStaff ? 'Payroll Dashboard' : 'Payroll Details', icon: Coins, highlight: true, allowed: isHRManager || isPayrollStaff },
+    { id: 'payroll', label: isPayrollStaff ? 'Payroll Studio' : 'Payroll Details', icon: Coins, highlight: true, allowed: isHRManager || isPayrollStaff },
     { id: 'salary', label: 'Salary & Schedules', icon: Sliders, allowed: isHRManager || isPayrollStaff },
     { id: 'users', label: 'User Governance', icon: UserCheck, allowed: isHRManager },
   ];
@@ -41,68 +42,111 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
 
   return (
     <aside style={{
-      width: '260px',
-      minWidth: '260px',
-      background: '#0B0C10',
-      borderRight: '1px solid #1E293B',
+      width: '268px',
+      minWidth: '268px',
+      background: 'linear-gradient(180deg, #090D16 0%, #06080E 100%)',
+      borderRight: '1px solid rgba(255, 255, 255, 0.08)',
       display: 'flex',
       flexDirection: 'column',
       height: '100vh',
       position: 'sticky',
       top: 0,
       zIndex: 40,
+      boxShadow: '4px 0 24px rgba(0, 0, 0, 0.3)',
+      userSelect: 'none',
     }}>
+      {/* Brand Header */}
       <div style={{
-        padding: '24px 20px',
+        padding: '22px 20px',
         display: 'flex',
         alignItems: 'center',
-        gap: '12px',
-        borderBottom: '1px solid #1E293B',
+        gap: '14px',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.07)',
+        background: 'rgba(255, 255, 255, 0.02)',
       }}>
         <div style={{
-          width: '38px',
-          height: '38px',
-          borderRadius: 'var(--radius-md)',
-          background: 'linear-gradient(135deg, #FFFFFF 0%, #C0C0C0 50%, #475569 100%)',
-          border: '1px solid #E2E8F0',
+          width: '42px',
+          height: '42px',
+          borderRadius: '12px',
+          background: 'linear-gradient(135deg, #FFFFFF 0%, #E2E8F0 45%, #94A3B8 100%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: '#000000',
+          color: '#090D16',
           fontWeight: 900,
-          fontSize: '1.25rem',
-          boxShadow: '0 2px 8px rgba(255,255,255,0.2)',
+          fontSize: '1.35rem',
+          boxShadow: '0 4px 14px rgba(255, 255, 255, 0.22), inset 0 1px 1px rgba(255, 255, 255, 0.8)',
+          border: '1px solid rgba(255, 255, 255, 0.8)',
+          letterSpacing: '-0.03em',
+          flexShrink: 0,
         }}>
           P
         </div>
-        <div>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{
-            fontSize: '1.1rem',
+            fontSize: '1.15rem',
             fontWeight: 800,
             letterSpacing: '-0.02em',
             color: '#FFFFFF',
             display: 'flex',
             alignItems: 'center',
-            gap: '4px'
+            gap: '4px',
+            lineHeight: 1.2,
           }}>
-            PeoplePay<span style={{ color: '#E2E8F0' }}>360</span>
+            PeoplePay
+            <span style={{
+              background: 'linear-gradient(135deg, #FFFFFF 0%, #94A3B8 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              fontWeight: 900,
+            }}>
+              360
+            </span>
           </div>
-          <div style={{ fontSize: '0.675rem', color: '#94A3B8', fontWeight: 700, letterSpacing: '0.06em' }}>
-            ENTERPRISE HR & PAYROLL
+          <div style={{
+            fontSize: '0.65rem',
+            color: '#94A3B8',
+            fontWeight: 700,
+            letterSpacing: '0.08em',
+            marginTop: '3px',
+            textTransform: 'uppercase',
+          }}>
+            Enterprise HR & Payroll
           </div>
         </div>
       </div>
 
-      <nav style={{ flex: 1, padding: '16px 12px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+      {/* Navigation List */}
+      <nav style={{
+        flex: 1,
+        padding: '20px 14px',
+        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '6px',
+      }}>
         <div style={{
-          fontSize: '0.675rem',
-          fontWeight: 700,
-          color: '#64748B',
-          textTransform: 'uppercase',
-          letterSpacing: '0.08em',
-          padding: '8px 12px 4px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '6px 10px 10px',
         }}>
-          Workforce & Operations
+          <span style={{
+            width: '6px',
+            height: '6px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #FFFFFF 0%, #94A3B8 100%)',
+            boxShadow: '0 0 6px rgba(255, 255, 255, 0.6)',
+          }} />
+          <span style={{
+            fontSize: '0.6875rem',
+            fontWeight: 800,
+            color: '#94A3B8',
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em',
+          }}>
+            Workforce & Operations
+          </span>
         </div>
 
         {navItems.map((item) => {
@@ -113,46 +157,90 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
               key={item.id}
               onClick={() => setActiveTab(item.id)}
               style={{
+                position: 'relative',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
-                padding: '10px 14px',
-                borderRadius: 'var(--radius-md)',
-                background: isActive ? 'linear-gradient(90deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.06) 100%)' : 'transparent',
+                padding: '11px 14px',
+                borderRadius: '10px',
+                background: isActive
+                  ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.05) 100%)'
+                  : 'transparent',
                 color: isActive ? '#FFFFFF' : '#94A3B8',
                 fontWeight: isActive ? 700 : 500,
                 fontSize: '0.875rem',
-                border: isActive ? '1px solid rgba(226, 232, 240, 0.3)' : '1px solid transparent',
+                border: isActive
+                  ? '1px solid rgba(255, 255, 255, 0.28)'
+                  : '1px solid transparent',
                 cursor: 'pointer',
-                transition: 'all var(--transition-fast)',
+                transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
                 textAlign: 'left',
                 width: '100%',
+                boxShadow: isActive
+                  ? '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                  : 'none',
               }}
               onMouseEnter={(e) => {
                 if (!isActive) {
                   e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
                   e.currentTarget.style.color = '#FFFFFF';
+                  e.currentTarget.style.transform = 'translateX(2px)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isActive) {
                   e.currentTarget.style.background = 'transparent';
                   e.currentTarget.style.color = '#94A3B8';
+                  e.currentTarget.style.transform = 'translateX(0px)';
                 }
               }}
             >
-              <Icon size={18} color={isActive ? '#FFFFFF' : '#64748B'} />
-              <span>{item.label}</span>
+              {/* Active Left Glow Bar */}
+              {isActive && (
+                <div style={{
+                  position: 'absolute',
+                  left: '-6px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: '4px',
+                  height: '20px',
+                  borderRadius: '4px',
+                  background: '#FFFFFF',
+                  boxShadow: '0 0 10px rgba(255, 255, 255, 0.8)',
+                }} />
+              )}
+
+              <Icon
+                size={18}
+                color={isActive ? '#FFFFFF' : '#64748B'}
+                style={{
+                  filter: isActive ? 'drop-shadow(0 0 6px rgba(255, 255, 255, 0.4))' : 'none',
+                  transition: 'all 0.18s ease',
+                }}
+              />
+              <span style={{ flex: 1, letterSpacing: '-0.01em' }}>{item.label}</span>
+
               {item.highlight && (
                 <span style={{
-                  marginLeft: 'auto',
-                  background: '#FFFFFF',
-                  color: '#000000',
-                  fontSize: '0.65rem',
+                  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                  color: '#FFFFFF',
+                  fontSize: '0.625rem',
                   fontWeight: 800,
-                  padding: '2px 6px',
-                  borderRadius: 'var(--radius-full)',
+                  padding: '2px 7px',
+                  borderRadius: '9999px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  boxShadow: '0 2px 8px rgba(16, 185, 129, 0.35)',
+                  letterSpacing: '0.04em',
                 }}>
+                  <span style={{
+                    width: '5px',
+                    height: '5px',
+                    borderRadius: '50%',
+                    background: '#FFFFFF',
+                    display: 'inline-block',
+                  }} />
                   LIVE
                 </span>
               )}
@@ -161,75 +249,122 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         })}
       </nav>
 
+      {/* User Governance / Profile Bottom Section */}
       <div style={{
-        padding: '16px 20px',
-        borderTop: '1px solid #1E293B',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        background: '#050608',
+        padding: '16px 14px',
+        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+        background: 'rgba(0, 0, 0, 0.25)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-          <div style={{
-            width: '34px',
-            height: '34px',
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, #334155 0%, #1E293B 100%)',
-            border: '2px solid #64748B',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 800,
-            fontSize: '0.8rem',
-            color: '#FFFFFF',
-            flexShrink: 0,
-          }}>
-            {user?.employee_name?.slice(0, 2).toUpperCase() || user?.email?.slice(0, 2).toUpperCase() || 'U'}
-          </div>
-          <div style={{ minWidth: 0 }}>
-            <div style={{
-              fontSize: '0.8125rem',
-              fontWeight: 700,
-              color: '#FFFFFF',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}>
-              {user?.employee_name || user?.email?.split('@')[0]}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          background: 'rgba(255, 255, 255, 0.04)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: '12px',
+          padding: '10px 12px',
+          boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #475569 0%, #1E293B 100%)',
+                border: '1.5px solid rgba(255, 255, 255, 0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 800,
+                fontSize: '0.8rem',
+                color: '#FFFFFF',
+                boxShadow: '0 2px 6px rgba(0, 0, 0, 0.3)',
+              }}>
+                {user?.employee_name?.slice(0, 2).toUpperCase() || user?.email?.slice(0, 2).toUpperCase() || 'AD'}
+              </div>
+              {/* Online Indicator */}
+              <span style={{
+                position: 'absolute',
+                bottom: '0',
+                right: '0',
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                background: '#10B981',
+                border: '2px solid #090D16',
+                boxShadow: '0 0 6px #10B981',
+              }} />
             </div>
-            <div style={{
-              fontSize: '0.675rem',
-              color: '#94A3B8',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}>
-              {user?.roles?.[0] || 'Employee'}
-            </div>
-          </div>
-        </div>
 
-        <button
-          onClick={logout}
-          title="Sign Out"
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: '#64748B',
-            cursor: 'pointer',
-            padding: '6px',
-            borderRadius: 'var(--radius-xs)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'color var(--transition-fast)',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = '#64748B')}
-        >
-          <LogOut size={16} />
-        </button>
+            <div style={{ minWidth: 0 }}>
+              <div style={{
+                fontSize: '0.8125rem',
+                fontWeight: 700,
+                color: '#FFFFFF',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                letterSpacing: '-0.01em',
+              }}>
+                {user?.employee_name || user?.email?.split('@')[0] || 'admin'}
+              </div>
+              <div style={{
+                fontSize: '0.675rem',
+                color: '#94A3B8',
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}>
+                <span style={{
+                  padding: '1px 5px',
+                  borderRadius: '4px',
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  color: '#CBD5E1',
+                  fontSize: '0.625rem',
+                }}>
+                  {user?.roles?.[0] || 'Admin'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={logout}
+            title="Sign Out"
+            style={{
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              color: '#94A3B8',
+              cursor: 'pointer',
+              padding: '7px',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.15s ease',
+              flexShrink: 0,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = '#FFFFFF';
+              e.currentTarget.style.background = 'rgba(220, 38, 38, 0.2)';
+              e.currentTarget.style.borderColor = 'rgba(220, 38, 38, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = '#94A3B8';
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+            }}
+          >
+            <LogOut size={15} />
+          </button>
+        </div>
       </div>
     </aside>
   );
 }
+
