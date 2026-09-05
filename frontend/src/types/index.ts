@@ -187,6 +187,21 @@ export interface DashboardData {
   attendanceRate?: number;
   byDepartment: Array<{ name: string; total: number; headcount?: number }>;
   monthlyTrend: Array<{ label: string; total: number }>;
+  stats?: {
+    total_employees: number;
+    active_employees: number;
+    pending_leaves: number;
+    attendance_today: {
+      present: number;
+      late: number;
+      absent: number;
+      logged: number;
+    };
+    payroll_status: string;
+    total_payroll_cost: number;
+    average_salary: number;
+    warnings_count: number;
+  };
   alerts?: {
     missingBankCount: number;
     duplicatePayslipWarning: number;
