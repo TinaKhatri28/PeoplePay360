@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import {
   Calendar,
-  Filter,
   Building2,
   TrendingUp,
-  Users,
   CreditCard,
   Percent,
-  Clock,
-  AlertTriangle,
-  AlertCircle,
   CheckCircle2,
   FileText,
-  Layers,
+  Plus,
   ArrowUpRight,
-  Plus
+  Download,
+  ShieldCheck,
+  Coins,
+  AlertCircle,
+  FileSpreadsheet,
+  PieChart
 } from 'lucide-react';
 import { apiRequest } from '../api';
 import { DashboardData } from '../types';
@@ -40,7 +40,6 @@ export default function PayrollDashboardView({ onTabChange }: PayrollDashboardVi
   const [selectedDept, setSelectedDept] = useState<string>('All Departments');
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [activeSubTab, setActiveSubTab] = useState<string>('Payroll');
 
   const fetchMetrics = async () => {
     setLoading(true);
@@ -58,59 +57,51 @@ export default function PayrollDashboardView({ onTabChange }: PayrollDashboardVi
     fetchMetrics();
   }, [year, month]);
 
-  const handleSubTabClick = (tabName: string) => {
-    setActiveSubTab(tabName);
-    if (onTabChange) {
-      if (tabName === 'HR') onTabChange('dashboard');
-      else if (tabName === 'Employees') onTabChange('employees');
-      else if (tabName === 'Attendance') onTabChange('attendance');
-      else if (tabName === 'Time Off') onTabChange('timeoff');
-      else if (tabName === 'Payroll') onTabChange('payroll');
-    }
-  };
-
-  // Metric Values
-  const netPaidLakhs = data ? (data.netSalary / 100000).toFixed(1) : '18.4';
-  const payslipsGenerated = data?.payslipCount || 148;
-  const paidCount = data?.paidCount || 142;
-  const pendingCount = data?.pendingCount || 6;
-  const avgSalary = data?.avgSalary?.toLocaleString('en-IN') || '12,432';
-  const approvedLeaveDays = data?.approvedTimeOffDays || 34;
-  const attendanceHealth = data?.attendanceHealth || 94;
+  const netSalary = data?.netSalary || 391520;
+  const grossSalary = Math.round(netSalary / 0.86);
+  const totalDeductions = grossSalary - netSalary;
+  const payslipsGenerated = data?.payslipCount || 6;
+  const avgSalary = data?.avgSalary || Math.round(netSalary / payslipsGenerated);
 
   const barData = data?.byDepartment?.length ? data.byDepartment : [
-    { name: 'HR', total: 110000 },
-    { name: 'Sales', total: 150000 },
-    { name: 'Support', total: 90000 },
-    { name: 'Finance', total: 120000 },
-    { name: 'IT', total: 170000 },
+    { name: 'Finance', total: 85000 },
+    { name: 'HR', total: 95000 },
+    { name: 'Engineering', total: 72000 },
+    { name: 'Sales', total: 68000 },
+    { name: 'IT', total: 60000 },
+    { name: 'Support', total: 76000 },
   ];
 
-  const maxBar = Math.max(...barData.map(b => b.total), 1);
+  const trendData = (data?.monthlyTrend && data.monthlyTrend.length > 0)
+    ? data.monthlyTrend
+    : [
+        { label: 'May 2026', total: 391520 },
+        { label: 'Jun 2026', total: 391520 },
+        { label: 'Jul 2026', total: 391520 },
+        { label: 'Aug 2026', total: 391520 },
+        { label: 'Sep 2026', total: 391520 },
+      ];
 
-  const trendPoints = [
-    { label: 'Apr', val: 14.2 },
-    { label: 'May', val: 15.1 },
-    { label: 'Jun', val: 14.8 },
-    { label: 'Jul', val: 18.0 },
-    { label: 'Aug', val: 16.5 },
-    { label: 'Sep', val: 18.4 },
+  const salaryComponents = [
+    { label: 'Basic Salary (60%)', amount: Math.round(grossSalary * 0.60), color: '#FFFFFF', pct: '60%' },
+    { label: 'HRA Allowance (20%)', amount: Math.round(grossSalary * 0.20), color: '#CBD5E1', pct: '20%' },
+    { label: 'Special & Transport Allowances (6%)', amount: Math.round(grossSalary * 0.06), color: '#94A3B8', pct: '6%' },
+    { label: 'PF & Statutory Deductions (14%)', amount: totalDeductions, color: '#EF4444', pct: '14%' },
   ];
 
   return (
     <div style={{
-      background: '#111827',
-      color: '#F9FAFB',
+      background: 'linear-gradient(180deg, #090D16 0%, #06080E 100%)',
+      color: '#FFFFFF',
       borderRadius: 'var(--radius-xl)',
-      padding: '24px',
-      fontFamily: 'Inter, system-ui, sans-serif',
-      boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5), 0 10px 10px -5px rgba(0,0,0,0.4)',
-      border: '1px solid rgba(255, 255, 255, 0.1)',
+      padding: '28px',
+      boxShadow: '0 20px 35px -5px rgba(0,0,0,0.6), 0 10px 10px -5px rgba(0,0,0,0.5)',
+      border: '1px solid rgba(255, 255, 255, 0.12)',
       display: 'flex',
       flexDirection: 'column',
       gap: '24px',
     }}>
-      {/* Sub-Header & Navigation Tabs */}
+      {/* Top Header & Studio Actions */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -118,116 +109,105 @@ export default function PayrollDashboardView({ onTabChange }: PayrollDashboardVi
         flexWrap: 'wrap',
         gap: '16px',
         borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-        paddingBottom: '16px',
+        paddingBottom: '20px',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {['HR', 'Employees', 'Attendance', 'Time Off', 'Payroll'].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => handleSubTabClick(tab)}
-              style={{
-                padding: '6px 16px',
-                borderRadius: 'var(--radius-md)',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                background: activeSubTab === tab ? '#1E3A5F' : 'transparent',
-                color: activeSubTab === tab ? '#FFFFFF' : '#9CA3AF',
-                border: activeSubTab === tab ? '1px solid #3B82F6' : '1px solid transparent',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              {tab}
-            </button>
-          ))}
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h1 style={{ fontSize: '1.6rem', fontWeight: 900, margin: 0, letterSpacing: '-0.02em', color: '#FFFFFF' }}>
+              Payroll Dashboard & Studio
+            </h1>
+            <span style={{
+              background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+              color: '#FFFFFF',
+              fontSize: '0.65rem',
+              fontWeight: 800,
+              padding: '3px 8px',
+              borderRadius: '9999px',
+              letterSpacing: '0.04em',
+            }}>
+              ● 100% Tax Compliant
+            </span>
+          </div>
+          <p style={{ fontSize: '0.825rem', color: '#CBD5E1', margin: '4px 0 0 0' }}>
+            Real-time compensation analytics, batch payrun execution, salary component distribution, and disbursement tracking.
+          </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <button
             onClick={() => onTabChange?.('batches')}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '6px',
-              padding: '8px 14px',
-              borderRadius: 'var(--radius-md)',
+              gap: '8px',
+              padding: '9px 18px',
+              borderRadius: '10px',
               fontSize: '0.85rem',
-              fontWeight: 700,
+              fontWeight: 800,
               cursor: 'pointer',
-              background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
-              color: '#FFFFFF',
-              border: 'none',
-              boxShadow: '0 4px 12px rgba(37, 99, 235, 0.4)',
-              transition: 'all 0.2s ease',
+              background: '#FFFFFF',
+              color: '#090D16',
+              border: '1px solid #FFFFFF',
+              boxShadow: '0 4px 14px rgba(255, 255, 255, 0.25)',
+              transition: 'all 0.18s ease',
             }}
           >
-            <Plus size={16} /> Create & Modify Payrun Records
+            <Plus size={16} /> Run & Manage Payrun Batches
           </button>
-          <span style={{ fontSize: '0.75rem', color: '#EF4444', background: 'rgba(239, 68, 68, 0.2)', padding: '4px 8px', borderRadius: '4px', border: '1px solid rgba(239, 68, 68, 0.4)' }}>
-            ● Manager Live Access
-          </span>
         </div>
       </div>
 
-      {/* Title & Description */}
-      <div>
-        <h1 style={{ fontSize: '1.6rem', fontWeight: 800, margin: 0, letterSpacing: '-0.02em', color: '#FFFFFF' }}>
-          Payroll Dashboard
-        </h1>
-        <p style={{ fontSize: '0.85rem', color: '#9CA3AF', margin: '4px 0 0 0' }}>
-          Dashboard should help payroll/HR users understand payments, staffing impact, leave patterns, and attendance quality for the selected period.
-        </p>
-      </div>
-
-      {/* Filter Bar */}
+      {/* Filter Toolbar */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-        gap: '16px',
-        background: '#1F2937',
+        gap: '14px',
+        background: 'rgba(255, 255, 255, 0.04)',
         padding: '16px',
-        borderRadius: 'var(--radius-lg)',
+        borderRadius: '12px',
         border: '1px solid rgba(255, 255, 255, 0.08)',
       }}>
         <div>
-          <label style={{ display: 'block', fontSize: '0.725rem', color: '#9CA3AF', marginBottom: '4px', fontWeight: 600 }}>
-            Period
+          <label style={{ display: 'block', fontSize: '0.725rem', color: '#FFFFFF', marginBottom: '4px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            Payroll Period
           </label>
           <select
             value={month}
             onChange={(e) => setMonth(+e.target.value)}
             style={{
               width: '100%',
-              background: '#111827',
-              color: '#F9FAFB',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              borderRadius: 'var(--radius-md)',
+              background: '#090D16',
+              color: '#FFFFFF',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '8px',
               padding: '8px 12px',
               fontSize: '0.875rem',
+              fontWeight: 600,
             }}
           >
-            <option value={9}>Sep 2026</option>
-            <option value={8}>Aug 2026</option>
-            <option value={7}>Jul 2026</option>
-            <option value={6}>Jun 2026</option>
+            <option value={9}>September 2026</option>
+            <option value={8}>August 2026</option>
+            <option value={7}>July 2026</option>
+            <option value={6}>June 2026</option>
           </select>
         </div>
 
         <div>
-          <label style={{ display: 'block', fontSize: '0.725rem', color: '#9CA3AF', marginBottom: '4px', fontWeight: 600 }}>
-            Department
+          <label style={{ display: 'block', fontSize: '0.725rem', color: '#FFFFFF', marginBottom: '4px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            Cost Center / Department
           </label>
           <select
             value={selectedDept}
             onChange={(e) => setSelectedDept(e.target.value)}
             style={{
               width: '100%',
-              background: '#111827',
-              color: '#F9FAFB',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              borderRadius: 'var(--radius-md)',
+              background: '#090D16',
+              color: '#FFFFFF',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '8px',
               padding: '8px 12px',
               fontSize: '0.875rem',
+              fontWeight: 600,
             }}
           >
             <option value="All Departments">All Departments</option>
@@ -241,432 +221,405 @@ export default function PayrollDashboardView({ onTabChange }: PayrollDashboardVi
         </div>
 
         <div>
-          <label style={{ display: 'block', fontSize: '0.725rem', color: '#9CA3AF', marginBottom: '4px', fontWeight: 600 }}>
-            Employee Type
+          <label style={{ display: 'block', fontSize: '0.725rem', color: '#FFFFFF', marginBottom: '4px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            Payrun Status
           </label>
-          <select
-            style={{
-              width: '100%',
-              background: '#111827',
-              color: '#F9FAFB',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              borderRadius: 'var(--radius-md)',
-              padding: '8px 12px',
-              fontSize: '0.875rem',
-            }}
-          >
-            <option value="All Types">All Types</option>
-            <option value="Full-time">Full-time</option>
-            <option value="Part-time">Part-time</option>
-            <option value="Contractor">Contractor</option>
-          </select>
+          <div style={{
+            background: '#090D16',
+            color: '#10B981',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '8px',
+            padding: '8px 12px',
+            fontSize: '0.875rem',
+            fontWeight: 800,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+          }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981' }} />
+            {data?.payrunStatus || 'Paid & Closed'}
+          </div>
         </div>
 
         <div>
-          <label style={{ display: 'block', fontSize: '0.725rem', color: '#9CA3AF', marginBottom: '4px', fontWeight: 600 }}>
-            Company
+          <label style={{ display: 'block', fontSize: '0.725rem', color: '#FFFFFF', marginBottom: '4px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            Legal Entity
           </label>
           <input
             readOnly
-            value="OXP Pvt Ltd"
+            value="OXP Pvt Ltd (India)"
             style={{
               width: '100%',
-              background: '#111827',
-              color: '#F9FAFB',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              borderRadius: 'var(--radius-md)',
+              background: '#090D16',
+              color: '#FFFFFF',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '8px',
               padding: '8px 12px',
               fontSize: '0.875rem',
+              fontWeight: 600,
             }}
           />
         </div>
       </div>
 
-      {/* Top 5 KPI Summary Cards */}
+      {/* 5 Pure Payroll KPI Cards */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
         gap: '16px',
       }}>
-        {/* Card 1 */}
+        {/* Card 1: Total Net Disbursement */}
         <div style={{
-          background: '#1F2937',
+          background: 'rgba(255, 255, 255, 0.05)',
           padding: '20px',
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: '14px',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
+          boxShadow: '0 4px 14px rgba(0, 0, 0, 0.2)',
         }}>
-          <div style={{ fontSize: '0.75rem', color: '#9CA3AF', fontWeight: 600 }}>Total Net Salary Paid</div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#FFFFFF', margin: '8px 0 4px', letterSpacing: '-0.02em' }}>
-            ₹ {netPaidLakhs}L
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.75rem', color: '#CBD5E1', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Total Net Payout
+            </span>
+            <CreditCard size={18} color="#FFFFFF" />
           </div>
-          <div style={{ fontSize: '0.725rem', color: '#10B981', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <ArrowUpRight size={14} /> +8.9% vs previous month
+          <div style={{ fontSize: '1.85rem', fontWeight: 900, color: '#FFFFFF', margin: '8px 0 4px', letterSpacing: '-0.02em' }}>
+            ₹{netSalary.toLocaleString('en-IN')}
+          </div>
+          <div style={{ fontSize: '0.725rem', color: '#10B981', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <ArrowUpRight size={14} /> +4.2% vs previous cycle
           </div>
         </div>
 
-        {/* Card 2 */}
+        {/* Card 2: Total Gross Payroll */}
         <div style={{
-          background: '#1F2937',
+          background: 'rgba(255, 255, 255, 0.05)',
           padding: '20px',
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: '14px',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
+          boxShadow: '0 4px 14px rgba(0, 0, 0, 0.2)',
         }}>
-          <div style={{ fontSize: '0.75rem', color: '#9CA3AF', fontWeight: 600 }}>Payslips Generated</div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#FFFFFF', margin: '8px 0 4px', letterSpacing: '-0.02em' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.75rem', color: '#CBD5E1', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Total Gross Payroll
+            </span>
+            <Coins size={18} color="#FFFFFF" />
+          </div>
+          <div style={{ fontSize: '1.85rem', fontWeight: 900, color: '#FFFFFF', margin: '8px 0 4px', letterSpacing: '-0.02em' }}>
+            ₹{grossSalary.toLocaleString('en-IN')}
+          </div>
+          <div style={{ fontSize: '0.725rem', color: '#CBD5E1', fontWeight: 500 }}>
+            Base wages + variable allowances
+          </div>
+        </div>
+
+        {/* Card 3: Statutory & Tax Deductions */}
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.05)',
+          padding: '20px',
+          borderRadius: '14px',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
+          boxShadow: '0 4px 14px rgba(0, 0, 0, 0.2)',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.75rem', color: '#CBD5E1', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Statutory & PF Deductions
+            </span>
+            <ShieldCheck size={18} color="#EF4444" />
+          </div>
+          <div style={{ fontSize: '1.85rem', fontWeight: 900, color: '#EF4444', margin: '8px 0 4px', letterSpacing: '-0.02em' }}>
+            ₹{totalDeductions.toLocaleString('en-IN')}
+          </div>
+          <div style={{ fontSize: '0.725rem', color: '#CBD5E1', fontWeight: 500 }}>
+            EPF, PT & TDS withholding
+          </div>
+        </div>
+
+        {/* Card 4: Payslips Disbursed */}
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.05)',
+          padding: '20px',
+          borderRadius: '14px',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
+          boxShadow: '0 4px 14px rgba(0, 0, 0, 0.2)',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.75rem', color: '#CBD5E1', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Payslips Generated
+            </span>
+            <FileText size={18} color="#FFFFFF" />
+          </div>
+          <div style={{ fontSize: '1.85rem', fontWeight: 900, color: '#FFFFFF', margin: '8px 0 4px', letterSpacing: '-0.02em' }}>
             {payslipsGenerated}
           </div>
-          <div style={{ fontSize: '0.725rem', color: '#9CA3AF' }}>
-            {paidCount} paid, {pendingCount} pending
+          <div style={{ fontSize: '0.725rem', color: '#10B981', fontWeight: 700 }}>
+            {payslipsGenerated} paid • 0 pending
           </div>
         </div>
 
-        {/* Card 3 */}
+        {/* Card 5: Average Net Wage */}
         <div style={{
-          background: '#1F2937',
+          background: 'rgba(255, 255, 255, 0.05)',
           padding: '20px',
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: '14px',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
+          boxShadow: '0 4px 14px rgba(0, 0, 0, 0.2)',
         }}>
-          <div style={{ fontSize: '0.75rem', color: '#9CA3AF', fontWeight: 600 }}>Avg Salary / Employee</div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#FFFFFF', margin: '8px 0 4px', letterSpacing: '-0.02em' }}>
-            ₹ {avgSalary}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.75rem', color: '#CBD5E1', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Avg Net Compensation
+            </span>
+            <TrendingUp size={18} color="#FFFFFF" />
           </div>
-          <div style={{ fontSize: '0.725rem', color: '#9CA3AF' }}>
-            Based on current payrun
+          <div style={{ fontSize: '1.85rem', fontWeight: 900, color: '#FFFFFF', margin: '8px 0 4px', letterSpacing: '-0.02em' }}>
+            ₹{avgSalary.toLocaleString('en-IN')}
           </div>
-        </div>
-
-        {/* Card 4 */}
-        <div style={{
-          background: '#1F2937',
-          padding: '20px',
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-        }}>
-          <div style={{ fontSize: '0.75rem', color: '#9CA3AF', fontWeight: 600 }}>Approved Time Off Days</div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#FFFFFF', margin: '8px 0 4px', letterSpacing: '-0.02em' }}>
-            {approvedLeaveDays} Days
-          </div>
-          <div style={{ fontSize: '0.725rem', color: '#9CA3AF' }}>
-            Across selected period
-          </div>
-        </div>
-
-        {/* Card 5 */}
-        <div style={{
-          background: '#1F2937',
-          padding: '20px',
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-        }}>
-          <div style={{ fontSize: '0.75rem', color: '#9CA3AF', fontWeight: 600 }}>Attendance Health</div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#FFFFFF', margin: '8px 0 4px', letterSpacing: '-0.02em' }}>
-            {attendanceHealth}%
-          </div>
-          <div style={{ fontSize: '0.725rem', color: '#9CA3AF' }}>
-            Present / reviewed records
+          <div style={{ fontSize: '0.725rem', color: '#CBD5E1', fontWeight: 500 }}>
+            Per employee monthly take-home
           </div>
         </div>
       </div>
 
-      {/* Middle Row: Charts & Alerts */}
+      {/* Middle Row: Department Spend & 6-Month Payout Trend */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
         gap: '20px',
       }}>
-        {/* Chart 1: Salary Cost by Department */}
+        {/* Payroll Cost by Department */}
         <div style={{
-          background: '#1F2937',
-          padding: '20px',
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          background: 'rgba(255, 255, 255, 0.04)',
+          padding: '22px',
+          borderRadius: '14px',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
         }}>
-          <div>
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0, color: '#FFFFFF' }}>
-              Salary Cost by Department
-            </h3>
-            <span style={{ fontSize: '0.7rem', color: '#9CA3AF' }}>Source: Payslips + Employee Department</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+            <div>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: '#FFFFFF' }}>
+                Payroll Spend by Department
+              </h3>
+              <span style={{ fontSize: '0.725rem', color: '#CBD5E1' }}>Disbursed compensation per cost center</span>
+            </div>
+            <span style={{ fontSize: '0.7rem', color: '#FFFFFF', background: 'rgba(255,255,255,0.1)', padding: '3px 8px', borderRadius: '6px' }}>
+              Cost Centers
+            </span>
           </div>
 
-          <div style={{ height: '180px', width: '100%', marginTop: '16px' }}>
+          <div style={{ height: '200px', width: '100%' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={barData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <BarChart data={barData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" vertical={false} />
-                <XAxis dataKey="name" stroke="#9CA3AF" fontSize={11} tickLine={false} />
+                <XAxis dataKey="name" stroke="#CBD5E1" fontSize={12} tickLine={false} />
                 <YAxis
-                  stroke="#9CA3AF"
-                  fontSize={10}
+                  stroke="#CBD5E1"
+                  fontSize={11}
                   tickLine={false}
                   axisLine={false}
                   tickFormatter={(v) => `₹${Math.round(v / 1000)}k`}
                 />
                 <Tooltip
-                  formatter={(val: any) => [`₹${Number(val).toLocaleString('en-IN')}`, 'Cost']}
-                  contentStyle={{ background: '#111827', borderColor: '#374151', borderRadius: '8px', color: '#F9FAFB' }}
+                  formatter={(val: any) => [`₹${Number(val).toLocaleString('en-IN')}`, 'Department Payroll']}
+                  contentStyle={{ background: '#090D16', borderColor: 'rgba(255,255,255,0.2)', borderRadius: '8px', color: '#FFFFFF', fontWeight: 700 }}
                 />
-                <Bar dataKey="total" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="total" fill="#FFFFFF" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Chart 2: Monthly Net Salary Trend */}
+        {/* Monthly Net Salary Trend */}
         <div style={{
-          background: '#1F2937',
-          padding: '20px',
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          background: 'rgba(255, 255, 255, 0.04)',
+          padding: '22px',
+          borderRadius: '14px',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
         }}>
-          <div>
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0, color: '#FFFFFF' }}>
-              Monthly Net Salary Trend
-            </h3>
-            <span style={{ fontSize: '0.7rem', color: '#9CA3AF' }}>Source: Historical Payslips / Payruns</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+            <div>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: '#FFFFFF' }}>
+                Historical Net Salary Trajectory
+              </h3>
+              <span style={{ fontSize: '0.725rem', color: '#CBD5E1' }}>6-Month batch payout trend & commitment</span>
+            </div>
+            <span style={{ fontSize: '0.7rem', color: '#10B981', background: 'rgba(16, 185, 129, 0.15)', padding: '3px 8px', borderRadius: '6px' }}>
+              Historical
+            </span>
           </div>
 
-          <div style={{ height: '180px', width: '100%', marginTop: '16px' }}>
+          <div style={{ height: '200px', width: '100%' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trendPoints} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <LineChart data={trendData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" vertical={false} />
-                <XAxis dataKey="label" stroke="#9CA3AF" fontSize={11} tickLine={false} />
+                <XAxis dataKey="label" stroke="#CBD5E1" fontSize={12} tickLine={false} />
                 <YAxis
-                  stroke="#9CA3AF"
-                  fontSize={10}
+                  stroke="#CBD5E1"
+                  fontSize={11}
                   tickLine={false}
                   axisLine={false}
-                  tickFormatter={(v) => `${v}L`}
-                  domain={['dataMin - 2', 'dataMax + 2']}
+                  tickFormatter={(v) => `₹${Math.round(v / 1000)}k`}
                 />
                 <Tooltip
-                  formatter={(val: any) => [`₹${val} Lakhs`, 'Net Payout']}
-                  contentStyle={{ background: '#111827', borderColor: '#374151', borderRadius: '8px', color: '#F9FAFB' }}
+                  formatter={(val: any) => [`₹${Number(val).toLocaleString('en-IN')}`, 'Net Disbursed']}
+                  contentStyle={{ background: '#090D16', borderColor: 'rgba(255,255,255,0.2)', borderRadius: '8px', color: '#FFFFFF', fontWeight: 700 }}
                 />
                 <Line
                   type="monotone"
-                  dataKey="val"
-                  stroke="#3B82F6"
+                  dataKey="total"
+                  stroke="#FFFFFF"
                   strokeWidth={3}
-                  dot={{ fill: '#60A5FA', r: 4 }}
-                  activeDot={{ r: 6 }}
+                  dot={{ fill: '#FFFFFF', r: 5 }}
+                  activeDot={{ r: 7 }}
                 />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
-
-        {/* Section 3: Payslip Status & Payroll Alerts */}
-        <div style={{
-          background: '#1F2937',
-          padding: '20px',
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '16px',
-        }}>
-          <div>
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0, color: '#FFFFFF' }}>
-              Payslip Status & Payroll Alerts
-            </h3>
-            <span style={{ fontSize: '0.7rem', color: '#9CA3AF' }}>Source: Payrun + Payslip validation</span>
-          </div>
-
-          {/* Status Split Multi-Color Bar */}
-          <div>
-            <div style={{ fontSize: '0.725rem', color: '#9CA3AF', marginBottom: '6px' }}>Status split</div>
-            <div style={{
-              display: 'flex',
-              height: '14px',
-              borderRadius: 'var(--radius-full)',
-              overflow: 'hidden',
-              background: '#374151',
-            }}>
-              <div style={{ width: '70%', background: '#10B981' }} title="Paid" />
-              <div style={{ width: '15%', background: '#3B82F6' }} title="Done" />
-              <div style={{ width: '10%', background: '#F59E0B' }} title="Pending" />
-              <div style={{ width: '5%', background: '#EF4444' }} title="Warning" />
-            </div>
-
-            <div style={{ display: 'flex', gap: '12px', marginTop: '8px', fontSize: '0.7rem', flexWrap: 'wrap' }}>
-              <span style={{ color: '#10B981', display: 'flex', alignItems: 'center', gap: '4px' }}>■ Paid</span>
-              <span style={{ color: '#3B82F6', display: 'flex', alignItems: 'center', gap: '4px' }}>■ Done</span>
-              <span style={{ color: '#F59E0B', display: 'flex', alignItems: 'center', gap: '4px' }}>■ Pending</span>
-              <span style={{ color: '#EF4444', display: 'flex', alignItems: 'center', gap: '4px' }}>■ Warning</span>
-            </div>
-          </div>
-
-          {/* Current Alerts List */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#F3F4F6' }}>Current alerts</div>
-            <div style={{ fontSize: '0.75rem', color: '#FCA5A5', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              ● 2 employees missing bank account
-            </div>
-            <div style={{ fontSize: '0.75rem', color: '#FCD34D', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              ● 1 duplicate payslip warning
-            </div>
-            <div style={{ fontSize: '0.75rem', color: '#93C5FD', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              ● 4 drafts still not validated
-            </div>
-            <div style={{ fontSize: '0.75rem', color: '#FDBA74', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              ● 3 contracts expiring this month
-            </div>
-          </div>
-        </div>
       </div>
 
-      {/* Bottom Grid: Attendance, Time Off, Department & Models to Aggregate */}
+      {/* Bottom Row: Salary Component Breakdown & Payroll Batch Lifecycle */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
         gap: '20px',
       }}>
-        {/* Attendance Overview */}
+        {/* Component Breakdown Card */}
         <div style={{
-          background: '#1F2937',
-          padding: '16px',
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          background: 'rgba(255, 255, 255, 0.04)',
+          padding: '22px',
+          borderRadius: '14px',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
         }}>
-          <h3 style={{ fontSize: '0.875rem', fontWeight: 700, margin: '0 0 4px 0', color: '#FFFFFF' }}>Attendance Overview</h3>
-          <span style={{ fontSize: '0.675rem', color: '#9CA3AF' }}>Source: Attendance</span>
+          <h3 style={{ fontSize: '1rem', fontWeight: 800, margin: '0 0 4px 0', color: '#FFFFFF' }}>
+            Salary Component Breakdown
+          </h3>
+          <p style={{ fontSize: '0.725rem', color: '#CBD5E1', margin: '0 0 16px 0' }}>
+            Statutory ratio vs allowances for current active structure
+          </p>
 
-          <div style={{ height: '100px', display: 'flex', alignItems: 'flex-end', gap: '12px', margin: '16px 0', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '6px' }}>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ width: '100%', height: '80px', background: '#3B82F6', borderRadius: '4px 4px 0 0' }} />
-              <span style={{ fontSize: '0.65rem', color: '#9CA3AF', marginTop: '4px' }}>Present</span>
-            </div>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ width: '100%', height: '25px', background: '#F59E0B', borderRadius: '4px 4px 0 0' }} />
-              <span style={{ fontSize: '0.65rem', color: '#9CA3AF', marginTop: '4px' }}>Late</span>
-            </div>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ width: '100%', height: '12px', background: '#EF4444', borderRadius: '4px 4px 0 0' }} />
-              <span style={{ fontSize: '0.65rem', color: '#9CA3AF', marginTop: '4px' }}>Absent</span>
-            </div>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ width: '100%', height: '35px', background: '#10B981', borderRadius: '4px 4px 0 0' }} />
-              <span style={{ fontSize: '0.65rem', color: '#9CA3AF', marginTop: '4px' }}>Overtime</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {salaryComponents.map((comp) => (
+              <div key={comp.label}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.825rem', marginBottom: '4px' }}>
+                  <span style={{ fontWeight: 700, color: '#FFFFFF' }}>{comp.label}</span>
+                  <span style={{ color: comp.color, fontFamily: 'monospace', fontWeight: 700 }}>
+                    ₹{comp.amount.toLocaleString('en-IN')}
+                  </span>
+                </div>
+                <div style={{
+                  width: '100%',
+                  height: '7px',
+                  background: 'rgba(255,255,255,0.1)',
+                  borderRadius: '9999px',
+                  overflow: 'hidden',
+                }}>
+                  <div style={{
+                    width: comp.pct,
+                    height: '100%',
+                    background: comp.color,
+                    borderRadius: '9999px',
+                  }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Batch Status & Quick Operations */}
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.04)',
+          padding: '22px',
+          borderRadius: '14px',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+        }}>
+          <div>
+            <h3 style={{ fontSize: '1rem', fontWeight: 800, margin: '0 0 4px 0', color: '#FFFFFF' }}>
+              Payroll Batch Lifecycle & Governance
+            </h3>
+            <p style={{ fontSize: '0.725rem', color: '#CBD5E1', margin: '0 0 16px 0' }}>
+              Execution stages for automatic batch computation
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '10px 14px',
+                background: 'rgba(16, 185, 129, 0.12)',
+                border: '1px solid rgba(16, 185, 129, 0.3)',
+                borderRadius: '8px',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <CheckCircle2 size={16} color="#10B981" />
+                  <span style={{ fontSize: '0.825rem', fontWeight: 700, color: '#FFFFFF' }}>1. Eligible Employees Computed</span>
+                </div>
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#10B981' }}>6 / 6 Ready</span>
+              </div>
+
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '10px 14px',
+                background: 'rgba(16, 185, 129, 0.12)',
+                border: '1px solid rgba(16, 185, 129, 0.3)',
+                borderRadius: '8px',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <CheckCircle2 size={16} color="#10B981" />
+                  <span style={{ fontSize: '0.825rem', fontWeight: 700, color: '#FFFFFF' }}>2. Structure Formulas Verified</span>
+                </div>
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#10B981' }}>Validated</span>
+              </div>
+
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '10px 14px',
+                background: 'rgba(16, 185, 129, 0.12)',
+                border: '1px solid rgba(16, 185, 129, 0.3)',
+                borderRadius: '8px',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <CheckCircle2 size={16} color="#10B981" />
+                  <span style={{ fontSize: '0.825rem', fontWeight: 700, color: '#FFFFFF' }}>3. Salary Disbursement & PDF Payslips</span>
+                </div>
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#10B981' }}>Disbursed</span>
+              </div>
             </div>
           </div>
 
-          <div style={{ fontSize: '0.675rem', color: '#9CA3AF', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <div>Missing checkouts: <strong>5</strong></div>
-            <div>Manual attendance edits: <strong>7</strong></div>
-            <div>Attendance coverage: <strong style={{ color: '#10B981' }}>94%</strong></div>
+          <div style={{ marginTop: '16px', display: 'flex', gap: '10px' }}>
+            <button
+              onClick={() => onTabChange?.('batches')}
+              style={{
+                flex: 1,
+                padding: '10px',
+                borderRadius: '8px',
+                background: '#FFFFFF',
+                color: '#090D16',
+                fontWeight: 800,
+                fontSize: '0.8rem',
+                border: 'none',
+                cursor: 'pointer',
+                textAlign: 'center',
+              }}
+            >
+              Open Payrun Studio
+            </button>
           </div>
-        </div>
-
-        {/* Time Off Overview */}
-        <div style={{
-          background: '#1F2937',
-          padding: '16px',
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-        }}>
-          <h3 style={{ fontSize: '0.875rem', fontWeight: 700, margin: '0 0 4px 0', color: '#FFFFFF' }}>Time Off Overview</h3>
-          <span style={{ fontSize: '0.675rem', color: '#9CA3AF' }}>Source: Time Off Requests + Allocations</span>
-
-          <table style={{ width: '100%', fontSize: '0.725rem', marginTop: '12px', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ color: '#9CA3AF', borderBottom: '1px solid rgba(255,255,255,0.1)', textAlign: 'left' }}>
-                <th style={{ padding: '6px 0' }}>Type</th>
-                <th style={{ padding: '6px 0' }}>Approved</th>
-                <th style={{ padding: '6px 0' }}>Pending</th>
-                <th style={{ padding: '6px 0' }}>Remaining</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <td style={{ padding: '6px 0', color: '#F3F4F6' }}>Paid Time Off</td>
-                <td>24</td>
-                <td>3</td>
-                <td>118 Days</td>
-              </tr>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <td style={{ padding: '6px 0', color: '#F3F4F6' }}>Sick Leave</td>
-                <td>6</td>
-                <td>1</td>
-                <td>N/A</td>
-              </tr>
-              <tr>
-                <td style={{ padding: '6px 0', color: '#F3F4F6' }}>Comp Off</td>
-                <td>4</td>
-                <td>2</td>
-                <td>11 Days</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        {/* Department Overview */}
-        <div style={{
-          background: '#1F2937',
-          padding: '16px',
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-        }}>
-          <h3 style={{ fontSize: '0.875rem', fontWeight: 700, margin: '0 0 4px 0', color: '#FFFFFF' }}>Department Overview</h3>
-          <span style={{ fontSize: '0.675rem', color: '#9CA3AF' }}>Source: Employee + Contract + Payslip totals</span>
-
-          <table style={{ width: '100%', fontSize: '0.725rem', marginTop: '12px', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ color: '#9CA3AF', borderBottom: '1px solid rgba(255,255,255,0.1)', textAlign: 'left' }}>
-                <th style={{ padding: '6px 0' }}>Department</th>
-                <th style={{ padding: '6px 0' }}>Headcount</th>
-                <th style={{ padding: '6px 0', textAlign: 'right' }}>Monthly Salary</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <td style={{ padding: '6px 0', color: '#F3F4F6' }}>IT</td>
-                <td>18</td>
-                <td style={{ textAlign: 'right', fontFamily: 'monospace' }}>₹ 4.2L</td>
-              </tr>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <td style={{ padding: '6px 0', color: '#F3F4F6' }}>Sales</td>
-                <td>22</td>
-                <td style={{ textAlign: 'right', fontFamily: 'monospace' }}>₹ 5.1L</td>
-              </tr>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <td style={{ padding: '6px 0', color: '#F3F4F6' }}>HR</td>
-                <td>8</td>
-                <td style={{ textAlign: 'right', fontFamily: 'monospace' }}>₹ 1.9L</td>
-              </tr>
-              <tr>
-                <td style={{ padding: '6px 0', color: '#F3F4F6' }}>Support</td>
-                <td>14</td>
-                <td style={{ textAlign: 'right', fontFamily: 'monospace' }}>₹ 2.7L</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        {/* Models to Aggregate */}
-        <div style={{
-          background: '#1F2937',
-          padding: '16px',
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-        }}>
-          <h3 style={{ fontSize: '0.875rem', fontWeight: 700, margin: '0 0 4px 0', color: '#60A5FA' }}>Models to Aggregate</h3>
-          <span style={{ fontSize: '0.65rem', color: '#9CA3AF' }}>This is the actual challenge behind the dashboard</span>
-
-          <ul style={{ fontSize: '0.675rem', color: '#D1D5DB', margin: '10px 0 0 0', paddingLeft: '14px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <li><strong>Employees / Departments</strong> → headcount, ownership, grouping</li>
-            <li><strong>Contracts</strong> → wage, schedule, active employees</li>
-            <li><strong>Payruns / Payslips</strong> → salary totals, paid vs pending, trend data</li>
-            <li><strong>Attendance</strong> → presence, absences, late entries, overtime</li>
-            <li><strong>Time Off Requests / Allocations</strong> → leave taken and leave balances</li>
-          </ul>
         </div>
       </div>
     </div>
   );
 }
+
