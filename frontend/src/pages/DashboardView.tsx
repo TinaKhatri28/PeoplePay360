@@ -29,6 +29,8 @@ interface DashboardViewProps {
 export default function DashboardView({ onNavigate }: DashboardViewProps) {
   const [year, setYear] = useState<number>(2026);
   const [month, setMonth] = useState<number>(9);
+  const [department, setDepartment] = useState<string>('All Departments');
+  const [status, setStatus] = useState<string>('All Statuses');
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +39,13 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
     setLoading(true);
     setError(null);
     try {
-      const res = await apiRequest<DashboardData>(`/api/dashboard?year=${year}&month=${month}`);
+      const params = new URLSearchParams({
+        year: String(year),
+        month: String(month),
+        department: department,
+        status: status,
+      });
+      const res = await apiRequest<DashboardData>(`/api/dashboard?${params.toString()}`);
       setData(res);
     } catch (err: any) {
       setError(err.message || 'Failed to load dashboard data');
@@ -48,7 +56,7 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
 
   useEffect(() => {
     fetchDashboard();
-  }, [year, month]);
+  }, [year, month, department, status]);
 
   const months = [
     { value: 1, name: 'January' },
@@ -92,12 +100,12 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
         border: '1px solid var(--border-subtle)',
         boxShadow: 'var(--shadow-sm)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
           <Calendar size={18} color="#000000" />
-          <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-main)' }}>Reporting Period:</span>
+          <span style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-main)' }}>Reporting Period:</span>
           <select
             className="form-control"
-            style={{ width: '150px', padding: '6px 12px', fontSize: '0.85rem', fontWeight: 600 }}
+            style={{ width: '130px', padding: '6px 10px', fontSize: '0.825rem', fontWeight: 600 }}
             value={month}
             onChange={(e) => setMonth(+e.target.value)}
           >
@@ -109,17 +117,33 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
           </select>
           <select
             className="form-control"
-            style={{ width: '100px', padding: '6px 12px', fontSize: '0.85rem', fontWeight: 600 }}
+            style={{ width: '90px', padding: '6px 10px', fontSize: '0.825rem', fontWeight: 600 }}
             value={year}
             onChange={(e) => setYear(+e.target.value)}
           >
             <option value={2026}>2026</option>
             <option value={2025}>2025</option>
           </select>
+
+          <span style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-main)', marginLeft: '6px' }}>Department:</span>
+          <select
+            className="form-control"
+            style={{ width: '160px', padding: '6px 10px', fontSize: '0.825rem', fontWeight: 600 }}
+            value={department}
+            onChange={(e) => setDepartment(e.target.value)}
+          >
+            <option value="All Departments">All Departments</option>
+            <option value="Finance">Finance</option>
+            <option value="Engineering">Engineering</option>
+            <option value="HR">HR</option>
+            <option value="Sales">Sales</option>
+            <option value="Support">Support</option>
+            <option value="IT">IT</option>
+          </select>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>Latest Payrun:</span>
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>Payrun Status:</span>
           <span className={`badge ${
             data?.payrunStatus === 'Paid' ? 'badge-success' :
             data?.payrunStatus === 'Validated' ? 'badge-info' :

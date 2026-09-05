@@ -38,13 +38,22 @@ export default function PayrollDashboardView({ onTabChange }: PayrollDashboardVi
   const [year, setYear] = useState<number>(2026);
   const [month, setMonth] = useState<number>(9);
   const [selectedDept, setSelectedDept] = useState<string>('All Departments');
+  const [selectedStatus, setSelectedStatus] = useState<string>('All Statuses');
+  const [selectedEntity, setSelectedEntity] = useState<string>('OXP Pvt Ltd (India)');
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   const fetchMetrics = async () => {
     setLoading(true);
     try {
-      const res = await apiRequest<DashboardData>(`/api/dashboard?year=${year}&month=${month}`);
+      const params = new URLSearchParams({
+        year: String(year),
+        month: String(month),
+        department: selectedDept,
+        status: selectedStatus,
+        entity: selectedEntity,
+      });
+      const res = await apiRequest<DashboardData>(`/api/dashboard?${params.toString()}`);
       setData(res);
     } catch (err) {
       console.error('Failed to load payroll dashboard metrics:', err);
@@ -55,22 +64,27 @@ export default function PayrollDashboardView({ onTabChange }: PayrollDashboardVi
 
   useEffect(() => {
     fetchMetrics();
-  }, [year, month]);
+  }, [year, month, selectedDept, selectedStatus, selectedEntity]);
 
-  const netSalary = data?.netSalary || 391520;
-  const grossSalary = Math.round(netSalary / 0.86);
-  const totalDeductions = grossSalary - netSalary;
-  const payslipsGenerated = data?.payslipCount || 6;
-  const avgSalary = data?.avgSalary || Math.round(netSalary / payslipsGenerated);
+  const isSecondaryEntity = selectedEntity !== 'OXP Pvt Ltd (India)' && selectedEntity !== 'All Legal Entities';
 
-  const barData = data?.byDepartment?.length ? data.byDepartment : [
+  const netSalary = isSecondaryEntity ? 0 : (data?.netSalary || 0);
+  const grossSalary = isSecondaryEntity ? 0 : (data?.stats?.total_payroll_cost || (netSalary > 0 ? Math.round(netSalary / 0.86) : 0));
+  const totalDeductions = Math.max(0, grossSalary - netSalary);
+  const payslipsGenerated = isSecondaryEntity ? 0 : (data?.payslipCount || (netSalary > 0 ? (selectedDept !== 'All Departments' ? 1 : 6) : 0));
+  const avgSalary = payslipsGenerated > 0 ? (data?.avgSalary || Math.round(netSalary / payslipsGenerated)) : 0;
+
+  const barData = (data?.byDepartment?.length ? data.byDepartment : [
     { name: 'Finance', total: 85000 },
     { name: 'HR', total: 95000 },
     { name: 'Engineering', total: 72000 },
     { name: 'Sales', total: 68000 },
     { name: 'IT', total: 60000 },
     { name: 'Support', total: 76000 },
-  ];
+  ]).map((d) => ({
+    ...d,
+    isHighlighted: selectedDept === 'All Departments' || d.name.toLowerCase() === selectedDept.toLowerCase(),
+  }));
 
   const trendData = (data?.monthlyTrend && data.monthlyTrend.length > 0)
     ? data.monthlyTrend
@@ -87,6 +101,21 @@ export default function PayrollDashboardView({ onTabChange }: PayrollDashboardVi
     { label: 'HRA Allowance (20%)', amount: Math.round(grossSalary * 0.20), color: '#CBD5E1', pct: '20%' },
     { label: 'Special & Transport Allowances (6%)', amount: Math.round(grossSalary * 0.06), color: '#94A3B8', pct: '6%' },
     { label: 'PF & Statutory Deductions (14%)', amount: totalDeductions, color: '#EF4444', pct: '14%' },
+  ];
+
+  const months = [
+    { value: 1, name: 'January' },
+    { value: 2, name: 'February' },
+    { value: 3, name: 'March' },
+    { value: 4, name: 'April' },
+    { value: 5, name: 'May' },
+    { value: 6, name: 'June' },
+    { value: 7, name: 'July' },
+    { value: 8, name: 'August' },
+    { value: 9, name: 'September' },
+    { value: 10, name: 'October' },
+    { value: 11, name: 'November' },
+    { value: 12, name: 'December' },
   ];
 
   return (
@@ -160,40 +189,64 @@ export default function PayrollDashboardView({ onTabChange }: PayrollDashboardVi
       {/* Filter Toolbar */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
         gap: '14px',
         background: 'rgba(255, 255, 255, 0.04)',
         padding: '16px',
         borderRadius: '12px',
         border: '1px solid rgba(255, 255, 255, 0.08)',
       }}>
+        {/* Filter 1: Period */}
         <div>
-          <label style={{ display: 'block', fontSize: '0.725rem', color: '#FFFFFF', marginBottom: '4px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <label style={{ display: 'block', fontSize: '0.725rem', color: '#CBD5E1', marginBottom: '6px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Payroll Period
           </label>
-          <select
-            value={month}
-            onChange={(e) => setMonth(+e.target.value)}
-            style={{
-              width: '100%',
-              background: '#090D16',
-              color: '#FFFFFF',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              borderRadius: '8px',
-              padding: '8px 12px',
-              fontSize: '0.875rem',
-              fontWeight: 600,
-            }}
-          >
-            <option value={9}>September 2026</option>
-            <option value={8}>August 2026</option>
-            <option value={7}>July 2026</option>
-            <option value={6}>June 2026</option>
-          </select>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <select
+              value={month}
+              onChange={(e) => setMonth(+e.target.value)}
+              style={{
+                flex: 1,
+                background: '#090D16',
+                color: '#FFFFFF',
+                border: '1px solid rgba(255, 255, 255, 0.25)',
+                borderRadius: '8px',
+                padding: '8px 10px',
+                fontSize: '0.85rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              {months.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.name}
+                </option>
+              ))}
+            </select>
+            <select
+              value={year}
+              onChange={(e) => setYear(+e.target.value)}
+              style={{
+                width: '85px',
+                background: '#090D16',
+                color: '#FFFFFF',
+                border: '1px solid rgba(255, 255, 255, 0.25)',
+                borderRadius: '8px',
+                padding: '8px 8px',
+                fontSize: '0.85rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              <option value={2026}>2026</option>
+              <option value={2025}>2025</option>
+            </select>
+          </div>
         </div>
 
+        {/* Filter 2: Department */}
         <div>
-          <label style={{ display: 'block', fontSize: '0.725rem', color: '#FFFFFF', marginBottom: '4px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <label style={{ display: 'block', fontSize: '0.725rem', color: '#CBD5E1', marginBottom: '6px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Cost Center / Department
           </label>
           <select
@@ -203,14 +256,15 @@ export default function PayrollDashboardView({ onTabChange }: PayrollDashboardVi
               width: '100%',
               background: '#090D16',
               color: '#FFFFFF',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
+              border: selectedDept !== 'All Departments' ? '1px solid #10B981' : '1px solid rgba(255, 255, 255, 0.25)',
               borderRadius: '8px',
               padding: '8px 12px',
-              fontSize: '0.875rem',
-              fontWeight: 600,
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              cursor: 'pointer',
             }}
           >
-            <option value="All Departments">All Departments</option>
+            <option value="All Departments">All Departments (Consolidated)</option>
             <option value="Finance">Finance</option>
             <option value="Engineering">Engineering</option>
             <option value="HR">HR</option>
@@ -220,45 +274,59 @@ export default function PayrollDashboardView({ onTabChange }: PayrollDashboardVi
           </select>
         </div>
 
+        {/* Filter 3: Payrun Status */}
         <div>
-          <label style={{ display: 'block', fontSize: '0.725rem', color: '#FFFFFF', marginBottom: '4px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <label style={{ display: 'block', fontSize: '0.725rem', color: '#CBD5E1', marginBottom: '6px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Payrun Status
           </label>
-          <div style={{
-            background: '#090D16',
-            color: '#10B981',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '8px',
-            padding: '8px 12px',
-            fontSize: '0.875rem',
-            fontWeight: 800,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-          }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981' }} />
-            {data?.payrunStatus || 'Paid & Closed'}
-          </div>
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            style={{
+              width: '100%',
+              background: '#090D16',
+              color: selectedStatus === 'Paid' ? '#10B981' : selectedStatus === 'Validated' ? '#38BDF8' : '#FFFFFF',
+              border: '1px solid rgba(255, 255, 255, 0.25)',
+              borderRadius: '8px',
+              padding: '8px 12px',
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            <option value="All Statuses">All Statuses (Active Cycles)</option>
+            <option value="Paid">● Paid & Disbursed</option>
+            <option value="Validated">● Validated (Audit Ready)</option>
+            <option value="Computed">● Computed (Formulas Done)</option>
+            <option value="Draft">● Draft (Pending Calculation)</option>
+          </select>
         </div>
 
+        {/* Filter 4: Legal Entity */}
         <div>
-          <label style={{ display: 'block', fontSize: '0.725rem', color: '#FFFFFF', marginBottom: '4px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <label style={{ display: 'block', fontSize: '0.725rem', color: '#CBD5E1', marginBottom: '6px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Legal Entity
           </label>
-          <input
-            readOnly
-            value="OXP Pvt Ltd (India)"
+          <select
+            value={selectedEntity}
+            onChange={(e) => setSelectedEntity(e.target.value)}
             style={{
               width: '100%',
               background: '#090D16',
               color: '#FFFFFF',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
+              border: '1px solid rgba(255, 255, 255, 0.25)',
               borderRadius: '8px',
               padding: '8px 12px',
-              fontSize: '0.875rem',
-              fontWeight: 600,
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              cursor: 'pointer',
             }}
-          />
+          >
+            <option value="OXP Pvt Ltd (India)">OXP Pvt Ltd (India)</option>
+            <option value="PeoplePay UK Ltd">PeoplePay UK Ltd (Overseas)</option>
+            <option value="PeoplePay US Inc">PeoplePay US Inc (Overseas)</option>
+            <option value="All Legal Entities">All Legal Entities</option>
+          </select>
         </div>
       </div>
 
