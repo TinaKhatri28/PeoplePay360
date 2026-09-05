@@ -27,12 +27,12 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
   const isEmployeeOnly = !isHRManager && !isPayrollStaff;
 
   const rawNavItems = [
-    { id: 'dashboard', label: isEmployeeOnly ? 'My Dashboard' : 'Dashboard', icon: LayoutDashboard, allowed: true },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, allowed: true },
     { id: 'employees', label: 'Employees', icon: Users, allowed: isHRManager || isPayrollStaff },
     { id: 'contracts', label: 'Contracts', icon: FileText, allowed: isHRManager || isPayrollStaff },
-    { id: 'attendance', label: isEmployeeOnly ? 'My Attendance' : 'Attendance', icon: Clock, allowed: true },
-    { id: 'timeoff', label: isEmployeeOnly ? 'My Leaves & Quotas' : 'Time Off & Leaves', icon: CalendarOff, allowed: true },
-    { id: 'payroll', label: isPayrollStaff ? 'Payroll Studio' : 'Payroll Details', icon: Coins, highlight: true, allowed: isHRManager || isPayrollStaff },
+    { id: 'attendance', label: 'Attendance', icon: Clock, allowed: true },
+    { id: 'timeoff', label: 'Time Off & Leaves', icon: CalendarOff, allowed: true },
+    { id: 'payroll', label: 'Payroll Studio', icon: Coins, highlight: true, allowed: isHRManager || isPayrollStaff },
     { id: 'salary', label: 'Salary & Schedules', icon: Sliders, allowed: isHRManager || isPayrollStaff },
     { id: 'users', label: 'User Governance', icon: UserCheck, allowed: isHRManager },
   ];

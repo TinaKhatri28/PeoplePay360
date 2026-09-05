@@ -20,7 +20,6 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const DEMO_USERS = [
   { role: 'Admin (Full Access)', email: 'admin@oxp.com', password: 'admin123', badge: 'HR Payroll Admin' },
   { role: 'Payroll Specialist', email: 'aarav@oxp.com', password: 'payroll123', badge: 'HR Payroll User' },
-  { role: 'Employee', email: 'john@oxp.com', password: 'employee123', badge: 'Employee' },
 ];
 
 export function AuthProvider({ children }: { children: ReactNode }) {
