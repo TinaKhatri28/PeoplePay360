@@ -86,7 +86,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
           }}>
             PeoplePay<span style={{ color: '#93C5FD' }}>360</span>
           </div>
-          <div style={{ fontSize: '0.675rem', color: '#94A3B8', fontWeight: 600, letterSpacing: '0.04em' }}>
+          <div style={{ fontSize: '0.675rem', color: 'rgba(255,255,255,0.55)', fontWeight: 600, letterSpacing: '0.04em' }}>
             ENTERPRISE HR & PAYROLL
           </div>
         </div>
@@ -96,7 +96,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         <div style={{
           fontSize: '0.675rem',
           fontWeight: 700,
-          color: '#94A3B8',
+          color: 'rgba(255,255,255,0.4)',
           textTransform: 'uppercase',
           letterSpacing: '0.08em',
           padding: '8px 12px 4px',
@@ -108,7 +108,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
           return (
-            <button
+          <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
               style={{
@@ -117,8 +117,8 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
                 gap: '12px',
                 padding: '10px 14px',
                 borderRadius: 'var(--radius-md)',
-                background: isActive ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                color: isActive ? '#FFFFFF' : '#CBD5E1',
+                background: isActive ? 'rgba(255, 255, 255, 0.18)' : 'transparent',
+                color: isActive ? '#FFFFFF' : 'rgba(255,255,255,0.7)',
                 fontWeight: isActive ? 600 : 500,
                 fontSize: '0.875rem',
                 border: isActive ? '1px solid rgba(255, 255, 255, 0.25)' : '1px solid transparent',
@@ -129,23 +129,23 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
               }}
               onMouseEnter={(e) => {
                 if (!isActive) {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
                   e.currentTarget.style.color = '#FFFFFF';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isActive) {
                   e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = '#CBD5E1';
+                  e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
                 }
               }}
             >
-              <Icon size={18} color={isActive ? '#93C5FD' : 'currentColor'} />
+              <Icon size={18} color={isActive ? '#93C5FD' : 'rgba(255,255,255,0.6)'} />
               <span>{item.label}</span>
               {item.highlight && (
                 <span style={{
                   marginLeft: 'auto',
-                  background: '#2E7D5B',
+                  background: 'var(--color-success)',
                   color: '#fff',
                   fontSize: '0.65rem',
                   fontWeight: 700,
@@ -166,15 +166,15 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        background: 'rgba(0, 0, 0, 0.2)',
+        background: 'rgba(0, 0, 0, 0.15)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
           <div style={{
             width: '34px',
             height: '34px',
             borderRadius: '50%',
-            background: '#3F5F7F',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
+            background: 'var(--color-secondary)',
+            border: '2px solid rgba(255, 255, 255, 0.25)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -198,7 +198,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
             </div>
             <div style={{
               fontSize: '0.675rem',
-              color: '#94A3B8',
+              color: 'rgba(255,255,255,0.5)',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -214,7 +214,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
           style={{
             background: 'transparent',
             border: 'none',
-            color: '#94A3B8',
+            color: 'rgba(255,255,255,0.4)',
             cursor: 'pointer',
             padding: '6px',
             borderRadius: 'var(--radius-xs)',
@@ -223,8 +223,8 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
             justifyContent: 'center',
             transition: 'color var(--transition-fast)',
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = '#B42318')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}
+          onMouseEnter={(e) => (e.currentTarget.style.color = '#FFAAAA')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(255,255,255,0.4)')}
         >
           <LogOut size={16} />
         </button>
