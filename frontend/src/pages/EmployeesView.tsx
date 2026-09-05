@@ -55,6 +55,7 @@ export default function EmployeesView({ onNavigate }: EmployeesViewProps = {}) {
     schedule_id: '',
     work_location: 'Mumbai HQ',
     bank_account: '',
+    wage: '30000',
   });
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -110,6 +111,7 @@ export default function EmployeesView({ onNavigate }: EmployeesViewProps = {}) {
           ...formData,
           department_id: formData.department_id ? +formData.department_id : null,
           schedule_id: formData.schedule_id ? +formData.schedule_id : null,
+          wage: formData.wage ? +formData.wage : 30000,
         },
       });
       setShowAddModal(false);
@@ -122,6 +124,7 @@ export default function EmployeesView({ onNavigate }: EmployeesViewProps = {}) {
         schedule_id: '',
         work_location: 'Mumbai HQ',
         bank_account: '',
+        wage: '30000',
       });
       fetchEmployees();
     } catch (err: any) {
@@ -680,6 +683,20 @@ export default function EmployeesView({ onNavigate }: EmployeesViewProps = {}) {
                     />
                   </div>
                 </div>
+
+                <div className="form-group">
+                  <label className="form-label">Monthly Basic Salary / Wage (₹)</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    placeholder="30000"
+                    value={formData.wage || ''}
+                    onChange={(e) => setFormData({ ...formData, wage: e.target.value })}
+                  />
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-subtle)', marginTop: '4px' }}>
+                    An active employment contract will be automatically generated with this basic salary.
+                  </div>
+                </div>
               </div>
 
               <div className="modal-footer">
@@ -750,6 +767,7 @@ export default function EmployeesView({ onNavigate }: EmployeesViewProps = {}) {
                 { id: 'attendance', label: `Attendance (${empDetails?.attendance?.length || 0})`, icon: Clock },
                 { id: 'timeoff', label: `Time Off (${empDetails?.timeoff?.length || 0})`, icon: Calendar },
                 { id: 'allocations', label: 'Leave Quota', icon: CheckCircle2 },
+                { id: 'payslips', label: `Payslips (${empDetails?.payslips?.length || 0})`, icon: CreditCard },
               ].map((tab) => {
                 const Icon = tab.icon;
                 const active = detailTab === tab.id;
@@ -989,6 +1007,74 @@ export default function EmployeesView({ onNavigate }: EmployeesViewProps = {}) {
                       </div>
                     );
                   })}
+                </div>
+              )}
+
+              {detailTab === 'payslips' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {(!empDetails?.payslips || empDetails.payslips.length === 0) ? (
+                    <div style={{ color: '#64748B', textAlign: 'center', padding: '24px' }}>
+                      No payslips generated for this employee yet. Create and compute a Payrun in the Payroll tab to generate salary records.
+                    </div>
+                  ) : (
+                    empDetails.payslips.map((ps) => (
+                      <div
+                        key={ps.id}
+                        style={{
+                          padding: '16px',
+                          borderRadius: 'var(--radius-md)',
+                          background: '#F8F9FA',
+                          border: '1px solid #E2E8F0',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          flexWrap: 'wrap',
+                          gap: '12px',
+                        }}
+                      >
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontWeight: 700, fontFamily: 'var(--font-mono)', color: '#1E3A5F' }}>
+                              {ps.number || `SLIP-${ps.id}`}
+                            </span>
+                            <span className={`badge ${
+                              ps.status === 'Paid' ? 'badge-success' :
+                              ps.status === 'Validated' ? 'badge-info' : 'badge-warning'
+                            }`}>
+                              <span className="badge-dot" />
+                              {ps.status}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '0.775rem', color: '#64748B', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>
+                            Pay Period: {ps.period_start?.slice(0, 10)} to {ps.period_end?.slice(0, 10)}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '2px' }}>
+                            Basic: ₹{Number(ps.basic_wage || 0).toLocaleString('en-IN')} | Gross: ₹{Number(ps.gross_wage || 0).toLocaleString('en-IN')}
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#2E7D5B', fontFamily: 'var(--font-mono)' }}>
+                              ₹{Number(ps.net_wage || 0).toLocaleString('en-IN')}
+                            </div>
+                            <span style={{ fontSize: '0.7rem', color: '#64748B' }}>Net Disbursed</span>
+                          </div>
+
+                          <a
+                            href={`/api/payroll/payslips/${ps.id}/pdf`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn btn-secondary"
+                            style={{ padding: '6px 12px', fontSize: '0.75rem', color: '#1E3A5F', display: 'flex', alignItems: 'center', gap: '6px' }}
+                          >
+                            <Download size={14} />
+                            <span>PDF Payslip</span>
+                          </a>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               )}
             </div>

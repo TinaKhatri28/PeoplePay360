@@ -148,9 +148,9 @@ export class PayrollCalculationService {
     }
 
     // Index attendance summaries by employee_id
-    const attendanceMap = new Map<string, { workedHours: number; overtimeHours: number; absentDays: number; presentDays: number }>();
+    const attendanceMap = new Map<string, { workedHours: number; overtimeHours: number; absentDays: number; presentDays: number; absentDates: string[] }>();
     for (const eid of employeeIds) {
-      attendanceMap.set(eid, { workedHours: 0, overtimeHours: 0, absentDays: 0, presentDays: 0 });
+      attendanceMap.set(eid, { workedHours: 0, overtimeHours: 0, absentDays: 0, presentDays: 0, absentDates: [] });
     }
     for (const r of attendanceRecords) {
       const entry = attendanceMap.get(r.employee_id);
@@ -159,6 +159,9 @@ export class PayrollCalculationService {
         entry.overtimeHours += r.overtime_hours || 0;
         if (r.status === 'Absent') {
           entry.absentDays++;
+          if (r.date) {
+            entry.absentDates.push(r.date);
+          }
         } else {
           entry.presentDays++;
         }
@@ -272,7 +275,7 @@ export class PayrollCalculationService {
         continue;
       }
 
-      const attendance = attendanceMap.get(eid) || { workedHours: 0, overtimeHours: 0, absentDays: 0, presentDays: 0 };
+      const attendance = attendanceMap.get(eid) || { workedHours: 0, overtimeHours: 0, absentDays: 0, presentDays: 0, absentDates: [] };
       const unpaidLeaveDays = leaveMap.get(eid) || 0;
       const empUnpaidLeaves = unpaidLeavesByEmployee.get(eid) || [];
 
@@ -296,11 +299,19 @@ export class PayrollCalculationService {
       let grossSalary = 0;
       let totalDeductions = 0;
       let hasHandledUnpaidLeave = false;
+      let hasHandledAbsence = false;
 
-      // Format date like "Sep 12"
-      const formatLeaveDate = (d: Date): string => {
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        return `${months[d.getUTCMonth()]} ${d.getUTCDate()}`;
+      // Format date like "05-Sep" or "Sep 05"
+      const formatDateStr = (dStr: string): string => {
+        try {
+          const d = new Date(dStr);
+          if (isNaN(d.getTime())) return dStr;
+          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const day = String(d.getUTCDate()).padStart(2, '0');
+          return `${day}-${months[d.getUTCMonth()]}`;
+        } catch {
+          return dStr;
+        }
       };
 
       // Push itemized unpaid leave deduction lines with breakdown details
@@ -310,15 +321,15 @@ export class PayrollCalculationService {
 
         for (const ul of empUnpaidLeaves) {
           const itemDeduction = +(ul.duration * dailyRate).toFixed(2);
-          const startStr = formatLeaveDate(ul.startDate);
-          const endStr = formatLeaveDate(ul.endDate);
+          const startStr = formatDateStr(ul.startDate.toISOString());
+          const endStr = formatDateStr(ul.endDate.toISOString());
           const dateStr = startStr === endStr ? startStr : `${startStr} - ${endStr}`;
           const isPending = ul.status === 'To Approve';
           if (isPending) pendingDays += ul.duration;
           const statusTag = isPending ? ' [Pending Approval]' : '';
 
           lines.push({
-            name: `Unpaid Leave Deduction - ${ul.typeName} (${ul.duration} ${ul.duration === 1 ? 'day' : 'days'} @ $${dailyRate.toFixed(2)}/day: ${dateStr})${statusTag}`,
+            name: `Unpaid Leave Deduction - ${ul.typeName} (${ul.duration} ${ul.duration === 1 ? 'day' : 'days'} @ ₹${dailyRate.toFixed(2)}/day: ${dateStr})${statusTag}`,
             category: 'Deduction',
             amount: itemDeduction,
           });
@@ -328,6 +339,22 @@ export class PayrollCalculationService {
         if (pendingDays > 0) {
           warnings.push(`Contains ${pendingDays} day(s) of unpaid leave pending approval`);
         }
+      };
+
+      // Push itemized attendance absence deduction lines with breakdown details
+      const pushAbsenceDeductions = (prefixName?: string) => {
+        if (attendance.absentDays === 0) return;
+        const absenceAmount = +(attendance.absentDays * dailyRate).toFixed(2);
+        const formattedDates = attendance.absentDates.map(formatDateStr).join(', ');
+        const datesTag = formattedDates ? `: ${formattedDates}` : '';
+        const label = prefixName || 'Attendance Absence Deduction';
+
+        lines.push({
+          name: `${label} (${attendance.absentDays} ${attendance.absentDays === 1 ? 'day' : 'days'} @ ₹${dailyRate.toFixed(2)}/day${datesTag})`,
+          category: 'Deduction',
+          amount: absenceAmount,
+        });
+        totalDeductions += absenceAmount;
       };
 
       for (const rule of rules) {
@@ -345,7 +372,13 @@ export class PayrollCalculationService {
           continue;
         }
 
-        // Enforce Deduction category for absence formula rule
+        // Handle ATTENDANCE_BASED rule by inserting the itemized absence breakdown
+        if (rule.formula_key === 'ATTENDANCE_BASED') {
+          hasHandledAbsence = true;
+          pushAbsenceDeductions(rule.name);
+          continue;
+        }
+
         const isDeductionFormula = rule.formula_key === 'ATTENDANCE_BASED';
         const effectiveCategory = isDeductionFormula ? 'Deduction' : rule.category;
         const absAmount = Math.abs(amount);
@@ -374,6 +407,11 @@ export class PayrollCalculationService {
         pushUnpaidLeaveDeductions();
       }
 
+      // If structure did NOT have an explicit ATTENDANCE_BASED rule, but employee has absent days
+      if (!hasHandledAbsence && attendance.absentDays > 0) {
+        pushAbsenceDeductions();
+      }
+
       if (lines.length === 0 || !lines.some((l) => l.category === 'Basic')) {
         grossSalary = basicSalary;
         lines.unshift({ name: 'Basic Salary', category: 'Basic', amount: basicSalary });
@@ -384,7 +422,7 @@ export class PayrollCalculationService {
       let netSalary = +(grossSalary - totalDeductions).toFixed(2);
       if (netSalary < 0) {
         warnings.push(
-          `Deductions ($${totalDeductions.toFixed(2)}) exceed gross earnings ($${grossSalary.toFixed(2)}). Net salary capped at $0.00 (Flagged for payroll review)`
+          `Deductions (₹${totalDeductions.toFixed(2)}) exceed gross earnings (₹${grossSalary.toFixed(2)}). Net salary capped at ₹0.00 (Flagged for payroll review)`
         );
         netSalary = 0;
       }

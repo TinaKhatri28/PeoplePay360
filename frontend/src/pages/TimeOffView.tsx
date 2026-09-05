@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { apiRequest } from '../api';
 import { useAuth } from '../context/AuthContext';
-import { TimeOffRequest, TimeOffAllocation } from '../types';
+import { TimeOffRequest, TimeOffAllocation, Employee } from '../types';
 
 export default function TimeOffView() {
   const { user, isHRManager } = useAuth();
@@ -20,6 +20,7 @@ export default function TimeOffView() {
   const [types, setTypes] = useState<any[]>([]);
   const [allocations, setAllocations] = useState<TimeOffAllocation[]>([]);
   const [myAllocations, setMyAllocations] = useState<TimeOffAllocation[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [showModal, setShowModal] = useState(false);
@@ -27,6 +28,7 @@ export default function TimeOffView() {
   const [submitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
+    employee_id: '',
     type_id: '',
     start_date: new Date().toISOString().slice(0, 10),
     end_date: new Date().toISOString().slice(0, 10),
@@ -35,14 +37,16 @@ export default function TimeOffView() {
 
   const fetchData = async () => {
     try {
-      const [reqData, typeData, allocData] = await Promise.all([
+      const [reqData, typeData, allocData, empData] = await Promise.all([
         apiRequest<TimeOffRequest[]>('/api/time-off/requests'),
         apiRequest<any[]>('/api/time-off/types'),
         apiRequest<TimeOffAllocation[]>('/api/time-off/allocations'),
+        apiRequest<Employee[]>('/api/employees'),
       ]);
       setRequests(reqData);
       setTypes(typeData);
       setAllocations(allocData);
+      setEmployees(empData);
 
       if (user?.employee_id) {
         const myAllocs = await apiRequest<TimeOffAllocation[]>(`/api/employees/${user.employee_id}/allocations`);
@@ -59,6 +63,18 @@ export default function TimeOffView() {
     fetchData();
   }, [user]);
 
+  const handleOpenModal = () => {
+    setFormData({
+      employee_id: user?.employee_id ? String(user.employee_id) : (employees.length > 0 ? String(employees[0].id) : ''),
+      type_id: types.length > 0 ? String(types[0].id) : '',
+      start_date: new Date().toISOString().slice(0, 10),
+      end_date: new Date().toISOString().slice(0, 10),
+      reason: '',
+    });
+    setFormError(null);
+    setShowModal(true);
+  };
+
   const durationDays = Math.max(
     1,
     Math.round((new Date(formData.end_date).getTime() - new Date(formData.start_date).getTime()) / 86400000) + 1
@@ -66,6 +82,11 @@ export default function TimeOffView() {
 
   const handleRequestSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    const targetEmpId = formData.employee_id || user?.employee_id;
+    if (!targetEmpId) {
+      setFormError('Please select an employee');
+      return;
+    }
     if (!formData.type_id) {
       setFormError('Please select a leave category');
       return;
@@ -81,11 +102,12 @@ export default function TimeOffView() {
           end_date: formData.end_date,
           duration: durationDays,
           reason: formData.reason,
-          employee_id: user?.employee_id,
+          employee_id: String(targetEmpId),
         },
       });
       setShowModal(false);
       setFormData({
+        employee_id: user?.employee_id ? String(user.employee_id) : (employees.length > 0 ? String(employees[0].id) : ''),
         type_id: '',
         start_date: new Date().toISOString().slice(0, 10),
         end_date: new Date().toISOString().slice(0, 10),
@@ -99,25 +121,52 @@ export default function TimeOffView() {
     }
   };
 
-  const handleApprove = async (id: number) => {
+  const [actionLoadingId, setActionLoadingId] = useState<string | number | null>(null);
+
+  const formatDate = (dStr: string) => {
+    if (!dStr) return '—';
+    try {
+      const d = new Date(dStr);
+      if (isNaN(d.getTime())) return dStr;
+      return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    } catch {
+      return dStr;
+    }
+  };
+
+  const handleApprove = async (id: string | number, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setActionLoadingId(id);
     try {
       await apiRequest(`/api/time-off/requests/${id}/approve`, { method: 'POST' });
-      fetchData();
+      setRequests((prev) =>
+        prev.map((r) => (String(r.id) === String(id) ? { ...r, status: 'Approved' } : r))
+      );
+      await fetchData();
     } catch (err: any) {
       alert(err.message || 'Approval failed');
+    } finally {
+      setActionLoadingId(null);
     }
   };
 
-  const handleRefuse = async (id: number) => {
+  const handleRefuse = async (id: string | number, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setActionLoadingId(id);
     try {
       await apiRequest(`/api/time-off/requests/${id}/refuse`, { method: 'POST' });
-      fetchData();
+      setRequests((prev) =>
+        prev.map((r) => (String(r.id) === String(id) ? { ...r, status: 'Refused' } : r))
+      );
+      await fetchData();
     } catch (err: any) {
       alert(err.message || 'Refusal failed');
+    } finally {
+      setActionLoadingId(null);
     }
   };
 
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
 
   const isAllSelected = requests.length > 0 && requests.every((r) => selectedIds.includes(r.id));
   const isSomeSelected = selectedIds.length > 0 && !isAllSelected;
@@ -130,7 +179,7 @@ export default function TimeOffView() {
     }
   };
 
-  const handleToggleSelectOne = (id: number, e?: React.MouseEvent | React.ChangeEvent) => {
+  const handleToggleSelectOne = (id: string | number, e?: React.MouseEvent | React.ChangeEvent) => {
     if (e) e.stopPropagation();
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
@@ -147,8 +196,8 @@ export default function TimeOffView() {
       r.id,
       r.employee_name,
       r.type_name,
-      r.start_date,
-      r.end_date,
+      formatDate(r.start_date),
+      formatDate(r.end_date),
       `${r.duration} ${r.unit || 'Days'}`,
       r.reason || '',
       r.status,
@@ -178,8 +227,11 @@ export default function TimeOffView() {
     }
     try {
       await Promise.all(pendingIds.map((id) => apiRequest(`/api/time-off/requests/${id}/approve`, { method: 'POST' })));
+      setRequests((prev) =>
+        prev.map((r) => (pendingIds.includes(r.id) ? { ...r, status: 'Approved' } : r))
+      );
       setSelectedIds([]);
-      fetchData();
+      await fetchData();
     } catch (err: any) {
       alert(err.message || 'Bulk approval failed');
     }
@@ -195,8 +247,11 @@ export default function TimeOffView() {
     }
     try {
       await Promise.all(pendingIds.map((id) => apiRequest(`/api/time-off/requests/${id}/refuse`, { method: 'POST' })));
+      setRequests((prev) =>
+        prev.map((r) => (pendingIds.includes(r.id) ? { ...r, status: 'Refused' } : r))
+      );
       setSelectedIds([]);
-      fetchData();
+      await fetchData();
     } catch (err: any) {
       alert(err.message || 'Bulk refusal failed');
     }
@@ -218,7 +273,7 @@ export default function TimeOffView() {
           </div>
           <button
             className="btn btn-primary"
-            onClick={() => setShowModal(true)}
+            onClick={handleOpenModal}
           >
             <Plus size={16} />
             <span>Request Time Off</span>
@@ -400,7 +455,9 @@ export default function TimeOffView() {
                         <span style={{ fontWeight: 600, color: '#818cf8' }}>{r.type_name}</span>
                       </td>
                       <td>
-                        <div style={{ fontSize: '0.825rem' }}>{r.start_date} → {r.end_date}</div>
+                        <div style={{ fontSize: '0.825rem', whiteSpace: 'nowrap' }}>
+                          {formatDate(r.start_date)} → {formatDate(r.end_date)}
+                        </div>
                       </td>
                       <td>
                         <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
@@ -426,20 +483,26 @@ export default function TimeOffView() {
                           {r.status === 'To Approve' ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                               <button
+                                type="button"
                                 className="btn btn-success btn-sm"
-                                onClick={() => handleApprove(r.id)}
+                                disabled={actionLoadingId === r.id}
+                                onClick={(e) => handleApprove(r.id, e)}
                                 title="Approve Request"
+                                style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
                               >
                                 <CheckCircle2 size={14} />
-                                <span>Approve</span>
+                                <span>{actionLoadingId === r.id ? '...' : 'Approve'}</span>
                               </button>
                               <button
+                                type="button"
                                 className="btn btn-danger btn-sm"
-                                onClick={() => handleRefuse(r.id)}
+                                disabled={actionLoadingId === r.id}
+                                onClick={(e) => handleRefuse(r.id, e)}
                                 title="Refuse Request"
+                                style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
                               >
                                 <XCircle size={14} />
-                                <span>Refuse</span>
+                                <span>{actionLoadingId === r.id ? '...' : 'Refuse'}</span>
                               </button>
                             </div>
                           ) : (
@@ -486,7 +549,28 @@ export default function TimeOffView() {
                 )}
 
                 <div className="form-group">
-                  <label className="form-label">Leave Category *</label>
+                  <label className="form-label" style={{ fontWeight: 600 }}>Employee *</label>
+                  <select
+                    className="form-control"
+                    value={formData.employee_id}
+                    onChange={(e) => setFormData({ ...formData, employee_id: e.target.value })}
+                    required
+                  >
+                    <option value="">Select Employee</option>
+                    {employees.map((emp) => {
+                      const empName = emp.name || `${emp.first_name || ''} ${emp.last_name || ''}`.trim() || emp.email;
+                      const dept = emp.department_name || emp.department || emp.position;
+                      return (
+                        <option key={emp.id} value={emp.id}>
+                          {empName} {dept ? `(${dept})` : ''}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600 }}>Leave Category *</label>
                   <select
                     className="form-control"
                     value={formData.type_id}
@@ -500,9 +584,33 @@ export default function TimeOffView() {
                   </select>
                 </div>
 
+                {(() => {
+                  const selectedAlloc = allocations.find(
+                    (a) => String(a.employee_id) === String(formData.employee_id) && String(a.type_id) === String(formData.type_id)
+                  );
+                  if (!selectedAlloc) return null;
+                  const rem = selectedAlloc.allocated - selectedAlloc.taken;
+                  return (
+                    <div style={{
+                      fontSize: '0.78rem',
+                      color: rem > 0 ? '#059669' : '#DC2626',
+                      background: rem > 0 ? 'rgba(5, 150, 105, 0.08)' : 'rgba(220, 38, 38, 0.08)',
+                      padding: '8px 12px',
+                      borderRadius: 'var(--radius-sm)',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      fontWeight: 600,
+                    }}>
+                      <span>Quota Balance:</span>
+                      <span>{rem} {selectedAlloc.unit || 'Days'} remaining ({selectedAlloc.taken} used of {selectedAlloc.allocated})</span>
+                    </div>
+                  );
+                })()}
+
                 <div className="grid-2">
                   <div className="form-group">
-                    <label className="form-label">Start Date *</label>
+                    <label className="form-label" style={{ fontWeight: 600 }}>Start Date *</label>
                     <input
                       type="date"
                       className="form-control"
@@ -512,7 +620,7 @@ export default function TimeOffView() {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">End Date *</label>
+                    <label className="form-label" style={{ fontWeight: 600 }}>End Date *</label>
                     <input
                       type="date"
                       className="form-control"

@@ -31,7 +31,7 @@ export default function PayrollView() {
   const [newYear, setNewYear] = useState<number>(2026);
   const [newMonth, setNewMonth] = useState<number>(9);
   const [eligible, setEligible] = useState<Employee[]>([]);
-  const [selectedEmpIds, setSelectedEmpIds] = useState<number[]>([]);
+  const [selectedEmpIds, setSelectedEmpIds] = useState<(string | number)[]>([]);
   const [structures, setStructures] = useState<SalaryStructure[]>([]);
   const [selectedStructure, setSelectedStructure] = useState<string>('');
   const [loadingEligible, setLoadingEligible] = useState(false);
@@ -51,7 +51,7 @@ export default function PayrollView() {
     }
   };
 
-  const fetchPayrunDetails = async (id: number) => {
+  const fetchPayrunDetails = async (id: string | number) => {
     try {
       const data = await apiRequest<Payrun>(`/api/payroll/payruns/${id}`);
       setPayrunDetails(data);
@@ -64,7 +64,7 @@ export default function PayrollView() {
     fetchPayruns();
   }, []);
 
-  const openPayrun = async (run: Partial<Payrun> & { id: number }) => {
+  const openPayrun = async (run: Partial<Payrun> & { id: string | number }) => {
     setSelectedPayrun(run as Payrun);
     fetchPayrunDetails(run.id);
   };
@@ -76,10 +76,14 @@ export default function PayrollView() {
         apiRequest<Employee[]>(`/api/payroll/eligible-employees?year=${newYear}&month=${newMonth}`),
         apiRequest<SalaryStructure[]>('/api/salary/structures'),
       ]);
-      setEligible(elData);
-      setSelectedEmpIds(elData.map((e) => e.id));
-      setStructures(structData);
-      if (structData.length > 0) setSelectedStructure(String(structData[0].id));
+      const validEmps = elData || [];
+      const validStructs = structData || [];
+      setEligible(validEmps);
+      setSelectedEmpIds(validEmps.map((e) => e.id));
+      setStructures(validStructs);
+      if (validStructs.length > 0) {
+        setSelectedStructure((prev) => prev || String(validStructs[0].id));
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -101,13 +105,13 @@ export default function PayrollView() {
     }
     setProcessing(true);
     try {
-      const res = await apiRequest<{ id: number }>('/api/payroll/payruns', {
+      const res = await apiRequest<{ id: string | number }>('/api/payroll/payruns', {
         method: 'POST',
         body: {
           period_year: +newYear,
           period_month: +newMonth,
-          structure_id: selectedStructure ? +selectedStructure : null,
-          employee_ids: selectedEmpIds,
+          structure_id: selectedStructure || null,
+          employee_ids: selectedEmpIds.map(String),
           company: 'OXP Pvt Ltd',
         },
       });
@@ -932,7 +936,9 @@ export default function PayrollView() {
                       border: '1px solid #E2E8F0',
                     }}>
                       {eligible.map((emp) => {
-                        const checked = selectedEmpIds.includes(emp.id);
+                        const checked = selectedEmpIds.some((id) => String(id) === String(emp.id));
+                        const empName = emp.name || `${emp.first_name || ''} ${emp.last_name || ''}`.trim() || emp.email;
+                        const wageVal = Number(emp.contract?.wage) || 30000;
                         return (
                           <label
                             key={emp.id}
@@ -952,13 +958,13 @@ export default function PayrollView() {
                               checked={checked}
                               onChange={(e) => {
                                 if (e.target.checked) setSelectedEmpIds([...selectedEmpIds, emp.id]);
-                                else setSelectedEmpIds(selectedEmpIds.filter((id) => id !== emp.id));
+                                else setSelectedEmpIds(selectedEmpIds.filter((id) => String(id) !== String(emp.id)));
                               }}
                             />
-                            <span style={{ fontWeight: 600, color: '#1F2937' }}>{emp.name}</span>
-                            <span style={{ color: '#64748B' }}>({emp.position})</span>
+                            <span style={{ fontWeight: 600, color: '#1F2937' }}>{empName}</span>
+                            <span style={{ color: '#64748B' }}>({emp.position || 'Staff'})</span>
                             <span style={{ marginLeft: 'auto', fontFamily: 'var(--font-mono)', color: '#2E7D5B', fontWeight: 600 }}>
-                              ₹{emp.contract?.wage?.toLocaleString('en-IN')}/mo
+                              ₹{wageVal.toLocaleString('en-IN')}/mo
                             </span>
                           </label>
                         );
@@ -1105,40 +1111,73 @@ export default function PayrollView() {
               )}
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {inspectedSlip.lines?.map((line, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '10px 14px',
-                      background: '#F8F9FA',
-                      borderRadius: 'var(--radius-sm)',
-                      border: '1px solid #E2E8F0',
-                      fontSize: '0.85rem',
-                    }}
-                  >
-                    <div>
-                      <span style={{ fontWeight: 600, color: '#1F2937' }}>{line.name}</span>
+                {(!inspectedSlip.lines || inspectedSlip.lines.length === 0) ? (
+                  <div style={{
+                    padding: '20px',
+                    textAlign: 'center',
+                    background: '#F8F9FA',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid #E2E8F0',
+                  }}>
+                    <div style={{ color: '#64748B', fontSize: '0.875rem', marginBottom: '12px' }}>
+                      This payslip is in draft state. Click below to compute salary rules, gross earnings, and attendance deductions.
+                    </div>
+                    {isPayrollUser && (
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                        disabled={processing}
+                        onClick={async () => {
+                          if (selectedPayrun) {
+                            await handleCompute();
+                            setInspectedSlip(null);
+                          }
+                        }}
+                      >
+                        <Play size={14} />
+                        <span>Compute Payrun Salaries</span>
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  inspectedSlip.lines.map((line, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '10px 14px',
+                        background: line.category === 'Deduction' ? 'rgba(239, 68, 68, 0.04)' : '#F8F9FA',
+                        borderRadius: 'var(--radius-sm)',
+                        border: `1px solid ${line.category === 'Deduction' ? 'rgba(239, 68, 68, 0.2)' : '#E2E8F0'}`,
+                        fontSize: '0.85rem',
+                      }}
+                    >
+                      <div>
+                        <span style={{ fontWeight: 600, color: '#1F2937' }}>{line.name}</span>
+                        <span style={{
+                          marginLeft: '8px',
+                          fontSize: '0.7rem',
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          background: line.category === 'Deduction' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(30, 58, 95, 0.08)',
+                          color: line.category === 'Deduction' ? '#B42318' : '#1E3A5F',
+                          fontWeight: 700,
+                        }}>
+                          {line.category}
+                        </span>
+                      </div>
                       <span style={{
-                        marginLeft: '8px',
-                        fontSize: '0.7rem',
-                        color: line.category === 'Deduction' ? '#B42318' : '#1E3A5F',
-                        fontWeight: 600,
+                        fontFamily: 'var(--font-mono)',
+                        fontWeight: 700,
+                        color: line.category === 'Deduction' ? '#B42318' : '#1F2937',
                       }}>
-                        [{line.category}]
+                        {line.category === 'Deduction' ? '-' : ''}₹{Math.abs(line.amount).toLocaleString('en-IN')}
                       </span>
                     </div>
-                    <span style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontWeight: 700,
-                      color: line.category === 'Deduction' ? '#B42318' : '#1F2937',
-                    }}>
-                      {line.category === 'Deduction' ? '-' : ''}₹{Math.abs(line.amount).toLocaleString('en-IN')}
-                    </span>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
 
               <div style={{
@@ -1153,7 +1192,7 @@ export default function PayrollView() {
                 <div>
                   <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Net Take-Home Pay</div>
                   <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#2E7D5B', fontFamily: 'var(--font-mono)' }}>
-                    ₹{inspectedSlip.net?.toLocaleString('en-IN')}
+                    ₹{Number(inspectedSlip.net || 0).toLocaleString('en-IN')}
                   </div>
                 </div>
                 <button

@@ -3,24 +3,50 @@ import { ConflictError, NotFoundError } from '../../shared/errors/app.error';
 
 export class PayrollRepository {
   async findEligibleEmployees(organizationId: string, periodStart: Date, periodEnd: Date) {
-    // Employees who have active status and a contract covering the period
+    // Employees who have active status
     const employees = await prisma.employee.findMany({
       where: { organization_id: organizationId, status: 'Active' },
       include: {
         contracts: {
-          where: {
-            start_date: { lte: periodEnd },
-            OR: [
-              { end_date: null },
-              { end_date: { gte: periodStart } },
-            ],
-          },
           orderBy: { start_date: 'desc' },
         },
       },
+      orderBy: { first_name: 'asc' },
     });
 
-    return employees.filter((e) => e.contracts.length > 0);
+    for (const emp of employees) {
+      // Find running or valid contract
+      let validContract = emp.contracts.find(
+        (c) => c.status === 'Running' || (!c.end_date || new Date(c.end_date) >= periodStart)
+      );
+
+      if (!validContract && emp.contracts.length > 0) {
+        validContract = emp.contracts[0];
+      }
+
+      if (!validContract) {
+        try {
+          const refCode = `CON-${(emp.first_name || 'EMP').slice(0, 3).toUpperCase()}-${Date.now().toString().slice(-4)}`;
+          validContract = await prisma.employmentContract.create({
+            data: {
+              organization_id: organizationId,
+              employee_id: emp.id,
+              ref: refCode,
+              start_date: emp.joining_date || periodStart,
+              wage: 30000,
+              status: 'Running',
+              position: emp.position || 'Staff',
+            },
+          });
+        } catch (err) {
+          console.error('Failed to auto-create contract in findEligibleEmployees:', err);
+        }
+      }
+
+      emp.contracts = validContract ? [validContract] : [];
+    }
+
+    return employees;
   }
 
   async findAllPayruns(organizationId: string) {
@@ -157,34 +183,36 @@ export class PayrollRepository {
     }>,
     totals: { gross: number; deductions: number; net: number }
   ) {
-    return prisma.$transaction(async (tx) => {
-      for (const slip of calculatedSlips) {
-        await tx.payslip.update({
-          where: { id: slip.payslipId },
-          data: {
-            contract_id: slip.contract_id,
-            gross: slip.gross,
-            deductions: slip.deductions,
-            net: slip.net,
-            lines_json: slip.lines_json,
-            warnings_json: slip.warnings_json,
-            status: slip.status,
-          },
-        });
-      }
-
-      const updatedPayrun = await tx.payrun.update({
-        where: { id: payrunId },
+    const payslipUpdates = calculatedSlips.map((slip) =>
+      prisma.payslip.update({
+        where: { id: slip.payslipId },
         data: {
-          status: 'Computed',
-          total_gross: totals.gross,
-          total_deductions: totals.deductions,
-          total_net: totals.net,
+          contract_id: slip.contract_id,
+          gross: slip.gross,
+          deductions: slip.deductions,
+          net: slip.net,
+          lines_json: slip.lines_json,
+          warnings_json: slip.warnings_json,
+          status: slip.status,
         },
-      });
+      })
+    );
 
-      return updatedPayrun;
+    const payrunUpdate = prisma.payrun.update({
+      where: { id: payrunId },
+      data: {
+        status: 'Computed',
+        total_gross: totals.gross,
+        total_deductions: totals.deductions,
+        total_net: totals.net,
+      },
     });
+
+    const results = await prisma.$transaction([...payslipUpdates, payrunUpdate], {
+      timeout: 30000,
+    });
+
+    return results[results.length - 1];
   }
 
   async updatePayslipCalculation(

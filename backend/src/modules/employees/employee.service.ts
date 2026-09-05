@@ -1,3 +1,4 @@
+import { prisma } from '../../config/database';
 import { employeeRepository, EmployeeRepository } from './employee.repository';
 import { auditService, AuditService } from '../audit/audit.service';
 import { ConflictError, NotFoundError } from '../../shared/errors/app.error';
@@ -93,6 +94,44 @@ export class EmployeeService {
       avatar_initials: avatarInitials,
       joining_date: data.joining_date ? new Date(data.joining_date) : new Date(),
     });
+
+    // Automatically create initial active employment contract so employee is immediately eligible for payroll
+    try {
+      const defaultWage = Number(data.wage) || 30000;
+      const refCode = `CON-${(firstName || 'EMP').slice(0, 3).toUpperCase()}-${Date.now().toString().slice(-4)}`;
+
+      await prisma.employmentContract.create({
+        data: {
+          organization_id: organizationId,
+          employee_id: created.id,
+          ref: refCode,
+          start_date: data.joining_date ? new Date(data.joining_date) : new Date(),
+          wage: defaultWage,
+          status: 'Running',
+          position: data.position || 'Staff',
+        },
+      });
+
+      // Provision default leave allocations for leave types in organization
+      const leaveTypes = await prisma.leaveType.findMany({
+        where: { organization_id: organizationId },
+      });
+      for (const lt of leaveTypes) {
+        await prisma.leaveAllocation.create({
+          data: {
+            organization_id: organizationId,
+            employee_id: created.id,
+            type_id: lt.id,
+            allocated: lt.is_paid ? 20 : 10,
+            taken: 0,
+            status: 'Approved',
+            approver_id: actorUserId || null,
+          },
+        });
+      }
+    } catch (err) {
+      console.error('Failed to auto-provision contract/allocations for new employee:', err);
+    }
 
     await this.audit.log({
       organizationId,

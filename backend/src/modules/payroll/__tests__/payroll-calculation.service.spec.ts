@@ -83,10 +83,11 @@ describe('PayrollCalculationService - Bug 1 & Bug 3 Fixes', () => {
     expect(empResult.totalDeductions).toBe(500);
     expect(empResult.netSalary).toBe(2100);
 
-    const absenceLine = empResult.lines.find((l) => l.name === 'Absence Penalty');
+    const absenceLine = empResult.lines.find((l) => l.name.includes('Absence Penalty'));
     expect(absenceLine).toBeDefined();
     expect(absenceLine?.category).toBe('Deduction');
     expect(absenceLine?.amount).toBe(500);
+    expect(absenceLine?.name).toContain('5 days @ ₹100.00/day');
   });
 
   it('caps net salary at 0.00 and logs warning when deductions exceed gross earnings (Bug 3 Fix)', async () => {
@@ -103,7 +104,7 @@ describe('PayrollCalculationService - Bug 1 & Bug 3 Fixes', () => {
     ]);
     mockAttendanceRepo.findMonthlyRecordsForEmployees.mockResolvedValue([]);
     mockLeaveRepo.findApprovedLeavesForEmployees.mockResolvedValue([]);
-    // Heavy deductions totaling $1,500 on $1,000 basic wage
+    // Heavy deductions totaling ₹1,500 on ₹1,000 basic wage
     mockSalaryRepo.findRulesForStructures.mockResolvedValue([
       {
         structure_id: 'struct_deduct',
@@ -128,9 +129,9 @@ describe('PayrollCalculationService - Bug 1 & Bug 3 Fixes', () => {
     expect(empResult).toBeDefined();
     expect(empResult.grossSalary).toBe(1000);
     expect(empResult.totalDeductions).toBe(1500);
-    // Net salary must NOT be -$500. It must be capped at 0
+    // Net salary must NOT be -₹500. It must be capped at 0
     expect(empResult.netSalary).toBe(0);
-    expect(empResult.warnings.some((w) => w.includes('exceed gross earnings') && w.includes('Net salary capped at $0.00'))).toBe(true);
+    expect(empResult.warnings.some((w) => w.includes('exceed gross earnings') && w.includes('Net salary capped at ₹0.00'))).toBe(true);
   });
 
   it('creates detailed itemized deduction lines for approved unpaid leaves with days, rate, and dates', async () => {
@@ -188,8 +189,8 @@ describe('PayrollCalculationService - Bug 1 & Bug 3 Fixes', () => {
     expect(unpaidLine).toBeDefined();
     expect(unpaidLine?.category).toBe('Deduction');
     expect(unpaidLine?.amount).toBe(200);
-    expect(unpaidLine?.name).toContain('2 days @ $100.00/day');
-    expect(unpaidLine?.name).toContain('Jun 10 - Jun 11');
+    expect(unpaidLine?.name).toContain('2 days @ ₹100.00/day');
+    expect(unpaidLine?.name).toContain('10-Jun - 11-Jun');
   });
 
   it('includes applied unpaid leave in To Approve status with [Pending Approval] tag and warning', async () => {
@@ -244,7 +245,8 @@ describe('PayrollCalculationService - Bug 1 & Bug 3 Fixes', () => {
     const pendingLine = empResult.lines.find((l) => l.name.includes('Leave Without Pay'));
     expect(pendingLine).toBeDefined();
     expect(pendingLine?.name).toContain('[Pending Approval]');
-    expect(pendingLine?.name).toContain('3 days @ $100.00/day');
+    expect(pendingLine?.name).toContain('3 days @ ₹100.00/day');
+    expect(pendingLine?.name).toContain('15-Jun - 17-Jun');
     expect(empResult.warnings.some((w) => w.includes('3 day(s) of unpaid leave pending approval'))).toBe(true);
   });
 
@@ -294,6 +296,52 @@ describe('PayrollCalculationService - Bug 1 & Bug 3 Fixes', () => {
     expect(autoLine).toBeDefined();
     expect(autoLine?.category).toBe('Deduction');
     expect(autoLine?.amount).toBe(200);
-    expect(autoLine?.name).toContain('1 day @ $200.00/day');
+    expect(autoLine?.name).toContain('1 day @ ₹200.00/day');
+    expect(autoLine?.name).toContain('20-Jun');
+  });
+
+  it('correctly calculates absence deduction when employee is absent for 2 days (e.g. ₹2600 wage, 2 days absent = ₹200 deduction itemized)', async () => {
+    mockEmployeesRepo.findManyByIds.mockResolvedValue([
+      { id: 'emp_6', first_name: 'Rahul', last_name: 'Sharma', bank_account: 'ACC66666666' },
+    ]);
+    mockContractRepo.findContractsValidForPeriodForEmployees.mockResolvedValue([
+      {
+        id: 'contract_6',
+        employee_id: 'emp_6',
+        wage: 2600, // ₹100/day across 26 expected working days
+        salary_structure_id: 'struct_auto_absence',
+      },
+    ]);
+    // 2 absent records with dates
+    mockAttendanceRepo.findMonthlyRecordsForEmployees.mockResolvedValue([
+      { employee_id: 'emp_6', date: new Date('2026-06-05'), status: 'Absent', worked_hours: 0, overtime_hours: 0 },
+      { employee_id: 'emp_6', date: new Date('2026-06-06'), status: 'Absent', worked_hours: 0, overtime_hours: 0 },
+      { employee_id: 'emp_6', date: new Date('2026-06-07'), status: 'Present', worked_hours: 8, overtime_hours: 0 },
+    ]);
+    mockLeaveRepo.findApprovedLeavesForEmployees.mockResolvedValue([]);
+    mockSalaryRepo.findRulesForStructures.mockResolvedValue([
+      {
+        structure_id: 'struct_auto_absence',
+        name: 'Basic Salary',
+        category: 'Basic',
+        compute_method: 'FIXED',
+        sequence: 1,
+      },
+    ]);
+
+    const results = await service.calculateBatchPayroll('org_1', ['emp_6'], 2026, 6);
+    const empResult = results.get('emp_6')!;
+
+    expect(empResult).toBeDefined();
+    expect(empResult.grossSalary).toBe(2600);
+    expect(empResult.totalDeductions).toBe(200); // 2 days * 100
+    expect(empResult.netSalary).toBe(2400);
+
+    const absenceLine = empResult.lines.find((l) => l.name.includes('Attendance Absence Deduction'));
+    expect(absenceLine).toBeDefined();
+    expect(absenceLine?.category).toBe('Deduction');
+    expect(absenceLine?.amount).toBe(200);
+    expect(absenceLine?.name).toContain('2 days @ ₹100.00/day');
+    expect(absenceLine?.name).toContain('05-Jun, 06-Jun');
   });
 });

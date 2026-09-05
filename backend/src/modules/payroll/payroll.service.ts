@@ -1,3 +1,4 @@
+import { prisma } from '../../config/database';
 import { payrollRepository, PayrollRepository } from './payroll.repository';
 import { payrollCalculationService, PayrollCalculationService } from './payroll-calculation.service';
 import { auditService, AuditService } from '../audit/audit.service';
@@ -71,7 +72,64 @@ export class PayrollService {
 
     const existing = await this.repo.findPayrunByPeriod(organizationId, year, month);
     if (existing) {
-      throw new ConflictError(`A payrun for period ${month}/${year} already exists.`);
+      if (existing.status === 'Paid') {
+        throw new ConflictError(`A finalized/paid payrun for period ${month}/${year} already exists.`);
+      }
+
+      // If existing payrun is unfinalized (Draft/Computed/Validated), sync with the updated employee selection
+      await prisma.payslip.deleteMany({
+        where: { payrun_id: existing.id, status: { not: 'Paid' } },
+      });
+
+      const draftPayslips = [];
+      for (const eid of employeeIds) {
+        const contract = await this.calculation.getApplicableContract(organizationId, eid, year, month);
+        draftPayslips.push({
+          organization_id: organizationId,
+          payrun_id: existing.id,
+          employee_id: eid,
+          contract_id: contract?.id || null,
+          gross: 0,
+          deductions: 0,
+          net: 0,
+          lines_json: '[]',
+          warnings_json: '[]',
+          status: 'Draft',
+        });
+      }
+
+      if (draftPayslips.length > 0) {
+        await this.repo.createDraftPayslips(draftPayslips);
+      }
+
+      const updated = await prisma.payrun.update({
+        where: { id: existing.id },
+        data: {
+          structure_id: data.structure_id || existing.structure_id,
+          status: 'Draft',
+          total_gross: 0,
+          total_net: 0,
+        },
+      });
+
+      await this.audit.log({
+        organizationId,
+        userId: actorUserId,
+        action: 'PAYRUN_UPDATED',
+        resourceType: 'payrun',
+        resourceId: existing.id,
+        details: { month, year, employeeCount: employeeIds.length },
+      });
+
+      // Automatically compute payrun so all employee payslips immediately have computed line items and net salary
+      try {
+        await this.computePayrun(organizationId, existing.id, actorUserId);
+        const computed = await this.repo.findPayrunById(organizationId, existing.id);
+        return computed || updated;
+      } catch (err) {
+        console.warn('Auto-compute payrun skipped/deferred:', err);
+        return updated;
+      }
     }
 
     // Prepare draft payslips for all selected employees
@@ -108,10 +166,18 @@ export class PayrollService {
       action: 'PAYRUN_CREATED',
       resourceType: 'payrun',
       resourceId: payrun.id,
-      details: { month, year, employee_count: employeeIds.length },
+      details: { month, year, employeeCount: employeeIds.length },
     });
 
-    return { id: payrun.id, payrun };
+    // Automatically compute payrun so all employee payslips immediately have computed line items and net salary
+    try {
+      await this.computePayrun(organizationId, payrun.id, actorUserId);
+      const computed = await this.repo.findPayrunById(organizationId, payrun.id);
+      return computed || payrun;
+    } catch (err) {
+      console.warn('Auto-compute payrun skipped/deferred:', err);
+      return payrun;
+    }
   }
 
   /**

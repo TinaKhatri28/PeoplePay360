@@ -19,9 +19,12 @@ export interface Department {
 export interface Employee {
   id: number;
   name: string;
+  first_name?: string;
+  last_name?: string;
   email: string;
   phone?: string | null;
   position?: string | null;
+  department?: string | null;
   department_id?: number | null;
   department_name?: string | null;
   manager_id?: number | null;
@@ -86,23 +89,23 @@ export interface TimeOffType {
 }
 
 export interface TimeOffAllocation {
-  id: number;
-  employee_id: number;
+  id: string | number;
+  employee_id: string | number;
   employee_name?: string;
-  type_id: number;
+  type_id: string | number;
   type_name?: string;
   unit?: string;
   allocated: number;
   taken: number;
   status: string;
-  approver_id?: number | null;
+  approver_id?: string | number | null;
 }
 
 export interface TimeOffRequest {
-  id: number;
-  employee_id: number;
+  id: string | number;
+  employee_id: string | number;
   employee_name?: string;
-  type_id: number;
+  type_id: string | number;
   type_name?: string;
   unit?: string;
   start_date: string;
