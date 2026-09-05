@@ -61,7 +61,7 @@ export class EmployeeService {
   }
 
   async createEmployee(organizationId: string, data: any, actorUserId?: string) {
-    const existing = await this.repo.findByEmail(data.email);
+    const existing = await this.repo.findByEmail(organizationId, data.email);
     if (existing) {
       throw new ConflictError(`Employee with email ${data.email} already exists`);
     }

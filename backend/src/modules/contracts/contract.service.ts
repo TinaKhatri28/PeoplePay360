@@ -1,6 +1,6 @@
 import { contractRepository, ContractRepository } from './contract.repository';
 import { auditService, AuditService } from '../audit/audit.service';
-import { ContractOverlapError, NotFoundError } from '../../shared/errors/app.error';
+import { ContractOverlapError, NotFoundError, ValidationError } from '../../shared/errors/app.error';
 
 export class ContractService {
   constructor(
@@ -50,6 +50,11 @@ export class ContractService {
   }
 
   async createContract(organizationId: string, data: any, actorUserId?: string) {
+    const wage = Number(data.wage);
+    if (isNaN(wage) || wage <= 0) {
+      throw new ValidationError('Contract wage must be greater than 0');
+    }
+
     const newStart = new Date(data.start_date);
     const newEnd = data.end_date ? new Date(data.end_date) : null;
 
@@ -104,7 +109,13 @@ export class ContractService {
     if (data.ref) updateData.ref = data.ref;
     if (data.start_date) updateData.start_date = new Date(data.start_date);
     if (data.end_date !== undefined) updateData.end_date = data.end_date ? new Date(data.end_date) : null;
-    if (data.wage !== undefined) updateData.wage = Number(data.wage);
+    if (data.wage !== undefined) {
+      const wage = Number(data.wage);
+      if (isNaN(wage) || wage <= 0) {
+        throw new ValidationError('Contract wage must be greater than 0');
+      }
+      updateData.wage = wage;
+    }
     if (data.status) updateData.status = data.status;
     if (data.department !== undefined) updateData.department = data.department;
     if (data.position !== undefined) updateData.position = data.position;

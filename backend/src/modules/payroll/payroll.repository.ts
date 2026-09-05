@@ -1,4 +1,5 @@
 import { prisma } from '../../config/database';
+import { ConflictError, NotFoundError } from '../../shared/errors/app.error';
 
 export class PayrollRepository {
   async findEligibleEmployees(organizationId: string, periodStart: Date, periodEnd: Date) {
@@ -243,6 +244,48 @@ export class PayrollRepository {
       },
     });
     return result.count;
+  }
+
+  /**
+   * ATOMIC TRANSACTION:
+   * Transitions payrun to 'Paid' and atomically updates all associated payslips to 'Paid'.
+   * Validates that payrun is in a payable status (Computed, Validated, or Approved).
+   */
+  async markPayrunPaidTx(organizationId: string, payrunId: string) {
+    return prisma.$transaction(async (tx) => {
+      const run = await tx.payrun.findFirst({
+        where: { id: payrunId, organization_id: organizationId },
+      });
+
+      if (!run) {
+        throw new NotFoundError(`Payrun with id ${payrunId} not found`);
+      }
+
+      if (run.status === 'Paid') {
+        return run;
+      }
+
+      const payableStatuses = ['Computed', 'Validated', 'Approved'];
+      if (!payableStatuses.includes(run.status)) {
+        throw new ConflictError(
+          `Cannot mark payrun as Paid from status '${run.status}'. Payrun must be Computed or Validated first.`
+        );
+      }
+
+      // Atomically update all payslips of this payrun to Paid
+      await tx.payslip.updateMany({
+        where: { payrun_id: payrunId, organization_id: organizationId },
+        data: { status: 'Paid' },
+      });
+
+      // Update payrun status to Paid
+      const updated = await tx.payrun.update({
+        where: { id: payrunId },
+        data: { status: 'Paid' },
+      });
+
+      return updated;
+    });
   }
 
   async findPayslipById(organizationId: string, payslipId: string) {

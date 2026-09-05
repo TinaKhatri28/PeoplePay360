@@ -269,31 +269,10 @@ export class PayrollService {
 
   /**
    * Mark payrun as paid (State transition: Computed/Validated/Approved -> Paid)
+   * Enforces atomic transaction across payrun and all associated payslips.
    */
   async markPaid(organizationId: string, payrunId: string, actorUserId?: string) {
-    const run = await this.repo.findPayrunById(organizationId, payrunId);
-    if (!run) {
-      throw new NotFoundError(`Payrun with id ${payrunId} not found`);
-    }
-
-    if (run.status === 'Paid') {
-      return { ok: true, message: 'Payrun already paid' };
-    }
-
-    await this.repo.updatePayrunStatus(payrunId, 'Paid');
-
-    // Update all payslips to Paid
-    for (const slip of run.payslips) {
-      await this.repo.updatePayslipCalculation(slip.id, {
-        contract_id: slip.contract_id,
-        gross: Number(slip.gross),
-        deductions: Number(slip.deductions),
-        net: Number(slip.net),
-        lines_json: slip.lines_json,
-        warnings_json: slip.warnings_json,
-        status: 'Paid',
-      });
-    }
+    const updated = await this.repo.markPayrunPaidTx(organizationId, payrunId);
 
     await this.audit.log({
       organizationId,
@@ -301,10 +280,10 @@ export class PayrollService {
       action: 'PAYROLL_MARKED_PAID',
       resourceType: 'payrun',
       resourceId: payrunId,
-      details: { total_net: run.total_net },
+      details: { total_net: (updated as any).total_net },
     });
 
-    return { ok: true };
+    return { ok: true, payrun: updated };
   }
 
   async sendPayslips(organizationId: string, payrunId: string, actorUserId?: string) {

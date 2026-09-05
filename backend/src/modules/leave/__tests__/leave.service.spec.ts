@@ -16,6 +16,8 @@ describe('LeaveService - Bug 4 Overlapping Leave & Balance Protection', () => {
       findOverlappingRequests: vi.fn(),
       getPendingDuration: vi.fn(),
       createRequest: vi.fn(),
+      findRequestById: vi.fn(),
+      processLeaveApprovalTx: vi.fn(),
     };
     mockAudit = {
       log: vi.fn(),
@@ -115,5 +117,31 @@ describe('LeaveService - Bug 4 Overlapping Leave & Balance Protection', () => {
 
     expect(result).toEqual(createdRecord);
     expect(mockRepo.createRequest).toHaveBeenCalled();
+  });
+
+  it('invokes processLeaveApprovalTx with atomic state and logs audit when changing status', async () => {
+    mockRepo.findRequestById.mockResolvedValue({
+      id: 'req_1',
+      employee_id: 'emp_1',
+      type_id: 'type_annual',
+      duration: 3,
+      status: 'Approved',
+    });
+    mockRepo.processLeaveApprovalTx.mockResolvedValue({
+      id: 'req_1',
+      status: 'Cancelled',
+    });
+
+    const result = await leaveService.processApproval('org_1', 'req_1', 'Cancelled', 'admin_1');
+
+    expect(result.status).toBe('Cancelled');
+    expect(mockRepo.processLeaveApprovalTx).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestId: 'req_1',
+        organizationId: 'org_1',
+        newStatus: 'Cancelled',
+        approverId: 'admin_1',
+      })
+    );
   });
 });

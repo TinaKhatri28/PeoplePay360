@@ -192,7 +192,26 @@ export class LeaveRepository {
         }
       }
 
-      // 3. Update the request status
+      // 3. If cancelling or refusing a previously Approved leave, atomically refund the allocation
+      if (req.status === 'Approved' && (params.newStatus === 'Cancelled' || params.newStatus === 'Refused')) {
+        const alloc = await tx.leaveAllocation.findFirst({
+          where: {
+            employee_id: req.employee_id,
+            type_id: req.type_id,
+            organization_id: params.organizationId,
+          },
+        });
+        if (alloc && req.duration > 0) {
+          await tx.leaveAllocation.update({
+            where: { id: alloc.id },
+            data: {
+              taken: { decrement: req.duration },
+            },
+          });
+        }
+      }
+
+      // 4. Update the request status
       const updatedReq = await tx.leaveRequest.update({
         where: { id: params.requestId },
         data: {

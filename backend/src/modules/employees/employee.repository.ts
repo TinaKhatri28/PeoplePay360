@@ -52,14 +52,9 @@ export class EmployeeRepository {
     return { total, items };
   }
 
-  async findByEmail(emailOrOrgId: string, email?: string) {
-    if (email) {
-      return prisma.employee.findFirst({
-        where: { email, organization_id: emailOrOrgId },
-      });
-    }
-    return prisma.employee.findUnique({
-      where: { email: emailOrOrgId },
+  async findByEmail(organizationId: string, email: string) {
+    return prisma.employee.findFirst({
+      where: { email, organization_id: organizationId },
     });
   }
 

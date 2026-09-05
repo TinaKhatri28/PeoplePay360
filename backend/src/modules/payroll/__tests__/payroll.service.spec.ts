@@ -97,4 +97,34 @@ describe('PayrollService - Race Condition 1 Concurrent Payrun Computation', () =
     expect(mockCalculation.calculateBatchPayroll).toHaveBeenCalledWith('org_1', ['emp_1'], 2026, 6, 'struct_1');
     expect(mockRepo.commitBatchPayrunCalculationTx).toHaveBeenCalled();
   });
+
+  it('delegates markPaid to atomic markPayrunPaidTx and records audit log', async () => {
+    mockRepo.markPayrunPaidTx = vi.fn().mockResolvedValue({
+      id: 'payrun_1',
+      status: 'Paid',
+      total_net: 4500,
+    });
+
+    const result = await payrollService.markPaid('org_1', 'payrun_1', 'admin_1');
+
+    expect(result.ok).toBe(true);
+    expect(mockRepo.markPayrunPaidTx).toHaveBeenCalledWith('org_1', 'payrun_1');
+    expect(mockAudit.log).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'PAYROLL_MARKED_PAID',
+        resourceType: 'payrun',
+        resourceId: 'payrun_1',
+      })
+    );
+  });
+
+  it('propagates ConflictError when attempting to mark an uncomputed Draft payrun as Paid', async () => {
+    mockRepo.markPayrunPaidTx = vi.fn().mockRejectedValue(
+      new ConflictError("Cannot mark payrun as Paid from status 'Draft'. Payrun must be Computed or Validated first.")
+    );
+
+    await expect(
+      payrollService.markPaid('org_1', 'payrun_draft', 'admin_1')
+    ).rejects.toThrow(ConflictError);
+  });
 });
