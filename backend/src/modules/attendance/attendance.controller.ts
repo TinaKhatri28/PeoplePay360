@@ -21,7 +21,8 @@ export class AttendanceController {
 
   getById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const record = await this.service.getAttendanceById(req.params.id as string);
+      const orgId = req.organizationId || 'org_default';
+      const record = await this.service.getAttendanceById(orgId, req.params.id as string);
       res.json(record);
     } catch (err) {
       next(err);
@@ -56,7 +57,8 @@ export class AttendanceController {
   checkIn = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const orgId = req.organizationId || 'org_default';
-      const employeeId = req.body.employee_id || req.user?.employeeId;
+      const isPrivileged = req.user?.role === 'Admin' || req.user?.role === 'HR Manager';
+      const employeeId = isPrivileged ? (req.body.employee_id || req.user?.employeeId) : req.user?.employeeId;
       if (!employeeId) {
         throw new ValidationError('Employee ID is required for check-in');
       }
@@ -70,7 +72,8 @@ export class AttendanceController {
   checkOut = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const orgId = req.organizationId || 'org_default';
-      const employeeId = req.body.employee_id || req.user?.employeeId;
+      const isPrivileged = req.user?.role === 'Admin' || req.user?.role === 'HR Manager';
+      const employeeId = isPrivileged ? (req.body.employee_id || req.user?.employeeId) : req.user?.employeeId;
       if (!employeeId) {
         throw new ValidationError('Employee ID is required for check-out');
       }

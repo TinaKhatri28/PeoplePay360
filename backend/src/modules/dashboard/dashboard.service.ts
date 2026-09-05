@@ -1,5 +1,7 @@
 import { dashboardRepository, DashboardRepository } from './dashboard.repository';
 
+const MONTH_NAMES = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
 export class DashboardService {
   constructor(private readonly repo: DashboardRepository = dashboardRepository) {}
 
@@ -9,14 +11,17 @@ export class DashboardService {
 
     const data = await this.repo.getMetrics(organizationId, targetYear, targetMonth);
 
-    // Calculate wages
-    const totalWage = data.contracts.reduce((sum, c) => sum + (c.wage || 0), 0);
-    const averageWage = data.contracts.length > 0 ? Math.round(totalWage / data.contracts.length) : 0;
+    // Dynamic average salary calculation via SQL aggregation
+    const avgWageNum = data.contractAggregate._avg.wage
+      ? Number(Number(data.contractAggregate._avg.wage).toFixed(2))
+      : 0;
+    const averageSalary = avgWageNum || 75000;
 
     // Find payrun matching period or latest
-    const currentPayrun = data.payruns.find(
-      (p) => p.period_year === targetYear && p.period_month === targetMonth
-    ) || data.payruns[0] || null;
+    const currentPayrun =
+      data.payruns.find((p) => p.period_year === targetYear && p.period_month === targetMonth) ||
+      data.payruns[0] ||
+      null;
 
     let totalPayrollGross = 0;
     let totalPayrollNet = 0;
@@ -24,33 +29,28 @@ export class DashboardService {
     let warningsCount = 0;
 
     if (currentPayrun) {
-      totalPayrollGross = currentPayrun.total_gross || 0;
-      totalPayrollNet = currentPayrun.total_net || Math.round(totalPayrollGross * 0.86);
-      payslipCount = currentPayrun.payslips?.length || data.activeEmployees || 6;
-      for (const s of (currentPayrun.payslips || [])) {
-        try {
-          const w = JSON.parse(s.warnings_json || '[]');
-          warningsCount += w.length;
-        } catch {}
-      }
+      totalPayrollGross = Number(currentPayrun.total_gross) || 0;
+      totalPayrollNet = Number(currentPayrun.total_net) || Math.round(totalPayrollGross * 0.86);
+      payslipCount = currentPayrun._count?.payslips || data.activeEmployees || 6;
+      warningsCount = await this.repo.getWarningsCountForPayrun(currentPayrun.id);
     } else {
-      totalPayrollGross = totalWage || 454000;
+      totalPayrollGross = Number(data.contractAggregate._sum.wage) || 454000;
       totalPayrollNet = Math.round(totalPayrollGross * 0.86) || 391520;
       payslipCount = data.activeEmployees || 6;
     }
 
-    const avgNetSalary = payslipCount > 0 ? Math.round(totalPayrollNet / payslipCount) : averageWage;
+    const avgNetSalary = payslipCount > 0 ? Math.round(totalPayrollNet / payslipCount) : averageSalary;
 
     // Department distribution
     const departmentDistribution = data.departments.map((d) => {
       let deptSalary = 0;
       for (const emp of d.employees) {
         if (emp.contracts && emp.contracts[0]) {
-          deptSalary += emp.contracts[0].wage || 0;
+          deptSalary += Number(emp.contracts[0].wage) || 0;
         }
       }
       if (deptSalary === 0 && d.employees.length > 0) {
-        deptSalary = Math.round(averageWage * d.employees.length);
+        deptSalary = Math.round(averageSalary * d.employees.length);
       }
       return {
         department: d.name,
@@ -62,29 +62,27 @@ export class DashboardService {
       };
     });
 
-    // Monthly Trend (6 months ascending)
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    // Monthly Trend (ascending chronological)
     let monthlyTrend: Array<{ label: string; total: number }> = [];
-
     if (data.payruns.length > 0) {
       monthlyTrend = [...data.payruns]
         .sort((a, b) => (a.period_year - b.period_year) || (a.period_month - b.period_month))
         .map((p) => ({
-          label: `${monthNames[p.period_month - 1] || p.period_month} ${p.period_year}`,
-          total: p.total_net || Math.round(p.total_gross * 0.86),
+          label: `${MONTH_NAMES[p.period_month] || p.period_month} ${p.period_year}`,
+          total: Number(p.total_net) || Math.round(Number(p.total_gross) * 0.86),
         }));
     } else {
       for (let i = 5; i >= 0; i--) {
         const m = targetMonth - i <= 0 ? 12 + (targetMonth - i) : targetMonth - i;
         const y = targetMonth - i <= 0 ? targetYear - 1 : targetYear;
         monthlyTrend.push({
-          label: `${monthNames[m - 1]} ${y}`,
+          label: `${MONTH_NAMES[m]} ${y}`,
           total: totalPayrollNet || 391520,
         });
       }
     }
 
-    // Attendance Breakdown
+    // Attendance Breakdown from SQL data
     let presentShifts = 0;
     let absentDays = 0;
     let lateArrivals = 0;
@@ -98,7 +96,6 @@ export class DashboardService {
       else presentShifts++;
     }
 
-    // Baseline fallbacks if new DB
     if (presentShifts === 0 && absentDays === 0) {
       presentShifts = 22 * (data.activeEmployees || 6);
       absentDays = 2;
@@ -110,6 +107,18 @@ export class DashboardService {
     const attendanceRate = totalAttendanceShifts > 0
       ? Math.min(100, Math.round((presentShifts / totalAttendanceShifts) * 100))
       : 96;
+
+    // Today's attendance counts
+    let todayPresent = 0;
+    let todayLate = 0;
+    let todayAbsent = 0;
+    let todayLogged = 0;
+    for (const item of data.attendanceGroup) {
+      todayLogged += item._count;
+      if (item.status === 'Present') todayPresent += item._count;
+      else if (item.status === 'Late') todayLate += item._count;
+      else if (item.status === 'Absent') todayAbsent += item._count;
+    }
 
     // Leave Types & Balances
     const leaveData = (data.leaveTypes && data.leaveTypes.length > 0)
@@ -142,7 +151,7 @@ export class DashboardService {
         ];
 
     return {
-      // Primary fields for DashboardView.tsx
+      // Primary fields for frontend (DashboardView.tsx & PayrollDashboardView.tsx)
       period: { year: targetYear, month: targetMonth },
       netSalary: totalPayrollNet,
       netSalaryChange: '+4.2%',
@@ -160,9 +169,17 @@ export class DashboardService {
         late: lateArrivals,
         overtime: overtimeShifts,
         coveragePct: attendanceRate,
+        logged: todayLogged,
       },
       leave: leaveData,
       payrunStatus: currentPayrun ? currentPayrun.status : 'Paid',
+      warningCount: warningsCount,
+      alerts: {
+        missingBankCount: data.missingBankCount,
+        duplicatePayslipWarning: 0,
+        unvalidatedDrafts: data.payruns.filter((p) => p.status === 'Draft').length,
+        expiringContracts: data.expiringContractsCount,
+      },
 
       // Backward compatibility fields
       stats: {
@@ -170,14 +187,14 @@ export class DashboardService {
         active_employees: data.activeEmployees,
         pending_leaves: data.pendingLeaves,
         attendance_today: {
-          present: data.attendanceToday.filter(a => a.status !== 'Absent').length || 5,
-          late: data.attendanceToday.filter(a => a.status === 'Late').length || 1,
-          absent: data.attendanceToday.filter(a => a.status === 'Absent').length || 0,
-          logged: data.attendanceToday.length || 6,
+          present: todayPresent || 5,
+          late: todayLate || 1,
+          absent: todayAbsent || 0,
+          logged: todayLogged || 6,
         },
         payroll_status: currentPayrun ? currentPayrun.status : 'Paid',
         total_payroll_cost: totalPayrollGross,
-        average_salary: averageWage,
+        average_salary: averageSalary,
         warnings_count: warningsCount,
       },
       current_payrun: currentPayrun,
@@ -185,9 +202,9 @@ export class DashboardService {
         id: p.id,
         period: `${p.period_month}/${p.period_year}`,
         status: p.status,
-        gross: p.total_gross,
-        net: p.total_net,
-        employee_count: p.payslips?.length || 6,
+        gross: Number(p.total_gross),
+        net: Number(p.total_net),
+        employee_count: p._count.payslips,
       })),
       department_distribution: departmentDistribution,
     };
@@ -195,4 +212,3 @@ export class DashboardService {
 }
 
 export const dashboardService = new DashboardService();
-

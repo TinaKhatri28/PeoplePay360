@@ -1,7 +1,7 @@
 import { payrollRepository, PayrollRepository } from './payroll.repository';
 import { payrollCalculationService, PayrollCalculationService } from './payroll-calculation.service';
 import { auditService, AuditService } from '../audit/audit.service';
-import { dispatchJob, PAYROLL_QUEUE_NAME } from '../../jobs/queue';
+import { dispatchJob, PAYROLL_QUEUE_NAME, EMAIL_QUEUE_NAME } from '../../jobs/queue';
 import { ConflictError, NotFoundError, ValidationError } from '../../shared/errors/app.error';
 
 export class PayrollService {
@@ -64,6 +64,11 @@ export class PayrollService {
 
     if (!month || !year || employeeIds.length === 0) {
       throw new ValidationError('period_month, period_year, and employee_ids are required');
+    }
+
+    const existing = await this.repo.findPayrunByPeriod(organizationId, year, month);
+    if (existing) {
+      throw new ConflictError(`A payrun for period ${month}/${year} already exists.`);
     }
 
     const payrun = await this.repo.createPayrun({
@@ -247,9 +252,9 @@ export class PayrollService {
     for (const slip of run.payslips) {
       await this.repo.updatePayslipCalculation(slip.id, {
         contract_id: slip.contract_id,
-        gross: slip.gross,
-        deductions: slip.deductions,
-        net: slip.net,
+        gross: Number(slip.gross),
+        deductions: Number(slip.deductions),
+        net: Number(slip.net),
         lines_json: slip.lines_json,
         warnings_json: slip.warnings_json,
         status: 'Paid',
@@ -272,6 +277,17 @@ export class PayrollService {
     const run = await this.repo.findPayrunById(organizationId, payrunId);
     if (!run) {
       throw new NotFoundError(`Payrun with id ${payrunId} not found`);
+    }
+
+    for (const slip of run.payslips) {
+      if (slip.employee?.email) {
+        await dispatchJob(EMAIL_QUEUE_NAME, `send-payslip-${slip.id}`, {
+          to: slip.employee.email,
+          subject: `Your Payslip for ${run.period_month}/${run.period_year}`,
+          html: `<p>Dear ${slip.employee.first_name},</p><p>Your payslip for ${run.period_month}/${run.period_year} has been processed.</p><p>Net Pay: $${Number(slip.net).toFixed(2)}</p>`,
+          text: `Your payslip for ${run.period_month}/${run.period_year} has been processed. Net Pay: $${Number(slip.net).toFixed(2)}`,
+        });
+      }
     }
 
     return { ok: true, sent: run.payslips.length };

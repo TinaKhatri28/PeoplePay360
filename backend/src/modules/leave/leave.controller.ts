@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { prisma } from '../../config/database';
 import { leaveService, LeaveService } from './leave.service';
 import { ValidationError } from '../../shared/errors/app.error';
 
@@ -43,7 +44,26 @@ export class LeaveController {
   createRequest = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const orgId = req.organizationId || 'org_default';
-      const employeeId = req.body.employee_id || req.user?.employeeId;
+      const isPrivileged = req.user?.role === 'Admin' || req.user?.role === 'HR Manager';
+      let employeeId = (isPrivileged && req.body.employee_id) ? req.body.employee_id : req.user?.employeeId;
+
+      if (!employeeId && req.user?.id) {
+        const user = await prisma.user.findUnique({
+          where: { id: req.user.id },
+          include: { employee: true },
+        });
+        if (user?.employee_id) {
+          employeeId = user.employee_id;
+        } else if (user?.email) {
+          const emp = await prisma.employee.findFirst({
+            where: { organization_id: orgId, email: user.email },
+          });
+          if (emp) {
+            employeeId = emp.id;
+          }
+        }
+      }
+
       if (!employeeId) {
         throw new ValidationError('Employee ID is required for leave request');
       }

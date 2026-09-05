@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { employeeService, EmployeeService } from './employee.service';
 import { departmentService } from '../departments/department.service';
+import { ForbiddenError } from '../../shared/errors/app.error';
 
 export class EmployeeController {
   constructor(private readonly service: EmployeeService = employeeService) {}
@@ -48,7 +49,12 @@ export class EmployeeController {
   getContracts = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const orgId = req.organizationId || 'org_default';
-      const contracts = await this.service.getEmployeeContracts(orgId, req.params.id as string);
+      const targetId = req.params.id as string;
+      const isPrivileged = req.user?.role === 'Admin' || req.user?.role === 'HR Manager' || req.user?.role === 'HR Payroll Admin' || req.user?.role === 'HR Payroll User';
+      if (!isPrivileged && req.user?.employeeId !== targetId) {
+        throw new ForbiddenError('You are not authorized to view another employee\'s contracts');
+      }
+      const contracts = await this.service.getEmployeeContracts(orgId, targetId);
       res.json(contracts);
     } catch (err) {
       next(err);
@@ -58,7 +64,12 @@ export class EmployeeController {
   getAttendance = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const orgId = req.organizationId || 'org_default';
-      const attendance = await this.service.getEmployeeAttendance(orgId, req.params.id as string);
+      const targetId = req.params.id as string;
+      const isPrivileged = req.user?.role === 'Admin' || req.user?.role === 'HR Manager' || req.user?.role === 'HR Payroll Admin';
+      if (!isPrivileged && req.user?.employeeId !== targetId) {
+        throw new ForbiddenError('You are not authorized to view another employee\'s attendance');
+      }
+      const attendance = await this.service.getEmployeeAttendance(orgId, targetId);
       res.json(attendance);
     } catch (err) {
       next(err);
@@ -68,7 +79,12 @@ export class EmployeeController {
   getTimeOff = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const orgId = req.organizationId || 'org_default';
-      const requests = await this.service.getEmployeeTimeOffRequests(orgId, req.params.id as string);
+      const targetId = req.params.id as string;
+      const isPrivileged = req.user?.role === 'Admin' || req.user?.role === 'HR Manager';
+      if (!isPrivileged && req.user?.employeeId !== targetId) {
+        throw new ForbiddenError('You are not authorized to view another employee\'s time-off requests');
+      }
+      const requests = await this.service.getEmployeeTimeOffRequests(orgId, targetId);
       res.json(requests);
     } catch (err) {
       next(err);
@@ -78,7 +94,12 @@ export class EmployeeController {
   getAllocations = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const orgId = req.organizationId || 'org_default';
-      const allocations = await this.service.getEmployeeTimeOffAllocations(orgId, req.params.id as string);
+      const targetId = req.params.id as string;
+      const isPrivileged = req.user?.role === 'Admin' || req.user?.role === 'HR Manager';
+      if (!isPrivileged && req.user?.employeeId !== targetId) {
+        throw new ForbiddenError('You are not authorized to view another employee\'s leave allocations');
+      }
+      const allocations = await this.service.getEmployeeTimeOffAllocations(orgId, targetId);
       res.json(allocations);
     } catch (err) {
       next(err);

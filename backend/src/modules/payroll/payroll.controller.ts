@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { payrollService, PayrollService } from './payroll.service';
 import { payslipPdfService } from '../payslips/payslip-pdf.service';
+import { ForbiddenError } from '../../shared/errors/app.error';
 
 export class PayrollController {
   constructor(private readonly service: PayrollService = payrollService) {}
@@ -92,6 +93,12 @@ export class PayrollController {
     try {
       const orgId = req.organizationId || 'org_default';
       const slip = await this.service.getPayslipById(orgId, req.params.id as string);
+
+      const isPrivileged = req.user?.role === 'Admin' || req.user?.role === 'HR Manager' || req.user?.role === 'HR Payroll Admin' || req.user?.role === 'HR Payroll User';
+      if (!isPrivileged && slip.employee_id !== req.user?.employeeId) {
+        throw new ForbiddenError('You are not authorized to view this payslip');
+      }
+
       res.json(slip);
     } catch (err) {
       next(err);
@@ -102,6 +109,11 @@ export class PayrollController {
     try {
       const orgId = req.organizationId || 'org_default';
       const slip = await this.service.getPayslipById(orgId, req.params.id as string);
+
+      const isPrivileged = req.user?.role === 'Admin' || req.user?.role === 'HR Manager' || req.user?.role === 'HR Payroll Admin' || req.user?.role === 'HR Payroll User';
+      if (!isPrivileged && slip.employee_id !== req.user?.employeeId) {
+        throw new ForbiddenError('You are not authorized to download this payslip');
+      }
 
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="payslip-${slip.id}.pdf"`);

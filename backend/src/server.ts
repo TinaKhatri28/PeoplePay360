@@ -3,6 +3,7 @@ import { env } from './config/env';
 import { logger } from './shared/logger/logger';
 import { prisma } from './config/database';
 import { initializeQueues } from './jobs/queue';
+import { closeWorkers } from './jobs/workers';
 
 const app = createApp();
 
@@ -21,6 +22,7 @@ const gracefulShutdown = async (signal: string) => {
   logger.info(`Received ${signal}. Starting graceful shutdown...`);
   server.close(async () => {
     logger.info('HTTP server closed.');
+    await closeWorkers();
     await prisma.$disconnect();
     logger.info('Database connection closed.');
     process.exit(0);

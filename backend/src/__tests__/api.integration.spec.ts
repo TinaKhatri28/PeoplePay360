@@ -44,4 +44,21 @@ describe('API Integration Tests (Supertest)', () => {
     expect(res.body.user.email).toBe('admin@oxp.com');
     expect(res.body.user.role).toBe('Admin');
   });
+
+  it('GET /api/contracts rejects unauthenticated request with 401', async () => {
+    const res = await request(app).get('/api/contracts');
+    expect(res.status).toBe(401);
+  });
+
+  it('GET /api/dashboard rejects unauthenticated request with 401', async () => {
+    const res = await request(app).get('/api/dashboard');
+    expect(res.status).toBe(401);
+  });
+
+  it('POST /api/users rejects unauthenticated user creation with 401', async () => {
+    const res = await request(app)
+      .post('/api/users')
+      .send({ email: 'hacker@oxp.com', role: 'Admin' });
+    expect(res.status).toBe(401);
+  });
 });

@@ -8,7 +8,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/', requireRole('HR Manager', 'Admin'), userController.getAll);
-router.post('/', requireRole('HR Payroll Admin', 'Admin'), userController.create);
-router.put('/:id', requireRole('HR Payroll Admin', 'Admin'), userController.update);
+router.post('/', requireRole('Admin'), userController.create);
+router.put('/:id', requireRole('Admin'), userController.update);
 
 export default router;

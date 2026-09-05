@@ -26,9 +26,9 @@ export class AttendanceRepository {
     });
   }
 
-  async findById(id: string) {
-    return prisma.attendanceRecord.findUnique({
-      where: { id },
+  async findById(organizationId: string, id: string) {
+    return prisma.attendanceRecord.findFirst({
+      where: { id, organization_id: organizationId },
       include: {
         employee: {
           include: {

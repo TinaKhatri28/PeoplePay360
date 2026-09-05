@@ -65,6 +65,16 @@ export class PayrollRepository {
     });
   }
 
+  async findPayrunByPeriod(organizationId: string, year: number, month: number) {
+    return prisma.payrun.findFirst({
+      where: {
+        organization_id: organizationId,
+        period_year: year,
+        period_month: month,
+      },
+    });
+  }
+
   async createPayrun(data: {
     organization_id: string;
     period_month: number;
@@ -80,6 +90,7 @@ export class PayrollRepository {
   async createDraftPayslips(payslipsData: any[]) {
     return prisma.payslip.createMany({
       data: payslipsData,
+      skipDuplicates: true,
     });
   }
 

@@ -21,8 +21,8 @@ export class AttendanceService {
     }));
   }
 
-  async getAttendanceById(id: string) {
-    const record = await this.repo.findById(id);
+  async getAttendanceById(organizationId: string, id: string) {
+    const record = await this.repo.findById(organizationId, id);
     if (!record) {
       throw new NotFoundError('Attendance record not found');
     }

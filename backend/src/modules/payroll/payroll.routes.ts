@@ -10,11 +10,11 @@ const router = Router();
 router.use(authenticate);
 
 // Eligible employees for payrun
-router.get('/eligible-employees', payrollController.getEligibleEmployees);
+router.get('/eligible-employees', requireRole('HR Payroll User', 'HR Payroll Admin', 'Admin'), payrollController.getEligibleEmployees);
 
 // Payruns lifecycle
-router.get('/payruns', payrollController.getPayruns);
-router.get('/payruns/:id', payrollController.getPayrunById);
+router.get('/payruns', requireRole('HR Payroll User', 'HR Payroll Admin', 'Admin'), payrollController.getPayruns);
+router.get('/payruns/:id', requireRole('HR Payroll User', 'HR Payroll Admin', 'Admin'), payrollController.getPayrunById);
 router.post(
   '/payruns',
   requireRole('HR Payroll User', 'HR Payroll Admin', 'Admin'),

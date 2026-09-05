@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../../config/database';
 import { authService } from '../auth/auth.service';
-import { NotFoundError } from '../../shared/errors/app.error';
+import { NotFoundError, ValidationError, ForbiddenError } from '../../shared/errors/app.error';
+
+const VALID_ROLES = ['Admin', 'HR Manager', 'HR Payroll Admin', 'HR Payroll User', 'Employee'] as const;
 
 export class UserController {
   getAll = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -35,6 +37,11 @@ export class UserController {
       const orgId = req.organizationId || 'org_default';
       const { email, password, roles, role, employee_id } = req.body;
 
+      const targetRole = role || roles || 'Employee';
+      if (!VALID_ROLES.includes(targetRole)) {
+        throw new ValidationError(`Invalid role: ${targetRole}. Valid roles: ${VALID_ROLES.join(', ')}`);
+      }
+
       const passwordHash = await authService.hashPassword(password || 'password123');
 
       const user = await prisma.user.create({
@@ -42,7 +49,7 @@ export class UserController {
           organization_id: orgId,
           email,
           password_hash: passwordHash,
-          role: role || roles || 'Employee',
+          role: targetRole,
           employee_id: employee_id || null,
         },
       });
@@ -59,7 +66,13 @@ export class UserController {
       const { roles, role, status, password } = req.body;
 
       const updateData: any = {};
-      if (roles || role) updateData.role = role || roles;
+      if (roles || role) {
+        const targetRole = role || roles;
+        if (!VALID_ROLES.includes(targetRole)) {
+          throw new ValidationError(`Invalid role: ${targetRole}. Valid roles: ${VALID_ROLES.join(', ')}`);
+        }
+        updateData.role = targetRole;
+      }
       if (status) updateData.status = status;
       if (password) updateData.password_hash = await authService.hashPassword(password);
 
