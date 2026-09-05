@@ -9,7 +9,6 @@ import {
   Sliders,
   LogOut,
   UserCheck,
-  Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -45,14 +44,14 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
       width: '268px',
       minWidth: '268px',
       background: 'linear-gradient(180deg, #090D16 0%, #06080E 100%)',
-      borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+      borderRight: '1px solid rgba(255, 255, 255, 0.12)',
       display: 'flex',
       flexDirection: 'column',
       height: '100vh',
       position: 'sticky',
       top: 0,
       zIndex: 40,
-      boxShadow: '4px 0 24px rgba(0, 0, 0, 0.3)',
+      boxShadow: '4px 0 24px rgba(0, 0, 0, 0.35)',
       userSelect: 'none',
     }}>
       {/* Brand Header */}
@@ -61,22 +60,22 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         display: 'flex',
         alignItems: 'center',
         gap: '14px',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.07)',
-        background: 'rgba(255, 255, 255, 0.02)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+        background: 'rgba(255, 255, 255, 0.03)',
       }}>
         <div style={{
           width: '42px',
           height: '42px',
           borderRadius: '12px',
-          background: 'linear-gradient(135deg, #FFFFFF 0%, #E2E8F0 45%, #94A3B8 100%)',
+          background: 'linear-gradient(135deg, #FFFFFF 0%, #F1F5F9 50%, #CBD5E1 100%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           color: '#090D16',
           fontWeight: 900,
           fontSize: '1.35rem',
-          boxShadow: '0 4px 14px rgba(255, 255, 255, 0.22), inset 0 1px 1px rgba(255, 255, 255, 0.8)',
-          border: '1px solid rgba(255, 255, 255, 0.8)',
+          boxShadow: '0 4px 14px rgba(255, 255, 255, 0.3), inset 0 1px 1px #FFFFFF',
+          border: '1px solid #FFFFFF',
           letterSpacing: '-0.03em',
           flexShrink: 0,
         }}>
@@ -84,7 +83,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         </div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{
-            fontSize: '1.15rem',
+            fontSize: '1.18rem',
             fontWeight: 800,
             letterSpacing: '-0.02em',
             color: '#FFFFFF',
@@ -93,23 +92,16 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
             gap: '4px',
             lineHeight: 1.2,
           }}>
-            PeoplePay
-            <span style={{
-              background: 'linear-gradient(135deg, #FFFFFF 0%, #94A3B8 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              fontWeight: 900,
-            }}>
-              360
-            </span>
+            PeoplePay <span style={{ color: '#FFFFFF', fontWeight: 900 }}>360</span>
           </div>
           <div style={{
-            fontSize: '0.65rem',
-            color: '#94A3B8',
+            fontSize: '0.675rem',
+            color: '#FFFFFF',
             fontWeight: 700,
             letterSpacing: '0.08em',
             marginTop: '3px',
             textTransform: 'uppercase',
+            opacity: 0.9,
           }}>
             Enterprise HR & Payroll
           </div>
@@ -135,13 +127,13 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
             width: '6px',
             height: '6px',
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, #FFFFFF 0%, #94A3B8 100%)',
-            boxShadow: '0 0 6px rgba(255, 255, 255, 0.6)',
+            background: '#FFFFFF',
+            boxShadow: '0 0 8px #FFFFFF',
           }} />
           <span style={{
-            fontSize: '0.6875rem',
+            fontSize: '0.725rem',
             fontWeight: 800,
-            color: '#94A3B8',
+            color: '#FFFFFF',
             textTransform: 'uppercase',
             letterSpacing: '0.1em',
           }}>
@@ -164,33 +156,31 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
                 padding: '11px 14px',
                 borderRadius: '10px',
                 background: isActive
-                  ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.05) 100%)'
+                  ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.08) 100%)'
                   : 'transparent',
-                color: isActive ? '#FFFFFF' : '#94A3B8',
-                fontWeight: isActive ? 700 : 500,
-                fontSize: '0.875rem',
+                color: '#FFFFFF',
+                fontWeight: isActive ? 800 : 600,
+                fontSize: '0.9rem',
                 border: isActive
-                  ? '1px solid rgba(255, 255, 255, 0.28)'
+                  ? '1px solid rgba(255, 255, 255, 0.35)'
                   : '1px solid transparent',
                 cursor: 'pointer',
                 transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
                 textAlign: 'left',
                 width: '100%',
                 boxShadow: isActive
-                  ? '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                  ? '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25)'
                   : 'none',
               }}
               onMouseEnter={(e) => {
                 if (!isActive) {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                  e.currentTarget.style.color = '#FFFFFF';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
                   e.currentTarget.style.transform = 'translateX(2px)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isActive) {
                   e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = '#94A3B8';
                   e.currentTarget.style.transform = 'translateX(0px)';
                 }
               }}
@@ -206,19 +196,20 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
                   height: '20px',
                   borderRadius: '4px',
                   background: '#FFFFFF',
-                  boxShadow: '0 0 10px rgba(255, 255, 255, 0.8)',
+                  boxShadow: '0 0 12px #FFFFFF',
                 }} />
               )}
 
               <Icon
                 size={18}
-                color={isActive ? '#FFFFFF' : '#64748B'}
+                color="#FFFFFF"
                 style={{
-                  filter: isActive ? 'drop-shadow(0 0 6px rgba(255, 255, 255, 0.4))' : 'none',
+                  filter: isActive ? 'drop-shadow(0 0 6px rgba(255, 255, 255, 0.6))' : 'none',
                   transition: 'all 0.18s ease',
+                  opacity: isActive ? 1 : 0.9,
                 }}
               />
-              <span style={{ flex: 1, letterSpacing: '-0.01em' }}>{item.label}</span>
+              <span style={{ flex: 1, letterSpacing: '-0.01em', color: '#FFFFFF' }}>{item.label}</span>
 
               {item.highlight && (
                 <span style={{
@@ -231,7 +222,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '4px',
-                  boxShadow: '0 2px 8px rgba(16, 185, 129, 0.35)',
+                  boxShadow: '0 2px 8px rgba(16, 185, 129, 0.45)',
                   letterSpacing: '0.04em',
                 }}>
                   <span style={{
@@ -252,18 +243,18 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
       {/* User Governance / Profile Bottom Section */}
       <div style={{
         padding: '16px 14px',
-        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-        background: 'rgba(0, 0, 0, 0.25)',
+        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+        background: 'rgba(0, 0, 0, 0.3)',
       }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          background: 'rgba(255, 255, 255, 0.04)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          background: 'rgba(255, 255, 255, 0.06)',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
           borderRadius: '12px',
           padding: '10px 12px',
-          boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
+          boxShadow: '0 2px 10px rgba(0, 0, 0, 0.25)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
             <div style={{ position: 'relative', flexShrink: 0 }}>
@@ -272,7 +263,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
                 height: '36px',
                 borderRadius: '50%',
                 background: 'linear-gradient(135deg, #475569 0%, #1E293B 100%)',
-                border: '1.5px solid rgba(255, 255, 255, 0.25)',
+                border: '1.5px solid #FFFFFF',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -299,8 +290,8 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
 
             <div style={{ minWidth: 0 }}>
               <div style={{
-                fontSize: '0.8125rem',
-                fontWeight: 700,
+                fontSize: '0.85rem',
+                fontWeight: 800,
                 color: '#FFFFFF',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
@@ -311,7 +302,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
               </div>
               <div style={{
                 fontSize: '0.675rem',
-                color: '#94A3B8',
+                color: '#FFFFFF',
                 fontWeight: 600,
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
@@ -319,13 +310,15 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px',
+                marginTop: '1px',
               }}>
                 <span style={{
-                  padding: '1px 5px',
+                  padding: '1px 6px',
                   borderRadius: '4px',
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  color: '#CBD5E1',
-                  fontSize: '0.625rem',
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  color: '#FFFFFF',
+                  fontSize: '0.65rem',
+                  fontWeight: 700,
                 }}>
                   {user?.roles?.[0] || 'Admin'}
                 </span>
@@ -337,9 +330,9 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
             onClick={logout}
             title="Sign Out"
             style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              color: '#94A3B8',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              color: '#FFFFFF',
               cursor: 'pointer',
               padding: '7px',
               borderRadius: '8px',
@@ -351,13 +344,13 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.color = '#FFFFFF';
-              e.currentTarget.style.background = 'rgba(220, 38, 38, 0.2)';
-              e.currentTarget.style.borderColor = 'rgba(220, 38, 38, 0.4)';
+              e.currentTarget.style.background = 'rgba(220, 38, 38, 0.3)';
+              e.currentTarget.style.borderColor = 'rgba(220, 38, 38, 0.5)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.color = '#94A3B8';
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+              e.currentTarget.style.color = '#FFFFFF';
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
             }}
           >
             <LogOut size={15} />
@@ -367,4 +360,5 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
     </aside>
   );
 }
+
 
