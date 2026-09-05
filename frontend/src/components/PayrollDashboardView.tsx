@@ -18,6 +18,17 @@ import {
 } from 'lucide-react';
 import { apiRequest } from '../api';
 import { DashboardData } from '../types';
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+} from 'recharts';
 
 interface PayrollDashboardViewProps {
   onTabChange?: (tab: string) => void;
@@ -381,40 +392,25 @@ export default function PayrollDashboardView({ onTabChange }: PayrollDashboardVi
             <span style={{ fontSize: '0.7rem', color: '#9CA3AF' }}>Source: Payslips + Employee Department</span>
           </div>
 
-          <div style={{
-            height: '180px',
-            display: 'flex',
-            alignItems: 'flex-end',
-            justifyContent: 'space-around',
-            gap: '16px',
-            marginTop: '20px',
-            paddingBottom: '8px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-          }}>
-            {barData.map((b) => {
-              const hPct = maxBar > 0 ? Math.max((b.total / maxBar) * 100, 15) : 15;
-              const valK = Math.round(b.total / 1000);
-              return (
-                <div key={b.name} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, height: '100%', justifyContent: 'flex-end' }}>
-                  <span style={{ fontSize: '0.675rem', color: '#60A5FA', fontFamily: 'monospace', marginBottom: '6px' }}>
-                    ₹{valK}k
-                  </span>
-                  <div
-                    style={{
-                      width: '80%',
-                      maxWidth: '36px',
-                      height: `${hPct}%`,
-                      background: 'linear-gradient(180deg, #3B82F6 0%, #1D4ED8 100%)',
-                      borderRadius: '6px 6px 0 0',
-                      boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
-                    }}
-                  />
-                  <span style={{ fontSize: '0.75rem', color: '#9CA3AF', marginTop: '8px', fontWeight: 600 }}>
-                    {b.name}
-                  </span>
-                </div>
-              );
-            })}
+          <div style={{ height: '180px', width: '100%', marginTop: '16px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={barData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" vertical={false} />
+                <XAxis dataKey="name" stroke="#9CA3AF" fontSize={11} tickLine={false} />
+                <YAxis
+                  stroke="#9CA3AF"
+                  fontSize={10}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(v) => `₹${Math.round(v / 1000)}k`}
+                />
+                <Tooltip
+                  formatter={(val: any) => [`₹${Number(val).toLocaleString('en-IN')}`, 'Cost']}
+                  contentStyle={{ background: '#111827', borderColor: '#374151', borderRadius: '8px', color: '#F9FAFB' }}
+                />
+                <Bar dataKey="total" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
@@ -435,20 +431,33 @@ export default function PayrollDashboardView({ onTabChange }: PayrollDashboardVi
             <span style={{ fontSize: '0.7rem', color: '#9CA3AF' }}>Source: Historical Payslips / Payruns</span>
           </div>
 
-          <div style={{ height: '180px', marginTop: '20px', position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-            <svg style={{ width: '100%', height: '130px', overflow: 'visible' }}>
-              <path
-                d="M 20 90 Q 60 70, 100 80 T 180 30 T 260 50 T 340 10"
-                fill="none"
-                stroke="#3B82F6"
-                strokeWidth="3"
-              />
-              <circle cx="340" cy="10" r="5" fill="#60A5FA" />
-              <text x="310" y="-5" fill="#60A5FA" fontSize="10" fontWeight="bold">18.4L</text>
-            </svg>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#9CA3AF', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '8px' }}>
-              {trendPoints.map(t => <span key={t.label}>{t.label}</span>)}
-            </div>
+          <div style={{ height: '180px', width: '100%', marginTop: '16px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={trendPoints} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" vertical={false} />
+                <XAxis dataKey="label" stroke="#9CA3AF" fontSize={11} tickLine={false} />
+                <YAxis
+                  stroke="#9CA3AF"
+                  fontSize={10}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(v) => `${v}L`}
+                  domain={['dataMin - 2', 'dataMax + 2']}
+                />
+                <Tooltip
+                  formatter={(val: any) => [`₹${val} Lakhs`, 'Net Payout']}
+                  contentStyle={{ background: '#111827', borderColor: '#374151', borderRadius: '8px', color: '#F9FAFB' }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="val"
+                  stroke="#3B82F6"
+                  strokeWidth={3}
+                  dot={{ fill: '#60A5FA', r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
 

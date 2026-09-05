@@ -12,6 +12,15 @@ import {
 } from 'lucide-react';
 import { apiRequest } from '../api';
 import { DashboardData } from '../types';
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+} from 'recharts';
 
 interface DashboardViewProps {
   onNavigate: (tab: string) => void;
@@ -82,14 +91,14 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
         flexWrap: 'wrap',
         gap: '16px',
         padding: '16px 24px',
-        background: '#FFFFFF',
+        background: 'rgba(19, 26, 43, 0.6)',
+        backdropFilter: 'blur(12px)',
         borderRadius: 'var(--radius-lg)',
-        border: '1px solid var(--color-border)',
-        boxShadow: 'var(--shadow-sm)',
+        border: '1px solid var(--border-subtle)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Calendar size={18} color="var(--color-primary)" />
-          <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--color-text-main)' }}>Reporting Period:</span>
+          <Calendar size={18} color="#818cf8" />
+          <span style={{ fontWeight: 600, fontSize: '0.9rem', color: '#fff' }}>Reporting Period:</span>
           <select
             className="form-control"
             style={{ width: '150px', padding: '6px 12px', fontSize: '0.85rem' }}
@@ -140,9 +149,8 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
           gap: '10px',
           padding: '12px 16px',
           borderRadius: 'var(--radius-md)',
-          background: 'rgba(180, 35, 24, 0.08)',
-          border: '1px solid rgba(180, 35, 24, 0.2)',
-          color: 'var(--color-error)',
+          background: 'rgba(244, 63, 94, 0.15)',
+          color: '#fca5a5',
           fontSize: '0.875rem',
         }}>
           <AlertCircle size={16} />
@@ -158,8 +166,8 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
               width: '36px',
               height: '36px',
               borderRadius: 'var(--radius-md)',
-              background: 'rgba(30, 58, 95, 0.1)',
-              color: 'var(--color-primary)',
+              background: 'rgba(99, 102, 241, 0.15)',
+              color: '#818cf8',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -167,7 +175,7 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
               <CreditCard size={18} />
             </div>
           </div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--color-text-main)', letterSpacing: '-0.02em' }}>
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>
             ₹{data?.netSalary?.toLocaleString('en-IN') || '0'}
           </div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-subtle)', marginTop: '6px' }}>
@@ -182,8 +190,8 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
               width: '36px',
               height: '36px',
               borderRadius: 'var(--radius-md)',
-              background: 'rgba(46, 125, 91, 0.12)',
-              color: 'var(--color-success)',
+              background: 'rgba(16, 185, 129, 0.15)',
+              color: '#34d399',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -191,7 +199,7 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
               <Users size={18} />
             </div>
           </div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--color-text-main)', letterSpacing: '-0.02em' }}>
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>
             {data?.payslipCount || 0}
           </div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-subtle)', marginTop: '6px' }}>
@@ -206,8 +214,8 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
               width: '36px',
               height: '36px',
               borderRadius: 'var(--radius-md)',
-              background: 'rgba(63, 95, 127, 0.12)',
-              color: 'var(--color-secondary)',
+              background: 'rgba(6, 182, 212, 0.15)',
+              color: '#38bdf8',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -215,7 +223,7 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
               <TrendingUp size={18} />
             </div>
           </div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--color-text-main)', letterSpacing: '-0.02em' }}>
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>
             ₹{data?.avgSalary?.toLocaleString('en-IN') || '0'}
           </div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-subtle)', marginTop: '6px' }}>
@@ -230,8 +238,8 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
               width: '36px',
               height: '36px',
               borderRadius: 'var(--radius-md)',
-              background: 'rgba(183, 121, 31, 0.12)',
-              color: 'var(--color-warning)',
+              background: 'rgba(245, 158, 11, 0.15)',
+              color: '#fbbf24',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -239,7 +247,7 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
               <Percent size={18} />
             </div>
           </div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--color-text-main)', letterSpacing: '-0.02em' }}>
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>
             {data?.attendanceRate || 0}%
           </div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-subtle)', marginTop: '6px' }}>
@@ -261,61 +269,32 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
             <span className="badge badge-primary">Historical Data</span>
           </div>
 
-          <div style={{
-            height: '220px',
-            display: 'flex',
-            alignItems: 'flex-end',
-            justifyContent: 'space-between',
-            gap: '12px',
-            paddingTop: '20px',
-            borderBottom: '1px solid var(--color-border)',
-          }}>
-            {data?.monthlyTrend?.map((item, idx) => {
-              const heightPct = maxTrend > 0 ? Math.max((item.total / maxTrend) * 100, 8) : 8;
-              return (
-                <div
-                  key={idx}
-                  style={{
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    height: '100%',
-                    justifyContent: 'flex-end',
-                    gap: '8px',
-                  }}
-                >
-                  <div style={{
-                    fontSize: '0.675rem',
-                    color: 'var(--text-subtle)',
-                    fontFamily: 'var(--font-mono)',
-                    whiteSpace: 'nowrap',
-                  }}>
-                    {item.total > 0 ? `₹${(item.total / 1000).toFixed(0)}k` : '₹0'}
-                  </div>
-                  <div
-                    style={{
-                      width: '100%',
-                      maxWidth: '42px',
-                      height: `${heightPct}%`,
-                      background: item.total > 0
-                        ? 'linear-gradient(180deg, #3F5F7F 0%, #1E3A5F 100%)'
-                        : 'var(--color-border)',
-                      borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0',
-                      transition: 'height 0.4s ease',
-                      boxShadow: item.total > 0 ? '0 0 12px rgba(30, 58, 95, 0.2)' : 'none',
-                    }}
-                  />
-                  <div style={{
-                    fontSize: '0.75rem',
+          <div style={{ height: '220px', width: '100%', paddingTop: '10px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data?.monthlyTrend || []} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
+                <XAxis dataKey="label" stroke="#64748B" fontSize={12} tickLine={false} />
+                <YAxis
+                  stroke="#64748B"
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(v) => `₹${Math.round(v / 1000)}k`}
+                />
+                <Tooltip
+                  formatter={(val: any) => [`₹${Number(val).toLocaleString('en-IN')}`, 'Net Payout']}
+                  contentStyle={{
+                    background: '#FFFFFF',
+                    borderColor: '#E2E8F0',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                    color: '#1F2937',
                     fontWeight: 600,
-                    color: 'var(--text-muted)',
-                  }}>
-                    {item.label}
-                  </div>
-                </div>
-              );
-            })}
+                  }}
+                />
+                <Bar dataKey="total" fill="#1E3A5F" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
@@ -346,7 +325,7 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {data?.byDepartment?.map((dept, idx) => {
                 const pct = totalDeptCost > 0 ? Math.round((dept.total / totalDeptCost) * 100) : 0;
-                const colors = ['#1E3A5F', '#3F5F7F', '#2E7D5B', '#B7791F', '#4A7C9E', '#5B8C5A'];
+                const colors = ['#1E3A5F', '#3F5F7F', '#2E7D5B', '#B7791F', '#0284C7', '#475569'];
                 const barColor = colors[idx % colors.length];
 
                 return (
@@ -360,7 +339,7 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
                     <div style={{
                       width: '100%',
                       height: '8px',
-                      background: 'var(--color-border)',
+                      background: 'rgba(30, 58, 95, 0.08)',
                       borderRadius: 'var(--radius-full)',
                       overflow: 'hidden',
                     }}>
@@ -388,42 +367,42 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
           <div className="grid-2" style={{ gap: '12px' }}>
             <div style={{
               padding: '12px',
-              background: 'rgba(46, 125, 91, 0.08)',
+              background: 'rgba(16, 185, 129, 0.08)',
               borderRadius: 'var(--radius-md)',
-              border: '1px solid rgba(46, 125, 91, 0.2)',
+              border: '1px solid rgba(16, 185, 129, 0.2)',
             }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--color-success)', fontWeight: 600 }}>Present Shifts</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--color-text-main)' }}>{data?.attendance?.present || 0}</div>
+              <div style={{ fontSize: '0.75rem', color: '#34d399', fontWeight: 600 }}>Present Shifts</div>
+              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff' }}>{data?.attendance?.present || 0}</div>
             </div>
 
             <div style={{
               padding: '12px',
-              background: 'rgba(180, 35, 24, 0.08)',
+              background: 'rgba(244, 63, 94, 0.08)',
               borderRadius: 'var(--radius-md)',
-              border: '1px solid rgba(180, 35, 24, 0.2)',
+              border: '1px solid rgba(244, 63, 94, 0.2)',
             }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--color-error)', fontWeight: 600 }}>Absent Days</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--color-text-main)' }}>{data?.attendance?.absent || 0}</div>
+              <div style={{ fontSize: '0.75rem', color: '#fb7185', fontWeight: 600 }}>Absent Days</div>
+              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff' }}>{data?.attendance?.absent || 0}</div>
             </div>
 
             <div style={{
               padding: '12px',
-              background: 'rgba(183, 121, 31, 0.08)',
+              background: 'rgba(245, 158, 11, 0.08)',
               borderRadius: 'var(--radius-md)',
-              border: '1px solid rgba(183, 121, 31, 0.2)',
+              border: '1px solid rgba(245, 158, 11, 0.2)',
             }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--color-warning)', fontWeight: 600 }}>Late Arrivals</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--color-text-main)' }}>{data?.attendance?.late || 0}</div>
+              <div style={{ fontSize: '0.75rem', color: '#fbbf24', fontWeight: 600 }}>Late Arrivals</div>
+              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff' }}>{data?.attendance?.late || 0}</div>
             </div>
 
             <div style={{
               padding: '12px',
-              background: 'rgba(63, 95, 127, 0.08)',
+              background: 'rgba(99, 102, 241, 0.08)',
               borderRadius: 'var(--radius-md)',
-              border: '1px solid rgba(63, 95, 127, 0.2)',
+              border: '1px solid rgba(99, 102, 241, 0.2)',
             }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--color-secondary)', fontWeight: 600 }}>Overtime Shifts</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--color-text-main)' }}>{data?.attendance?.overtime || 0}</div>
+              <div style={{ fontSize: '0.75rem', color: '#a5b4fc', fontWeight: 600 }}>Overtime Shifts</div>
+              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff' }}>{data?.attendance?.overtime || 0}</div>
             </div>
           </div>
         </div>
@@ -441,21 +420,21 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   padding: '10px 14px',
-                  background: '#F8F9FA',
+                  background: 'rgba(255, 255, 255, 0.02)',
                   borderRadius: 'var(--radius-md)',
-                  border: '1px solid var(--color-border)',
+                  border: '1px solid var(--border-subtle)',
                 }}
               >
                 <div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-main)' }}>{l.name}</div>
-                  <div style={{ fontSize: '0.725rem', color: 'var(--color-text-secondary)' }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{l.name}</div>
+                  <div style={{ fontSize: '0.725rem', color: 'var(--text-subtle)' }}>
                     {l.approved} approved • {l.pending} to approve
                   </div>
                 </div>
                 <div style={{
                   fontSize: '0.85rem',
                   fontWeight: 700,
-                  color: 'var(--color-primary)',
+                  color: '#a5b4fc',
                   fontFamily: 'var(--font-mono)',
                 }}>
                   {l.remaining} rem
