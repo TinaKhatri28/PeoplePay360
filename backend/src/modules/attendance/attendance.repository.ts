@@ -17,10 +17,27 @@ export class AttendanceRepository {
             email: true,
             position: true,
             schedule_id: true,
+            department: true,
+            manager: true,
           },
         },
       },
       orderBy: { date: 'desc' },
+    });
+  }
+
+  async findById(id: string) {
+    return prisma.attendanceRecord.findUnique({
+      where: { id },
+      include: {
+        employee: {
+          include: {
+            department: true,
+            manager: true,
+            schedule: true,
+          },
+        },
+      },
     });
   }
 

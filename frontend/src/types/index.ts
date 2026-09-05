@@ -60,16 +60,19 @@ export interface Contract {
 }
 
 export interface AttendanceRecord {
-  id: number;
-  employee_id: number;
+  id: string | number;
+  employee_id: string | number;
   employee_name?: string;
+  department_name?: string;
+  manager_name?: string;
   date: string;
   check_in?: string | null;
   check_out?: string | null;
   worked_hours: number;
   overtime_hours: number;
-  status: 'Present' | 'Absent' | 'Late';
+  status: 'Present' | 'Absent' | 'Late' | 'Overtime' | 'Anomaly';
   notes?: string | null;
+  employee?: any;
 }
 
 export interface TimeOffType {

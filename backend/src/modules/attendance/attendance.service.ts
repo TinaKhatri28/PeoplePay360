@@ -13,10 +13,51 @@ export class AttendanceService {
 
   async listAttendance(organizationId: string, filters: { date?: string; employee_id?: string }) {
     const records = await this.repo.findAll(organizationId, filters);
-    return records.map((r) => ({
+    return records.map((r: any) => ({
       ...r,
       employee_name: r.employee ? `${r.employee.first_name} ${r.employee.last_name}` : 'Unknown',
+      department_name: r.employee?.department?.name || 'General',
+      manager_name: r.employee?.manager ? `${r.employee.manager.first_name} ${r.employee.manager.last_name}` : 'None',
     }));
+  }
+
+  async getAttendanceById(id: string) {
+    const record = await this.repo.findById(id);
+    if (!record) {
+      throw new NotFoundError('Attendance record not found');
+    }
+    return {
+      ...record,
+      employee_name: record.employee ? `${record.employee.first_name} ${record.employee.last_name}` : 'Unknown',
+      department_name: record.employee?.department?.name || 'General',
+      manager_name: record.employee?.manager ? `${record.employee.manager.first_name} ${record.employee.manager.last_name}` : 'None',
+    };
+  }
+
+  async createManual(organizationId: string, data: any) {
+    const checkIn = data.check_in ? new Date(data.check_in) : null;
+    const checkOut = data.check_out ? new Date(data.check_out) : null;
+
+    let workedHours = Number(data.worked_hours) || 0;
+    let overtimeHours = Number(data.overtime_hours) || 0;
+
+    if (checkIn && checkOut && !data.worked_hours) {
+      const diffMs = checkOut.getTime() - checkIn.getTime();
+      workedHours = Math.max(0, +(diffMs / (1000 * 60 * 60)).toFixed(2));
+      overtimeHours = workedHours > 8 ? +(workedHours - 8).toFixed(2) : 0;
+    }
+
+    return this.repo.create({
+      organization_id: organizationId,
+      employee_id: data.employee_id,
+      date: data.date,
+      check_in: checkIn,
+      check_out: checkOut,
+      worked_hours: workedHours,
+      overtime_hours: overtimeHours,
+      status: data.status || 'Present',
+      notes: data.notes || 'Manually recorded by HR/Manager',
+    });
   }
 
   async getMyStatus(organizationId: string, employeeId: string) {

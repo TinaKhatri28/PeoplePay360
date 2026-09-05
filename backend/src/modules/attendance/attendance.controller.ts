@@ -19,6 +19,25 @@ export class AttendanceController {
     }
   };
 
+  getById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const record = await this.service.getAttendanceById(req.params.id as string);
+      res.json(record);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  createManual = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const orgId = req.organizationId || 'org_default';
+      const record = await this.service.createManual(orgId, req.body);
+      res.status(201).json(record);
+    } catch (err) {
+      next(err);
+    }
+  };
+
   getMyStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const orgId = req.organizationId || 'org_default';
