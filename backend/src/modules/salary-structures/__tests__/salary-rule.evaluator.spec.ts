@@ -62,4 +62,18 @@ describe('SalaryRuleEvaluator', () => {
     const result = salaryRuleEvaluator.evaluate(rule, context);
     expect(result).toBe(4000);
   });
+
+  it('evaluates FORMULA for ATTENDANCE_BASED correctly as positive deduction amount', () => {
+    const rule = {
+      name: 'Attendance Loss Deduction',
+      category: 'Deduction',
+      compute_method: 'FORMULA',
+      formula_key: 'ATTENDANCE_BASED',
+      sequence: 50,
+    };
+    // Expected working days: 25, absent: 1 -> attended 24, ratio = 24/25 = 0.96.
+    // Absence deduction = 50,000 * (1 - 0.96) = 2,000
+    const result = salaryRuleEvaluator.evaluate(rule, context);
+    expect(result).toBe(2000);
+  });
 });

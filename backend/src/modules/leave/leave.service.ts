@@ -1,6 +1,6 @@
 import { leaveRepository, LeaveRepository } from './leave.repository';
 import { auditService, AuditService } from '../audit/audit.service';
-import { InsufficientLeaveBalanceError, NotFoundError, ValidationError } from '../../shared/errors/app.error';
+import { ConflictError, InsufficientLeaveBalanceError, NotFoundError, ValidationError } from '../../shared/errors/app.error';
 import { cacheService } from '../../shared/utils/cache.service';
 
 export class LeaveService {
@@ -39,13 +39,36 @@ export class LeaveService {
       throw new ValidationError('Leave duration must be greater than 0');
     }
 
-    // Check allocation balance
+    const startDate = new Date(data.start_date);
+    const endDate = new Date(data.end_date);
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      throw new ValidationError('Valid start_date and end_date are required');
+    }
+    if (startDate > endDate) {
+      throw new ValidationError('Leave start date must be before or equal to end date');
+    }
+
+    // Bug 4 Fix: Check for overlapping active or pending leave requests
+    const overlapping = await this.repo.findOverlappingRequests(
+      organizationId,
+      employeeId,
+      startDate,
+      endDate
+    );
+    if (overlapping && overlapping.length > 0) {
+      throw new ConflictError(
+        'An active or pending leave request already exists covering this date range'
+      );
+    }
+
+    // Bug 4 Fix: Check allocation balance accounting for taken AND pending ('To Approve') requests
     const alloc = await this.repo.findAllocation(organizationId, employeeId, data.type_id);
     if (alloc) {
-      const remaining = alloc.allocated - alloc.taken;
-      if (remaining < duration) {
+      const pendingDuration = await this.repo.getPendingDuration(organizationId, employeeId, data.type_id);
+      const effectiveRemaining = alloc.allocated - alloc.taken - pendingDuration;
+      if (effectiveRemaining < duration) {
         throw new InsufficientLeaveBalanceError(
-          `Insufficient leave balance. You have ${remaining} days remaining, but requested ${duration} days.`
+          `Insufficient leave balance. You have ${Math.max(0, effectiveRemaining)} days available (${pendingDuration} days pending approval), but requested ${duration} days.`
         );
       }
     }
@@ -54,8 +77,8 @@ export class LeaveService {
       organization_id: organizationId,
       employee_id: employeeId,
       type_id: data.type_id,
-      start_date: new Date(data.start_date),
-      end_date: new Date(data.end_date),
+      start_date: startDate,
+      end_date: endDate,
       duration,
       reason: data.reason || null,
       status: 'To Approve',

@@ -63,8 +63,8 @@ export class SalaryRuleEvaluator {
         const totalExpected = ctx.expectedWorkingDays || 26;
         const attendedDays = Math.max(0, totalExpected - ctx.absentDays);
         const ratio = totalExpected > 0 ? attendedDays / totalExpected : 1;
-        // Negative adjustment if absent
-        return +((ctx.basic * ratio) - ctx.basic).toFixed(2);
+        // Absence loss calculated as a positive deduction value
+        return +(ctx.basic * (1 - ratio)).toFixed(2);
       }
 
       default:

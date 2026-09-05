@@ -272,16 +272,21 @@ export class PayrollCalculationService {
           amount = this.ruleEvaluator.evaluate(rule, context);
         }
 
+        // Enforce Deduction category for absence and unpaid leave formula rules
+        const isDeductionFormula = rule.formula_key === 'ATTENDANCE_BASED' || rule.formula_key === 'UNPAID_LEAVE_DEDUCTION';
+        const effectiveCategory = isDeductionFormula ? 'Deduction' : rule.category;
+        const absAmount = Math.abs(amount);
+
         lines.push({
           name: rule.name,
-          category: rule.category,
-          amount: Math.abs(amount),
+          category: effectiveCategory,
+          amount: absAmount,
         });
 
-        if (rule.category === 'Deduction') {
-          totalDeductions += Math.abs(amount);
+        if (effectiveCategory === 'Deduction') {
+          totalDeductions += absAmount;
         } else {
-          grossSalary += amount;
+          grossSalary += absAmount;
           context.grossSoFar = grossSalary;
         }
       }
@@ -291,7 +296,13 @@ export class PayrollCalculationService {
         lines.push({ name: 'Basic Salary', category: 'Basic', amount: basicSalary });
       }
 
-      const netSalary = +(grossSalary - totalDeductions).toFixed(2);
+      let netSalary = +(grossSalary - totalDeductions).toFixed(2);
+      if (netSalary < 0) {
+        warnings.push(
+          `Deductions ($${totalDeductions.toFixed(2)}) exceed gross earnings ($${grossSalary.toFixed(2)}). Net salary capped at $0.00 (Flagged for payroll review)`
+        );
+        netSalary = 0;
+      }
 
       if (!employee.bank_account) {
         warnings.push('Missing bank account details');

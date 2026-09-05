@@ -3,6 +3,9 @@ import { payrollCalculationService, PayrollCalculationService } from './payroll-
 import { auditService, AuditService } from '../audit/audit.service';
 import { dispatchJob, PAYROLL_QUEUE_NAME, EMAIL_QUEUE_NAME } from '../../jobs/queue';
 import { ConflictError, NotFoundError, ValidationError } from '../../shared/errors/app.error';
+import { payslipPdfService } from '../payslips/payslip-pdf.service';
+import { storageService } from '../../shared/utils/storage.service';
+import { emailService } from '../../shared/utils/email.service';
 
 export class PayrollService {
   constructor(
@@ -296,15 +299,47 @@ export class PayrollService {
     }
 
     for (const slip of run.payslips) {
+      // 1. Generate official PDF buffer
+      const pdfBuffer = await payslipPdfService.generatePayslipPdfBuffer(slip);
+
+      // 2. Persist to storage provider
+      await storageService.storePayslip(slip.id, pdfBuffer);
+
+      // 3. Dispatch email with PDF attachment
       if (slip.employee?.email) {
-        await dispatchJob(EMAIL_QUEUE_NAME, `send-payslip-${slip.id}`, {
+        const emailPayload = {
           to: slip.employee.email,
           subject: `Your Payslip for ${run.period_month}/${run.period_year}`,
           html: `<p>Dear ${slip.employee.first_name},</p><p>Your payslip for ${run.period_month}/${run.period_year} has been processed.</p><p>Net Pay: $${Number(slip.net).toFixed(2)}</p>`,
           text: `Your payslip for ${run.period_month}/${run.period_year} has been processed. Net Pay: $${Number(slip.net).toFixed(2)}`,
-        });
+          attachments: [
+            {
+              filename: `payslip-${slip.id}.pdf`,
+              content: pdfBuffer,
+              contentType: 'application/pdf',
+            },
+          ],
+        };
+
+        await dispatchJob(
+          EMAIL_QUEUE_NAME,
+          `send-payslip-${slip.id}`,
+          emailPayload,
+          async () => {
+            await emailService.sendEmail(emailPayload);
+          }
+        );
       }
     }
+
+    await this.audit.log({
+      organizationId,
+      userId: actorUserId,
+      action: 'PAYSLIPS_DISPATCHED',
+      resourceType: 'payrun',
+      resourceId: payrunId,
+      details: { sent_count: run.payslips.length },
+    });
 
     return { ok: true, sent: run.payslips.length };
   }

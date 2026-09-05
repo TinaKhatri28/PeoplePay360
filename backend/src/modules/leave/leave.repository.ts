@@ -77,6 +77,42 @@ export class LeaveRepository {
     });
   }
 
+  async findOverlappingRequests(
+    organizationId: string,
+    employeeId: string,
+    startDate: Date,
+    endDate: Date
+  ) {
+    return prisma.leaveRequest.findMany({
+      where: {
+        organization_id: organizationId,
+        employee_id: employeeId,
+        status: { in: ['Approved', 'To Approve'] },
+        start_date: { lte: endDate },
+        end_date: { gte: startDate },
+      },
+    });
+  }
+
+  async getPendingDuration(
+    organizationId: string,
+    employeeId: string,
+    typeId: string
+  ): Promise<number> {
+    const aggregate = await prisma.leaveRequest.aggregate({
+      where: {
+        organization_id: organizationId,
+        employee_id: employeeId,
+        type_id: typeId,
+        status: 'To Approve',
+      },
+      _sum: {
+        duration: true,
+      },
+    });
+    return aggregate._sum.duration || 0;
+  }
+
   async createRequest(data: any) {
     return prisma.leaveRequest.create({
       data,
