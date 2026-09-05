@@ -42,23 +42,38 @@ export class AuthService {
     return crypto.createHash('sha256').update(token).digest('hex');
   }
 
+  private getRoleArray(role: string): string[] {
+    if (!role) return [];
+    const list = typeof role === 'string' ? role.split(',').map(r => r.trim()).filter(Boolean) : (Array.isArray(role) ? role : []);
+    if (list.includes('Admin')) {
+      if (!list.includes('HR Payroll Admin')) list.push('HR Payroll Admin');
+      if (!list.includes('HR Manager')) list.push('HR Manager');
+      if (!list.includes('HR Payroll User')) list.push('HR Payroll User');
+    }
+    if (list.includes('HR Manager')) {
+      if (!list.includes('HR Payroll User')) list.push('HR Payroll User');
+    }
+    return list;
+  }
+
   generateTokens(user: { id: string; email: string; role: string; organization_id: string; employee_id?: string | null }) {
     const role = user.role as RoleName;
     const permissions = RolePermissionsMap[role] || [];
+    const rolesArray = this.getRoleArray(user.role);
 
     const payload = {
       id: user.id,
       userId: user.id,
       email: user.email,
       role: user.role,
-      roles: user.role,
+      roles: rolesArray,
       organizationId: user.organization_id,
       employeeId: user.employee_id,
       permissions,
     };
 
     const accessToken = jwt.sign(payload, env.JWT_SECRET, {
-      expiresIn: '15m',
+      expiresIn: '12h',
     });
 
     const refreshToken = jwt.sign(
@@ -70,7 +85,7 @@ export class AuthService {
     return {
       accessToken,
       refreshToken,
-      expiresIn: '15m',
+      expiresIn: '12h',
     };
   }
 
@@ -92,13 +107,14 @@ export class AuthService {
     const tokens = this.generateTokens(user);
     await this.repo.updateRefreshTokenHash(user.id, this.hashToken(tokens.refreshToken));
 
+    const rolesArray = this.getRoleArray(user.role);
     return {
       user: {
         id: user.id,
         email: user.email,
         name: user.employee ? `${user.employee.first_name} ${user.employee.last_name}` : user.email.split('@')[0],
         role: user.role,
-        roles: user.role,
+        roles: rolesArray,
         organizationId: user.organization_id,
         employeeId: user.employee_id,
         permissions: RolePermissionsMap[user.role as RoleName] || [],
@@ -151,12 +167,13 @@ export class AuthService {
       throw new NotFoundError('User not found');
     }
 
+    const rolesArray = this.getRoleArray(user.role);
     return {
       id: user.id,
       email: user.email,
       name: user.employee ? `${user.employee.first_name} ${user.employee.last_name}` : user.email.split('@')[0],
       role: user.role,
-      roles: user.role,
+      roles: rolesArray,
       organizationId: user.organization_id,
       employeeId: user.employee_id,
       organization: user.organization ? { id: user.organization.id, name: user.organization.name } : null,

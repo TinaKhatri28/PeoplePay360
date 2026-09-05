@@ -4,9 +4,9 @@
   "description": "Enterprise HRMS and Payroll Management System Backend",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "npx tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "npx tsx src/server.ts",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:migrate": "prisma migrate dev",
@@ -55,7 +55,8 @@
     "@types/uuid": "^10.0.0",
     "prisma": "^6.4.1",
     "supertest": "^7.0.0",
-    "tsx": "^4.19.3",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.23.13",
     "typescript": "^5.7.3",
     "vitest": "^3.0.7"
   }
