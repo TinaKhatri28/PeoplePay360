@@ -1,126 +1,430 @@
-import React, { useState } from 'react';
-import { Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowRight } from 'lucide-react';
+import React, { useState, FormEvent } from 'react';
+import { Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowRight, Sparkles, UserCheck, AlertCircle } from 'lucide-react';
+import { useAuth, DEMO_USERS } from '../context/AuthContext';
 
-export default function HRMSLogin(): React.JSX.Element {
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
+export default function LoginView(): React.JSX.Element {
+  const { login } = useAuth();
+  const [email, setEmail] = useState<string>('admin@oxp.com');
+  const [password, setPassword] = useState<string>('admin123');
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [rememberMe, setRememberMe] = useState<boolean>(false);
+  const [rememberMe, setRememberMe] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState<boolean>(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
+  const colors = {
+    primary: '#1E3A5F',
+    secondary: '#3F5F7F',
+    bg: '#F8F9FA',
+    card: '#FFFFFF',
+    text: '#1F2937',
+    muted: '#64748B',
+    success: '#2E7D5B',
+    error: '#B42318',
+    border: '#E2E8F0',
+  };
+
+  const handleFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Handle enterprise authentication
+    setError(null);
+    setSubmitting(true);
+    try {
+      await login(email, password);
+    } catch (err: any) {
+      setError(err.message || 'Invalid corporate credentials');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDemoLogin = async (demoEmail: string, demoPass: string) => {
+    setEmail(demoEmail);
+    setPassword(demoPass);
+    setError(null);
+    setSubmitting(true);
+    try {
+      await login(demoEmail, demoPass);
+    } catch (err: any) {
+      setError(err.message || 'Failed to authenticate demo user');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center bg-[#F8F9FA] p-4 overflow-hidden text-[#1F2937] font-sans antialiased">
-      {/* Subtle Background Glows */}
-      <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#3F5F7F]/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#1E3A5F]/10 rounded-full blur-3xl pointer-events-none" />
+    <div
+      style={{
+        minHeight: '100vh',
+        width: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.bg,
+        fontFamily: 'Plus Jakarta Sans, system-ui, sans-serif',
+        padding: '1.5rem',
+        position: 'relative',
+        overflow: 'hidden',
+        boxSizing: 'border-box',
+      }}
+    >
+      {/* Background Ambient Glows */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '-8rem',
+          left: '-8rem',
+          width: '26rem',
+          height: '26rem',
+          borderRadius: '9999px',
+          backgroundColor: 'rgba(63, 95, 127, 0.12)',
+          filter: 'blur(70px)',
+          pointerEvents: 'none',
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '-8rem',
+          right: '-8rem',
+          width: '26rem',
+          height: '26rem',
+          borderRadius: '9999px',
+          backgroundColor: 'rgba(30, 58, 95, 0.12)',
+          filter: 'blur(70px)',
+          pointerEvents: 'none',
+        }}
+      />
 
-      {/* Login Card */}
-      <div className="relative w-full max-w-md bg-[#FFFFFF] rounded-2xl border border-[#E2E8F0] p-8 md:p-10 shadow-[0_20px_40px_-15px_rgba(30,58,95,0.08)] z-10">
+      {/* Main Login Card */}
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          maxWidth: '440px',
+          backgroundColor: colors.card,
+          borderRadius: '1.25rem',
+          border: `1px solid ${colors.border}`,
+          padding: '2.5rem 2.25rem',
+          boxShadow: '0 20px 40px -15px rgba(30, 58, 95, 0.12)',
+          zIndex: 10,
+          boxSizing: 'border-box',
+        }}
+      >
         {/* Brand Header */}
-        <div className="flex flex-col items-center text-center mb-8">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F8F9FA] border border-[#E2E8F0] shadow-inner mb-4">
-            <ShieldCheck className="h-6 w-6 text-[#1E3A5F]" />
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '3.5rem',
+              height: '3.5rem',
+              borderRadius: '1rem',
+              backgroundColor: 'rgba(30, 58, 95, 0.08)',
+              border: `1px solid rgba(30, 58, 95, 0.2)`,
+              marginBottom: '1rem',
+            }}
+          >
+            <ShieldCheck size={28} color={colors.primary} />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-[#1E3A5F]">HRMS Portal</h1>
-          <p className="text-xs text-[#64748B] mt-1">Sign in with your enterprise credentials</p>
+          <h1
+            style={{
+              fontSize: '1.65rem',
+              fontWeight: 800,
+              color: colors.primary,
+              margin: 0,
+              letterSpacing: '-0.02em',
+            }}
+          >
+            PeoplePay<span style={{ color: colors.secondary }}>360</span>
+          </h1>
+          <p style={{ fontSize: '0.8125rem', color: colors.muted, marginTop: '0.35rem', margin: 0 }}>
+            Enterprise HRMS & Payroll Automation OS
+          </p>
         </div>
 
+        {/* Error Alert */}
+        {error && (
+          <div
+            style={{
+              marginBottom: '1.25rem',
+              padding: '0.75rem 1rem',
+              borderRadius: '0.75rem',
+              backgroundColor: 'rgba(180, 35, 24, 0.08)',
+              border: `1px solid rgba(180, 35, 24, 0.25)`,
+              color: colors.error,
+              fontSize: '0.825rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+            }}
+          >
+            <AlertCircle size={16} style={{ flexShrink: 0 }} />
+            <span>{error}</span>
+          </div>
+        )}
+
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {/* Email Field */}
           <div>
-            <label className="block text-xs font-semibold text-[#1F2937] mb-1.5 uppercase tracking-wider">
-              Corporate Email
+            <label
+              style={{
+                display: 'block',
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                color: colors.text,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                marginBottom: '0.4rem',
+              }}
+            >
+              Corporate Work Email
             </label>
-            <div className="relative flex items-center">
-              <Mail className="absolute left-3.5 h-4 w-4 text-[#64748B]" />
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Mail
+                size={18}
+                color={colors.muted}
+                style={{ position: 'absolute', left: '0.875rem', pointerEvents: 'none' }}
+              />
               <input
                 type="email"
                 required
                 value={email}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                placeholder="employee@company.com"
-                className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8F9FA] pl-10 pr-4 py-2.5 text-sm text-[#1F2937] placeholder-[#64748B]/70 outline-none transition duration-150 focus:border-[#3F5F7F] focus:bg-[#FFFFFF] focus:ring-3 focus:ring-[#3F5F7F]/15"
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="employee@oxp.com"
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 0.875rem 0.75rem 2.6rem',
+                  borderRadius: '0.75rem',
+                  border: `1px solid ${colors.border}`,
+                  backgroundColor: colors.bg,
+                  fontSize: '0.875rem',
+                  color: colors.text,
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
               />
             </div>
           </div>
 
           {/* Password Field */}
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-xs font-semibold text-[#1F2937] uppercase tracking-wider">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+              <label
+                style={{
+                  fontSize: '0.7rem',
+                  fontWeight: 700,
+                  color: colors.text,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  margin: 0,
+                }}
+              >
                 Password
               </label>
-              <a href="#" className="text-xs font-medium text-[#3F5F7F] hover:text-[#1E3A5F] transition">
+              <a
+                href="#forgot"
+                onClick={(e) => { e.preventDefault(); alert('For demo login, please click one of the quick persona buttons below.'); }}
+                style={{
+                  fontSize: '0.75rem',
+                  color: colors.secondary,
+                  textDecoration: 'none',
+                  fontWeight: 600,
+                }}
+              >
                 Forgot?
               </a>
             </div>
-            <div className="relative flex items-center">
-              <Lock className="absolute left-3.5 h-4 w-4 text-[#64748B]" />
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Lock
+                size={18}
+                color={colors.muted}
+                style={{ position: 'absolute', left: '0.875rem', pointerEvents: 'none' }}
+              />
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
                 value={password}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8F9FA] pl-10 pr-10 py-2.5 text-sm text-[#1F2937] placeholder-[#64748B]/70 outline-none transition duration-150 focus:border-[#3F5F7F] focus:bg-[#FFFFFF] focus:ring-3 focus:ring-[#3F5F7F]/15"
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 2.6rem 0.75rem 2.6rem',
+                  borderRadius: '0.75rem',
+                  border: `1px solid ${colors.border}`,
+                  backgroundColor: colors.bg,
+                  fontSize: '0.875rem',
+                  color: colors.text,
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 text-[#64748B] hover:text-[#1F2937] transition focus:outline-none"
+                style={{
+                  position: 'absolute',
+                  right: '0.875rem',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
               >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPassword ? <EyeOff size={18} color={colors.muted} /> : <Eye size={18} color={colors.muted} />}
               </button>
             </div>
           </div>
 
           {/* Remember Me */}
-          <div className="flex items-center">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <input
-              id="remember-me"
+              id="remember"
               type="checkbox"
               checked={rememberMe}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRememberMe(e.target.checked)}
-              className="h-4 w-4 rounded border-[#E2E8F0] accent-[#1E3A5F] cursor-pointer"
+              onChange={(e) => setRememberMe(e.target.checked)}
+              style={{ cursor: 'pointer', accentColor: colors.primary }}
             />
-            <label htmlFor="remember-me" className="ml-2 text-xs text-[#64748B] cursor-pointer select-none">
+            <label htmlFor="remember" style={{ fontSize: '0.78rem', color: colors.muted, cursor: 'pointer' }}>
               Keep me signed in for 24 hours
             </label>
           </div>
 
           {/* 3D Crystal Deep Navy Button */}
-          <div className="pt-2">
+          <div style={{ paddingTop: '0.5rem' }}>
             <button
               type="submit"
-              className="group relative w-full overflow-hidden rounded-xl border border-white/20 py-3 px-6 transition-all duration-150 active:translate-y-0.5 cursor-pointer bg-gradient-to-b from-[#3F5F7F]/95 to-[#1E3A5F] shadow-[inset_0_1px_1px_rgba(255,255,255,0.6),inset_0_-2px_4px_rgba(10,20,35,0.5),0_10px_20px_-5px_rgba(30,58,95,0.35),0_4px_6px_-2px_rgba(30,58,95,0.2)] hover:from-[#4B7095] hover:to-[#1E3A5F] hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.8),inset_0_-2px_4px_rgba(10,20,35,0.6),0_14px_26px_-4px_rgba(30,58,95,0.45)]"
+              disabled={submitting}
+              style={{
+                position: 'relative',
+                width: '100%',
+                padding: '0.85rem 1.5rem',
+                borderRadius: '0.75rem',
+                border: '1px solid rgba(255, 255, 255, 0.4)',
+                background: `linear-gradient(180deg, #3F5F7F 0%, #1E3A5F 100%)`,
+                boxShadow: `
+                  inset 0 1px 1px rgba(255, 255, 255, 0.7),
+                  inset 0 -2px 4px rgba(10, 20, 35, 0.5),
+                  0 10px 20px -5px rgba(30, 58, 95, 0.35),
+                  0 4px 6px -2px rgba(30, 58, 95, 0.2)
+                `,
+                color: '#FFFFFF',
+                fontSize: '0.9rem',
+                fontWeight: 700,
+                cursor: submitting ? 'wait' : 'pointer',
+                overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                transition: 'transform 0.1s ease',
+              }}
+              onMouseDown={(e) => (e.currentTarget.style.transform = 'translateY(1px)')}
+              onMouseUp={(e) => (e.currentTarget.style.transform = 'translateY(0px)')}
             >
-              {/* Specular Light Bar */}
-              <div className="absolute top-0 inset-x-4 h-[1px] bg-gradient-to-r from-transparent via-white/70 to-transparent pointer-events-none" />
-
-              {/* Shimmer Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-white/10 opacity-60 group-hover:opacity-100 transition-opacity pointer-events-none" />
-
-              {/* Label */}
-              <span className="relative z-10 flex items-center justify-center gap-2 text-sm font-semibold tracking-wide text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
-                Sign In
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              <span
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: '10%',
+                  right: '10%',
+                  height: '1px',
+                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.85), transparent)',
+                  pointerEvents: 'none',
+                }}
+              />
+              <span style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.4)' }}>
+                {submitting ? 'Authenticating...' : 'Sign In to Workspace'}
               </span>
+              <ArrowRight size={16} />
             </button>
           </div>
         </form>
 
-        {/* System Status Footer */}
-        <div className="mt-8 border-t border-[#E2E8F0] pt-4 flex items-center justify-between text-[11px] text-[#64748B]">
-          <div className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-[#2E7D5B] inline-block" />
-            <span>Systems Nominal</span>
+        {/* Demo Quick Logins */}
+        <div style={{ marginTop: '1.75rem', paddingTop: '1.25rem', borderTop: `1px solid ${colors.border}` }}>
+          <div style={{
+            fontSize: '0.7rem',
+            fontWeight: 700,
+            color: colors.muted,
+            textTransform: 'uppercase',
+            letterSpacing: '0.06em',
+            marginBottom: '0.75rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.35rem',
+          }}>
+            <Sparkles size={13} color={colors.primary} />
+            <span>1-Click Demo Personas</span>
           </div>
-          <span>v2.4.0 Secure Access</span>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {DEMO_USERS.map((demo) => (
+              <button
+                key={demo.email}
+                type="button"
+                onClick={() => handleDemoLogin(demo.email, demo.password)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0.5rem 0.75rem',
+                  borderRadius: '0.5rem',
+                  backgroundColor: colors.bg,
+                  border: `1px solid ${colors.border}`,
+                  color: colors.text,
+                  fontSize: '0.78rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  textAlign: 'left',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = colors.primary;
+                  e.currentTarget.style.backgroundColor = 'rgba(30, 58, 95, 0.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = colors.border;
+                  e.currentTarget.style.backgroundColor = colors.bg;
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: 700, color: colors.primary }}>{demo.role}</div>
+                  <div style={{ fontSize: '0.7rem', color: colors.muted }}>{demo.email}</div>
+                </div>
+                <UserCheck size={14} color={colors.secondary} />
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div
+          style={{
+            marginTop: '1.5rem',
+            paddingTop: '1rem',
+            borderTop: `1px solid ${colors.border}`,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            fontSize: '0.72rem',
+            color: colors.muted,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <span
+              style={{
+                width: '0.5rem',
+                height: '0.5rem',
+                borderRadius: '50%',
+                backgroundColor: colors.success,
+                display: 'inline-block',
+              }}
+            />
+            <span>API Gateway Connected</span>
+          </div>
+          <span>v2.4.0 TS Engine</span>
         </div>
       </div>
     </div>
