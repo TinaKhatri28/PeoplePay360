@@ -59,6 +59,24 @@ export class LeaveRepository {
     });
   }
 
+  async findApprovedLeavesForEmployees(
+    organizationId: string,
+    employeeIds: string[],
+    periodStart: Date,
+    periodEnd: Date
+  ) {
+    return prisma.leaveRequest.findMany({
+      where: {
+        organization_id: organizationId,
+        employee_id: { in: employeeIds },
+        status: 'Approved',
+        start_date: { lte: periodEnd },
+        end_date: { gte: periodStart },
+      },
+      include: { leave_type: true },
+    });
+  }
+
   async createRequest(data: any) {
     return prisma.leaveRequest.create({
       data,

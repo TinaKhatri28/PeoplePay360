@@ -72,6 +72,36 @@ export class ContractRepository {
     return running || contracts[0] || null;
   }
 
+  async findContractsValidForPeriodForEmployees(
+    organizationId: string,
+    employeeIds: string[],
+    periodStart: Date,
+    periodEnd: Date
+  ) {
+    return prisma.employmentContract.findMany({
+      where: {
+        organization_id: organizationId,
+        employee_id: { in: employeeIds },
+        start_date: { lte: periodEnd },
+        OR: [
+          { end_date: null },
+          { end_date: { gte: periodStart } },
+        ],
+      },
+      include: {
+        salary_structure: {
+          include: {
+            rules: {
+              where: { is_active: true },
+              orderBy: { sequence: 'asc' },
+            },
+          },
+        },
+      },
+      orderBy: { start_date: 'desc' },
+    });
+  }
+
   async create(data: any) {
     return prisma.employmentContract.create({
       data,

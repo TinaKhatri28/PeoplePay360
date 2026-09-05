@@ -130,33 +130,43 @@ export class PayrollService {
     await this.repo.updatePayrunStatus(payrunId, 'Processing');
 
     const computeAction = async () => {
+      const employeeIds = run.payslips.map((s) => s.employee_id);
+      const resultMap = await this.calculation.calculateBatchPayroll(
+        organizationId,
+        employeeIds,
+        run.period_year,
+        run.period_month,
+        run.structure_id
+      );
+
       let totalGross = 0;
       let totalDeductions = 0;
       let totalNet = 0;
 
+      const updatePromises = [];
+
       for (const slip of run.payslips) {
-        const result = await this.calculation.calculateEmployeePayroll(
-          organizationId,
-          slip.employee_id,
-          run.period_year,
-          run.period_month,
-          run.structure_id
-        );
+        const result = resultMap.get(slip.employee_id);
+        if (!result) continue;
 
         totalGross += result.grossSalary;
         totalDeductions += result.totalDeductions;
         totalNet += result.netSalary;
 
-        await this.repo.updatePayslipCalculation(slip.id, {
-          contract_id: result.contractId,
-          gross: result.grossSalary,
-          deductions: result.totalDeductions,
-          net: result.netSalary,
-          lines_json: JSON.stringify(result.lines),
-          warnings_json: JSON.stringify(result.warnings),
-          status: 'Done',
-        });
+        updatePromises.push(
+          this.repo.updatePayslipCalculation(slip.id, {
+            contract_id: result.contractId,
+            gross: result.grossSalary,
+            deductions: result.totalDeductions,
+            net: result.netSalary,
+            lines_json: JSON.stringify(result.lines),
+            warnings_json: JSON.stringify(result.warnings),
+            status: 'Done',
+          })
+        );
       }
+
+      await Promise.all(updatePromises);
 
       await this.repo.updatePayrunStatus(payrunId, 'Computed', {
         gross: +totalGross.toFixed(2),

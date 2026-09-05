@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { prisma } from '../../config/database';
+import { userRepository } from '../users/user.repository';
+import { employeeRepository } from '../employees/employee.repository';
 import { leaveService, LeaveService } from './leave.service';
 import { ValidationError } from '../../shared/errors/app.error';
 
@@ -48,16 +49,11 @@ export class LeaveController {
       let employeeId = (isPrivileged && req.body.employee_id) ? req.body.employee_id : req.user?.employeeId;
 
       if (!employeeId && req.user?.id) {
-        const user = await prisma.user.findUnique({
-          where: { id: req.user.id },
-          include: { employee: true },
-        });
+        const user = await userRepository.findById(orgId, req.user.id);
         if (user?.employee_id) {
           employeeId = user.employee_id;
         } else if (user?.email) {
-          const emp = await prisma.employee.findFirst({
-            where: { organization_id: orgId, email: user.email },
-          });
+          const emp = await employeeRepository.findByEmail(orgId, user.email);
           if (emp) {
             employeeId = emp.id;
           }

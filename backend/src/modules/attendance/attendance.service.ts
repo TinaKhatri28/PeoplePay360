@@ -1,5 +1,5 @@
-import { prisma } from '../../config/database';
 import { attendanceRepository, AttendanceRepository } from './attendance.repository';
+import { employeeRepository, EmployeeRepository } from '../employees/employee.repository';
 import { scheduleService, ScheduleService } from '../schedules/schedule.service';
 import { auditService, AuditService } from '../audit/audit.service';
 import { ConflictError, NotFoundError, ValidationError } from '../../shared/errors/app.error';
@@ -7,6 +7,7 @@ import { ConflictError, NotFoundError, ValidationError } from '../../shared/erro
 export class AttendanceService {
   constructor(
     private readonly repo: AttendanceRepository = attendanceRepository,
+    private readonly employeeRepo: EmployeeRepository = employeeRepository,
     private readonly schedule: ScheduleService = scheduleService,
     private readonly audit: AuditService = auditService
   ) {}
@@ -63,7 +64,7 @@ export class AttendanceService {
   async getMyStatus(organizationId: string, employeeId: string) {
     const today = new Date().toISOString().slice(0, 10);
     const record = await this.repo.findByEmployeeAndDate(organizationId, employeeId, today);
-    const emp = await prisma.employee.findUnique({ where: { id: employeeId } });
+    const emp = await this.employeeRepo.findById(organizationId, employeeId);
 
     let elapsedMinutes = 0;
     let elapsedFormatted = '0h00';
@@ -99,7 +100,7 @@ export class AttendanceService {
     // 2. Schedule comparison for Late Detection
     let isLate = false;
     let lateMinutes = 0;
-    const emp = await prisma.employee.findUnique({ where: { id: employeeId } });
+    const emp = await this.employeeRepo.findById(organizationId, employeeId);
     const scheduleId = emp?.schedule_id;
     if (scheduleId) {
       try {

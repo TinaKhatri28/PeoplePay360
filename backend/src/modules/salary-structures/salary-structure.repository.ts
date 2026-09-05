@@ -75,6 +75,17 @@ export class SalaryStructureRepository {
       where: { id, organization_id: organizationId },
     });
   }
+
+  async findRulesForStructures(organizationId: string, structureIds: string[]) {
+    return prisma.salaryRule.findMany({
+      where: {
+        organization_id: organizationId,
+        structure_id: { in: structureIds },
+        is_active: true,
+      },
+      orderBy: { sequence: 'asc' },
+    });
+  }
 }
 
 export const salaryStructureRepository = new SalaryStructureRepository();

@@ -84,6 +84,16 @@ export class AttendanceRepository {
       data,
     });
   }
+
+  async findMonthlyRecordsForEmployees(organizationId: string, employeeIds: string[], monthPrefix: string) {
+    return prisma.attendanceRecord.findMany({
+      where: {
+        organization_id: organizationId,
+        employee_id: { in: employeeIds },
+        date: { startsWith: monthPrefix },
+      },
+    });
+  }
 }
 
 export const attendanceRepository = new AttendanceRepository();

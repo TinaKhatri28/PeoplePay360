@@ -52,6 +52,23 @@ export class EmployeeRepository {
     return { total, items };
   }
 
+  async findByEmail(emailOrOrgId: string, email?: string) {
+    if (email) {
+      return prisma.employee.findFirst({
+        where: { email, organization_id: emailOrOrgId },
+      });
+    }
+    return prisma.employee.findUnique({
+      where: { email: emailOrOrgId },
+    });
+  }
+
+  async findManyByIds(organizationId: string, ids: string[]) {
+    return prisma.employee.findMany({
+      where: { id: { in: ids }, organization_id: organizationId },
+    });
+  }
+
   async findById(organizationId: string, id: string) {
     return prisma.employee.findFirst({
       where: { id, organization_id: organizationId },
@@ -71,12 +88,6 @@ export class EmployeeRepository {
           },
         },
       },
-    });
-  }
-
-  async findByEmail(email: string) {
-    return prisma.employee.findUnique({
-      where: { email },
     });
   }
 
