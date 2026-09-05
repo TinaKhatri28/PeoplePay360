@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import LoginView from './components/LoginView';
+import LandingPage from './components/LandingPage';
 import DashboardView from './pages/DashboardView';
 import EmployeesView from './pages/EmployeesView';
 import ContractsView from './pages/ContractsView';
@@ -16,6 +17,7 @@ import EmployeeDashboardView from './components/EmployeeDashboardView';
 function MainApp() {
   const { user, loading, isHRManager, isPayrollUser } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [showLogin, setShowLogin] = useState(false);
 
   const userRoles = user?.roles || [];
   const isAdmin = userRoles.includes('HR Payroll Admin') || userRoles.includes('Admin');
@@ -62,7 +64,10 @@ function MainApp() {
   }
 
   if (!user) {
-    return <LoginView />;
+    if (!showLogin) {
+      return <LandingPage onEnterLogin={() => setShowLogin(true)} />;
+    }
+    return <LoginView onBackToLanding={() => setShowLogin(false)} />;
   }
 
   return (

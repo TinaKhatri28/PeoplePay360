@@ -1,8 +1,12 @@
 import React, { useState, FormEvent } from 'react';
-import { Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowRight, Sparkles, UserCheck, AlertCircle } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowRight, ArrowLeft, Sparkles, UserCheck, AlertCircle } from 'lucide-react';
 import { useAuth, DEMO_USERS } from '../context/AuthContext';
 
-export default function LoginView(): React.JSX.Element {
+interface LoginViewProps {
+  onBackToLanding?: () => void;
+}
+
+export default function LoginView({ onBackToLanding }: LoginViewProps): React.JSX.Element {
   const { login } = useAuth();
   const [email, setEmail] = useState<string>('admin@oxp.com');
   const [password, setPassword] = useState<string>('admin123');
@@ -93,6 +97,45 @@ export default function LoginView(): React.JSX.Element {
           pointerEvents: 'none',
         }}
       />
+
+      {/* Top Left Back to Landing Button */}
+      {onBackToLanding && (
+        <button
+          type="button"
+          onClick={onBackToLanding}
+          style={{
+            position: 'absolute',
+            top: '2rem',
+            left: '2rem',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.5rem 1rem',
+            borderRadius: '999px',
+            backgroundColor: '#FFFFFF',
+            border: `1px solid ${colors.border}`,
+            color: colors.primary,
+            fontSize: '0.85rem',
+            fontWeight: 700,
+            fontStyle: 'italic',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+            zIndex: 20,
+            transition: 'all 0.15s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(30, 58, 95, 0.05)';
+            e.currentTarget.style.transform = 'translateX(-2px)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#FFFFFF';
+            e.currentTarget.style.transform = 'translateX(0px)';
+          }}
+        >
+          <ArrowLeft size={16} />
+          <span>Back to Landing Page</span>
+        </button>
+      )}
 
       {/* Main Login Card */}
       <div
