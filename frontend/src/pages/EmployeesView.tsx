@@ -79,14 +79,15 @@ export default function EmployeesView() {
     setSelectedEmployee(emp);
     setDetailTab('overview');
     try {
-      const [full, contracts, attendance, timeoff, allocations] = await Promise.all([
+      const [full, contracts, attendance, timeoff, allocations, payslips] = await Promise.all([
         apiRequest(`/api/employees/${emp.id}`),
         apiRequest(`/api/employees/${emp.id}/contracts`),
         apiRequest(`/api/employees/${emp.id}/attendance`),
         apiRequest(`/api/employees/${emp.id}/time-off`),
         apiRequest(`/api/employees/${emp.id}/allocations`),
+        apiRequest(`/api/payroll/payslips?employee_id=${emp.id}`).catch(() => []),
       ]);
-      setEmpDetails({ full, contracts, attendance, timeoff, allocations });
+      setEmpDetails({ full, contracts, attendance, timeoff, allocations, payslips: payslips || [] });
     } catch (err) {
       console.error(err);
     }
