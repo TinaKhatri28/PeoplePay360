@@ -255,7 +255,14 @@ export default function PayrollView() {
           </div>
 
           {payrollSubTab === 'dashboard' ? (
-            <PayrollDashboardView />
+            <PayrollDashboardView onTabChange={(tab) => {
+              if (tab === 'batches' || tab === 'payroll') {
+                setPayrollSubTab('batches');
+                if (tab === 'batches') {
+                  setShowNewModal(true);
+                }
+              }
+            }} />
           ) : (
             <>
               <div style={{

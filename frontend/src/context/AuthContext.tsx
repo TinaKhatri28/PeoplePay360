@@ -82,8 +82,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const isPayrollAdmin = Boolean(user?.roles?.includes('HR Payroll Admin'));
-  const isPayrollUser = isPayrollAdmin || Boolean(user?.roles?.includes('HR Payroll User'));
   const isHRManager = isPayrollAdmin || Boolean(user?.roles?.includes('HR Manager'));
+  const isPayrollUser = isPayrollAdmin || isHRManager || Boolean(user?.roles?.includes('HR Payroll User'));
 
   return (
     <AuthContext.Provider

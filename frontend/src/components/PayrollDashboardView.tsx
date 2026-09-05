@@ -13,7 +13,8 @@ import {
   CheckCircle2,
   FileText,
   Layers,
-  ArrowUpRight
+  ArrowUpRight,
+  Plus
 } from 'lucide-react';
 import { apiRequest } from '../api';
 import { DashboardData } from '../types';
@@ -131,8 +132,28 @@ export default function PayrollDashboardView({ onTabChange }: PayrollDashboardVi
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '0.75rem', color: '#EF4444', background: 'rgba(239, 68, 68, 0.2)', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(239, 68, 68, 0.4)' }}>
-            ● Live Sync Mode
+          <button
+            onClick={() => onTabChange?.('batches')}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 14px',
+              borderRadius: 'var(--radius-md)',
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              background: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+              color: '#FFFFFF',
+              border: 'none',
+              boxShadow: '0 4px 12px rgba(37, 99, 235, 0.4)',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <Plus size={16} /> Create & Modify Payrun Records
+          </button>
+          <span style={{ fontSize: '0.75rem', color: '#EF4444', background: 'rgba(239, 68, 68, 0.2)', padding: '4px 8px', borderRadius: '4px', border: '1px solid rgba(239, 68, 68, 0.4)' }}>
+            ● Manager Live Access
           </span>
         </div>
       </div>

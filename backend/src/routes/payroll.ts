@@ -30,7 +30,7 @@ router.get('/payruns/:id', (req: express.Request, res: express.Response) => {
   res.json({ ...run, payslips: slips.map(s => ({ ...s, lines: JSON.parse(s.lines_json || '[]'), warnings: JSON.parse(s.warnings_json || '[]') })) });
 });
 
-router.post('/payruns', requireRole('HR Payroll User'), (req: AuthRequest, res: express.Response) => {
+router.post('/payruns', requireRole('HR Payroll User', 'HR Manager'), (req: AuthRequest, res: express.Response) => {
   const { period_month, period_year, structure_id, company, employee_ids } = req.body;
   if (!period_month || !period_year || !employee_ids?.length) {
     return res.status(400).json({ error: 'period_month, period_year and employee_ids are required' });
@@ -51,7 +51,7 @@ router.post('/payruns', requireRole('HR Payroll User'), (req: AuthRequest, res: 
   res.status(201).json({ id: payrunId });
 });
 
-router.post('/payruns/:id/compute', requireRole('HR Payroll User'), (req: AuthRequest, res: express.Response) => {
+router.post('/payruns/:id/compute', requireRole('HR Payroll User', 'HR Manager'), (req: AuthRequest, res: express.Response) => {
   const run = db.prepare('SELECT * FROM payruns WHERE id = ?').get(req.params.id) as any;
   if (!run) return res.status(404).json({ error: 'Payrun not found' });
 
@@ -70,7 +70,7 @@ router.post('/payruns/:id/compute', requireRole('HR Payroll User'), (req: AuthRe
   res.json({ ok: true, computed: slips.length });
 });
 
-router.post('/payruns/:id/validate', requireRole('HR Payroll User'), (req: AuthRequest, res: express.Response) => {
+router.post('/payruns/:id/validate', requireRole('HR Payroll User', 'HR Manager'), (req: AuthRequest, res: express.Response) => {
   const run = db.prepare('SELECT * FROM payruns WHERE id = ?').get(req.params.id) as any;
   if (!run) return res.status(404).json({ error: 'Payrun not found' });
 
@@ -102,13 +102,13 @@ router.post('/payruns/:id/validate', requireRole('HR Payroll User'), (req: AuthR
   res.json({ valid: validCount, total: slips.length, issues });
 });
 
-router.post('/payruns/:id/mark-paid', requireRole('HR Payroll Admin'), (req: AuthRequest, res: express.Response) => {
+router.post('/payruns/:id/mark-paid', requireRole('HR Payroll Admin', 'HR Manager'), (req: AuthRequest, res: express.Response) => {
   db.prepare("UPDATE payslips SET status = 'Paid' WHERE payrun_id = ?").run(req.params.id);
   db.prepare("UPDATE payruns SET status = 'Paid' WHERE id = ?").run(req.params.id);
   res.json({ ok: true });
 });
 
-router.post('/payruns/:id/send-payslips', requireRole('HR Payroll User'), (req: AuthRequest, res: express.Response) => {
+router.post('/payruns/:id/send-payslips', requireRole('HR Payroll User', 'HR Manager'), (req: AuthRequest, res: express.Response) => {
   db.prepare("UPDATE payslips SET sent = 1 WHERE payrun_id = ?").run(req.params.id);
   res.json({ ok: true, message: 'Payslips marked as sent (demo mode — no external mail server configured)' });
 });

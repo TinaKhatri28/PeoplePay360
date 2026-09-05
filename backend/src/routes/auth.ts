@@ -5,6 +5,13 @@ import { signToken, authRequired, AuthRequest } from '../auth';
 
 const router = express.Router();
 
+const parseRoles = (roles: any): string[] => {
+  if (!roles) return [];
+  if (Array.isArray(roles)) return roles;
+  if (typeof roles === 'string') return roles.split(',').map(r => r.trim());
+  return [];
+};
+
 router.post('/login', (req: express.Request, res: express.Response) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
@@ -24,7 +31,7 @@ router.post('/login', (req: express.Request, res: express.Response) => {
   res.json({
     token,
     user: {
-      id: user.id, email: user.email, roles: user.roles.split(','),
+      id: user.id, email: user.email, roles: parseRoles(user.roles),
       employee_id: user.employee_id, employee_name: employee?.name || null,
     },
   });
@@ -35,7 +42,7 @@ router.get('/me', authRequired, (req: AuthRequest, res: express.Response) => {
   const user = db.prepare('SELECT id, email, roles, employee_id FROM users WHERE id = ?').get(req.user.id) as any;
   if (!user) return res.status(404).json({ error: 'User not found' });
   const employee = user.employee_id ? db.prepare('SELECT * FROM employees WHERE id = ?').get(user.employee_id) : null;
-  res.json({ ...user, roles: user.roles.split(','), employee });
+  res.json({ ...user, roles: parseRoles(user.roles), employee });
 });
 
 export default router;
