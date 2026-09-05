@@ -61,7 +61,16 @@ export async function apiRequest<T = any>(endpoint: string, options: ApiRequestO
   }
 
   if (!response.ok) {
-    const errorMsg = data?.error || data?.message || `Request failed with status ${response.status}`;
+    let errorMsg = `Request failed with status ${response.status}`;
+    if (typeof data?.error === 'string') {
+      errorMsg = data.error;
+    } else if (data?.error?.message) {
+      errorMsg = data.error.message;
+    } else if (typeof data?.message === 'string') {
+      errorMsg = data.message;
+    } else if (typeof data === 'string' && data.length > 0) {
+      errorMsg = data;
+    }
     const err: any = new Error(errorMsg);
     err.status = response.status;
     err.data = data;
