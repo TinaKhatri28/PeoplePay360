@@ -12,12 +12,12 @@ export interface User {
 }
 
 export interface Department {
-  id: number;
+  id: string | number;
   name: string;
 }
 
 export interface Employee {
-  id: number;
+  id: string | number;
   name: string;
   first_name?: string;
   last_name?: string;
@@ -25,10 +25,10 @@ export interface Employee {
   phone?: string | null;
   position?: string | null;
   department?: string | null;
-  department_id?: number | null;
+  department_id?: string | number | null;
   department_name?: string | null;
-  manager_id?: number | null;
-  schedule_id?: number | null;
+  manager_id?: string | number | null;
+  schedule_id?: string | number | null;
   schedule_name?: string | null;
   company?: string;
   work_location?: string | null;
@@ -81,7 +81,7 @@ export interface AttendanceRecord {
 }
 
 export interface TimeOffType {
-  id: number;
+  id: string | number;
   name: string;
   unit: 'Days' | 'Hours';
   allocation_required: number;
@@ -117,14 +117,14 @@ export interface TimeOffRequest {
 }
 
 export interface SalaryStructure {
-  id: number;
+  id: string | number;
   name: string;
   rules?: SalaryRule[];
 }
 
 export interface SalaryRule {
-  id: number;
-  structure_id: number;
+  id: string | number;
+  structure_id: string | number;
   name: string;
   category: 'Basic' | 'Allowance' | 'Deduction';
   compute_method: 'FIXED' | 'PERCENTAGE' | 'FORMULA';
@@ -136,10 +136,10 @@ export interface SalaryRule {
 }
 
 export interface Payrun {
-  id: number;
+  id: string | number;
   period_month: number;
   period_year: number;
-  structure_id?: number | null;
+  structure_id?: string | number | null;
   company?: string;
   status: 'Draft' | 'Computed' | 'Validated' | 'Paid';
   created_at?: string;
@@ -153,11 +153,11 @@ export interface PayslipLine {
 }
 
 export interface Payslip {
-  id: number;
-  payrun_id: number;
-  employee_id: number;
+  id: string | number;
+  payrun_id: string | number;
+  employee_id: string | number;
   employee_name: string;
-  contract_id?: number | null;
+  contract_id?: string | number | null;
   gross: number;
   deductions: number;
   net: number;
