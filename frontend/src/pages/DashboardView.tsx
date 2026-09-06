@@ -399,15 +399,6 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
                   Assigned salary structure, allowances, deductions, and shift timetable
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => onNavigate('salary')}
-                className="btn btn-secondary btn-sm"
-                style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.78rem' }}
-              >
-                <span>Full Details</span>
-                <ChevronRight size={13} />
-              </button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>

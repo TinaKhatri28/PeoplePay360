@@ -108,7 +108,6 @@ export default function Header({ activeTab }: HeaderProps) {
     attendance: { title: 'Attendance & Time Tracker', desc: 'Live punch clock, daily check-ins, worked hours, and manual overrides' },
     timeoff: { title: 'Time Off & Leaves', desc: 'Leave quota allocations, pending approval requests, and policy rules' },
     payroll: { title: 'Payroll Studio', desc: 'Full batch lifecycle: Eligible calculation → Compute → Validate → Mark Paid → PDF Payslips' },
-    salary: { title: 'Salary Structures & Schedules', desc: 'Configurable compensation formulas, fixed allowances, and shift hours' },
     users: { title: 'User & Role Governance', desc: 'Provision user accounts, assign system roles, and audit access permissions' },
   };
 

@@ -936,27 +936,6 @@ export default function ContractsView({ onNavigate }: ContractsViewProps = {}) {
                 <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#1E3A5F', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   Configured Salary Rules & Component Breakdown ({rules.length}):
                 </span>
-                {onNavigate && (
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('salary')}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: '#1E3A5F',
-                      fontSize: '0.78rem',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      textDecoration: 'underline',
-                    }}
-                  >
-                    <span>Manage Salary Structures</span>
-                    <ExternalLink size={13} />
-                  </button>
-                )}
               </div>
 
               <div className="table-container" style={{ border: '1px solid #E2E8F0', borderRadius: '8px', overflow: 'hidden' }}>

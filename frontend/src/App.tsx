@@ -12,7 +12,6 @@ const ContractsView = lazy(() => import('./pages/ContractsView'));
 const AttendanceView = lazy(() => import('./pages/AttendanceView'));
 const TimeOffView = lazy(() => import('./pages/TimeOffView'));
 const PayrollView = lazy(() => import('./pages/PayrollView'));
-const SalaryStructuresView = lazy(() => import('./pages/SalaryStructuresView'));
 const UsersView = lazy(() => import('./pages/UsersView'));
 
 function TabLoader() {
@@ -99,7 +98,6 @@ function MainApp() {
             {activeTab === 'attendance' && <AttendanceView />}
             {activeTab === 'timeoff' && <TimeOffView />}
             {activeTab === 'payroll' && <PayrollView />}
-            {activeTab === 'salary' && <SalaryStructuresView />}
             {activeTab === 'users' && <UsersView />}
           </Suspense>
         </main>
