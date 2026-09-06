@@ -8,10 +8,13 @@ import {
   Calendar,
   ChevronRight,
   Sparkles,
-  AlertCircle
+  AlertCircle,
+  Sliders,
+  FileText
 } from 'lucide-react';
 import { apiRequest } from '../api';
-import { DashboardData } from '../types';
+import { useAuth } from '../context/AuthContext';
+import { DashboardData, Employee, Contract, WorkingSchedule, SalaryStructure } from '../types';
 import {
   ResponsiveContainer,
   BarChart,
@@ -27,6 +30,7 @@ interface DashboardViewProps {
 }
 
 export default function DashboardView({ onNavigate }: DashboardViewProps) {
+  const { user } = useAuth();
   const [year, setYear] = useState<number>(2026);
   const [month, setMonth] = useState<number>(9);
   const [department, setDepartment] = useState<string>('All Departments');
@@ -34,6 +38,40 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [myEmployeeProfile, setMyEmployeeProfile] = useState<Employee | null>(null);
+  const [myContract, setMyContract] = useState<Contract | null>(null);
+  const [mySchedule, setMySchedule] = useState<WorkingSchedule | null>(null);
+  const [myStructure, setMyStructure] = useState<SalaryStructure | null>(null);
+
+  const fetchMyDetails = async () => {
+    const targetEmpId = user?.employee_id || (user as any)?.employeeId;
+    if (!targetEmpId) return;
+    try {
+      const [emp, contracts, schedules, structures] = await Promise.all([
+        apiRequest<Employee>(`/api/employees/${targetEmpId}`).catch(() => null),
+        apiRequest<Contract[]>(`/api/employees/${targetEmpId}/contracts`).catch(() => []),
+        apiRequest<WorkingSchedule[]>('/api/schedules').catch(() => []),
+        apiRequest<SalaryStructure[]>('/api/salary/structures').catch(() => []),
+      ]);
+
+      if (emp) setMyEmployeeProfile(emp);
+      if (contracts && contracts.length > 0) {
+        const active = contracts.find((c) => c.status === 'Running') || contracts[0];
+        setMyContract(active);
+        if (active.salary_structure_id && structures) {
+          const matchedSt = structures.find((s) => String(s.id) === String(active.salary_structure_id));
+          if (matchedSt) setMyStructure(matchedSt);
+        }
+      }
+      if (emp?.schedule_id && schedules) {
+        const matchedSch = schedules.find((s) => String(s.id) === String(emp.schedule_id));
+        if (matchedSch) setMySchedule(matchedSch);
+      }
+    } catch (e) {
+      console.error('Failed to load my salary & schedule info:', e);
+    }
+  };
 
   const fetchDashboard = async (isRetry = false) => {
     setLoading(true);
@@ -62,6 +100,10 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
   useEffect(() => {
     fetchDashboard();
   }, [year, month, department, status]);
+
+  useEffect(() => {
+    fetchMyDetails();
+  }, [user]);
 
   const months = [
     { value: 1, name: 'January' },
@@ -92,6 +134,222 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* My Salary & Schedule Overview Card */}
+      {myEmployeeProfile && (
+        <div className="card" style={{
+          background: 'linear-gradient(135deg, #0A0F1D 0%, #111827 100%)',
+          color: '#FFFFFF',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
+          boxShadow: '0 8px 30px rgba(0, 0, 0, 0.25)',
+          padding: '24px 28px',
+          position: 'relative',
+          overflow: 'hidden',
+        }}>
+          {/* Subtle background glow */}
+          <div style={{
+            position: 'absolute',
+            right: '-60px',
+            top: '-60px',
+            width: '240px',
+            height: '240px',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)',
+            pointerEvents: 'none',
+          }} />
+
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '20px',
+            flexWrap: 'wrap',
+            gap: '12px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{
+                width: '42px',
+                height: '42px',
+                borderRadius: '12px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#FFFFFF',
+              }}>
+                <Sliders size={22} />
+              </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.02em' }}>
+                    My Salary & Schedule Overview
+                  </h3>
+                  <span style={{
+                    fontSize: '0.7rem',
+                    padding: '2px 8px',
+                    borderRadius: '20px',
+                    background: 'rgba(34, 197, 94, 0.2)',
+                    color: '#4ade80',
+                    border: '1px solid rgba(34, 197, 94, 0.4)',
+                    fontWeight: 700,
+                  }}>
+                    Active Contract
+                  </span>
+                </div>
+                <p style={{ fontSize: '0.78rem', color: '#94A3B8', marginTop: '2px' }}>
+                  Official compensation terms, assigned wage structure, and weekly work hours
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={() => onNavigate('attendance')}
+                className="btn btn-sm"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  color: '#FFFFFF',
+                  fontSize: '0.8rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 12px',
+                  borderRadius: 'var(--radius-md)',
+                }}
+              >
+                <Clock size={14} />
+                <span>Attendance Logs</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigate('timeoff')}
+                className="btn btn-sm"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  color: '#FFFFFF',
+                  fontSize: '0.8rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 12px',
+                  borderRadius: 'var(--radius-md)',
+                }}
+              >
+                <Calendar size={14} />
+                <span>Time Off Quota</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="grid-3" style={{ gap: '18px' }}>
+            {/* 1. Monthly Wage & Contract */}
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.04)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              padding: '16px 18px',
+            }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Base Compensation
+              </div>
+              <div style={{
+                fontSize: '1.75rem',
+                fontWeight: 900,
+                color: '#FFFFFF',
+                fontFamily: 'var(--font-mono)',
+                marginTop: '6px',
+                letterSpacing: '-0.02em',
+              }}>
+                ₹{(Number(myContract?.wage || myEmployeeProfile?.contract?.wage || 30000)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                <span style={{ fontSize: '0.8rem', fontWeight: 500, color: '#94A3B8', marginLeft: '4px' }}>/ month</span>
+              </div>
+              <div style={{ marginTop: '12px', fontSize: '0.78rem', color: '#CBD5E1', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#94A3B8' }}>Contract Ref:</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: '#F1F5F9' }}>
+                    {myContract?.ref || myEmployeeProfile?.contract?.ref || 'CON-STD-001'}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#94A3B8' }}>Status:</span>
+                  <span style={{ color: '#4ADE80', fontWeight: 700 }}>
+                    {myContract?.status || 'Running'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Salary Structure Rules */}
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.04)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              padding: '16px 18px',
+            }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Salary Structure
+              </div>
+              <div style={{
+                fontSize: '1.15rem',
+                fontWeight: 800,
+                color: '#FFFFFF',
+                marginTop: '6px',
+              }}>
+                {myStructure?.name || 'Standard Executive Structure'}
+              </div>
+              <div style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '4px', background: 'rgba(99, 102, 241, 0.2)', color: '#A5B4FC', fontWeight: 600 }}>
+                  Basic Wage (100%)
+                </span>
+                <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '4px', background: 'rgba(34, 197, 94, 0.2)', color: '#86EFAC', fontWeight: 600 }}>
+                  HRA & Transport Allowances
+                </span>
+                <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '4px', background: 'rgba(239, 68, 68, 0.2)', color: '#FCA5A5', fontWeight: 600 }}>
+                  PF & Unpaid Leave Deductions
+                </span>
+              </div>
+            </div>
+
+            {/* 3. Working Schedule */}
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.04)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              padding: '16px 18px',
+            }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Working Schedule
+              </div>
+              <div style={{
+                fontSize: '1.15rem',
+                fontWeight: 800,
+                color: '#FFFFFF',
+                marginTop: '6px',
+              }}>
+                {mySchedule?.name || myEmployeeProfile?.schedule_name || 'Standard Full-Time (40h/week)'}
+              </div>
+              <div style={{ marginTop: '12px', fontSize: '0.78rem', color: '#CBD5E1', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#94A3B8' }}>Weekly Hours:</span>
+                  <span style={{ fontWeight: 600, color: '#F1F5F9' }}>
+                    {mySchedule?.weekly_hours || mySchedule?.total_hours || 40} Hours / Week
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#94A3B8' }}>Working Days:</span>
+                  <span style={{ fontWeight: 600, color: '#F1F5F9' }}>
+                    {mySchedule?.days_per_week || 5} Days (Mon - Fri)
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Filter and Period Selector Banner */}
       <div style={{
         display: 'flex',
