@@ -1,4 +1,3 @@
-import React, { useState, useEffect, FormEvent } from 'react';
 import {
   CalendarOff,
   Plus,
@@ -8,7 +7,10 @@ import {
   AlertCircle,
   Calendar,
   X,
-  Download
+  Download,
+  Search,
+  Filter,
+  RotateCcw
 } from 'lucide-react';
 import { apiRequest } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -166,16 +168,61 @@ export default function TimeOffView() {
     }
   };
 
+  // Filter States
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'All' | 'To Approve' | 'Approved' | 'Refused'>('All');
+  const [typeFilter, setTypeFilter] = useState('All');
+  const [employeeFilter, setEmployeeFilter] = useState('All');
+
+  const pendingCount = requests.filter((r) => r.status === 'To Approve').length;
+  const approvedCount = requests.filter((r) => r.status === 'Approved').length;
+  const refusedCount = requests.filter((r) => r.status === 'Refused').length;
+
+  const distinctTypes = Array.from(
+    new Set([...types.map((t) => t.name), ...requests.map((r) => r.type_name)].filter(Boolean))
+  );
+
+  const filteredRequests = requests.filter((r) => {
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const name = (r.employee_name || '').toLowerCase();
+      const reason = (r.reason || '').toLowerCase();
+      const type = (r.type_name || '').toLowerCase();
+      if (!name.includes(q) && !reason.includes(q) && !type.includes(q)) {
+        return false;
+      }
+    }
+    if (statusFilter !== 'All' && r.status !== statusFilter) {
+      return false;
+    }
+    if (typeFilter !== 'All' && r.type_name !== typeFilter) {
+      return false;
+    }
+    if (employeeFilter !== 'All' && String(r.employee_id) !== String(employeeFilter)) {
+      return false;
+    }
+    return true;
+  });
+
+  const isFiltered = searchQuery.trim() !== '' || statusFilter !== 'All' || typeFilter !== 'All' || employeeFilter !== 'All';
+
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('All');
+    setTypeFilter('All');
+    setEmployeeFilter('All');
+  };
+
   const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
 
-  const isAllSelected = requests.length > 0 && requests.every((r) => selectedIds.includes(r.id));
+  const isAllSelected = filteredRequests.length > 0 && filteredRequests.every((r) => selectedIds.includes(r.id));
   const isSomeSelected = selectedIds.length > 0 && !isAllSelected;
 
   const handleToggleSelectAll = () => {
     if (isAllSelected) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(requests.map((r) => r.id));
+      setSelectedIds(filteredRequests.map((r) => r.id));
     }
   };
 
@@ -188,8 +235,8 @@ export default function TimeOffView() {
 
   const exportSelectedCSV = () => {
     const targetRequests = selectedIds.length > 0
-      ? requests.filter((r) => selectedIds.includes(r.id))
-      : requests;
+      ? filteredRequests.filter((r) => selectedIds.includes(r.id))
+      : filteredRequests;
 
     const headers = ['ID', 'Employee', 'Leave Type', 'Start Date', 'End Date', 'Duration', 'Reason', 'Status'];
     const rows = targetRequests.map((r) => [
@@ -218,7 +265,7 @@ export default function TimeOffView() {
   };
 
   const handleBulkApprove = async () => {
-    const pendingIds = requests
+    const pendingIds = filteredRequests
       .filter((r) => selectedIds.includes(r.id) && r.status === 'To Approve')
       .map((r) => r.id);
     if (!pendingIds.length) {
@@ -238,7 +285,7 @@ export default function TimeOffView() {
   };
 
   const handleBulkRefuse = async () => {
-    const pendingIds = requests
+    const pendingIds = filteredRequests
       .filter((r) => selectedIds.includes(r.id) && r.status === 'To Approve')
       .map((r) => r.id);
     if (!pendingIds.length) {
@@ -325,7 +372,167 @@ export default function TimeOffView() {
               Pending and processed absence requests
             </p>
           </div>
-          <span className="badge badge-primary">{requests.length} Total Requests</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {isFiltered && (
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="btn btn-secondary btn-sm"
+                style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', padding: '4px 10px' }}
+                title="Reset all filters"
+              >
+                <RotateCcw size={12} />
+                <span>Reset Filters</span>
+              </button>
+            )}
+            <span className="badge badge-primary">
+              {isFiltered ? `${filteredRequests.length} of ${requests.length} Requests` : `${requests.length} Total Requests`}
+            </span>
+          </div>
+        </div>
+
+        {/* Filter Controls & Status Tabs */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '18px' }}>
+          {/* Status Filter Tabs */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            overflowX: 'auto',
+            paddingBottom: '4px',
+            borderBottom: '1px solid var(--border-subtle, #e2e8f0)',
+          }}>
+            {[
+              { key: 'All', label: 'All Requests', count: requests.length },
+              { key: 'To Approve', label: 'To Approve', count: pendingCount, highlight: pendingCount > 0 },
+              { key: 'Approved', label: 'Approved', count: approvedCount },
+              { key: 'Refused', label: 'Refused', count: refusedCount },
+            ].map((tab) => {
+              const active = statusFilter === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setStatusFilter(tab.key as any)}
+                  style={{
+                    background: active ? '#000000' : 'transparent',
+                    color: active ? '#ffffff' : 'var(--text-muted, #64748B)',
+                    border: 'none',
+                    borderRadius: '20px',
+                    padding: '6px 14px',
+                    fontSize: '0.8rem',
+                    fontWeight: active ? 600 : 500,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    whiteSpace: 'nowrap',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <span>{tab.label}</span>
+                  <span
+                    style={{
+                      fontSize: '0.7rem',
+                      padding: '1px 6px',
+                      borderRadius: '10px',
+                      background: active
+                        ? 'rgba(255, 255, 255, 0.25)'
+                        : tab.highlight
+                        ? 'rgba(245, 158, 11, 0.15)'
+                        : 'rgba(0, 0, 0, 0.06)',
+                      color: active
+                        ? '#ffffff'
+                        : tab.highlight
+                        ? '#d97706'
+                        : 'inherit',
+                      fontWeight: 700,
+                    }}
+                  >
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Search bar & Dropdowns */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '12px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: '260px' }}>
+              <div style={{ position: 'relative', flex: 1 }}>
+                <Search
+                  size={15}
+                  color="var(--text-subtle, #94a3b8)"
+                  style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}
+                />
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Search requests by employee, reason, leave type..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{ paddingLeft: '36px', paddingRight: searchQuery ? '30px' : '12px', height: '38px', fontSize: '0.85rem' }}
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    style={{
+                      position: 'absolute',
+                      right: '8px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--text-subtle)',
+                      cursor: 'pointer',
+                      padding: '4px',
+                    }}
+                    title="Clear search"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Filter size={14} color="var(--text-subtle, #94a3b8)" />
+                <select
+                  className="form-control"
+                  style={{ width: 'auto', minWidth: '160px', height: '38px', fontSize: '0.85rem' }}
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value)}
+                >
+                  <option value="All">All Leave Types</option>
+                  {distinctTypes.map((tName) => (
+                    <option key={tName} value={tName}>{tName}</option>
+                  ))}
+                </select>
+              </div>
+
+              {isHRManager && employees.length > 0 && (
+                <select
+                  className="form-control"
+                  style={{ width: 'auto', minWidth: '160px', height: '38px', fontSize: '0.85rem' }}
+                  value={employeeFilter}
+                  onChange={(e) => setEmployeeFilter(e.target.value)}
+                >
+                  <option value="All">All Employees</option>
+                  {employees.map((emp) => (
+                    <option key={emp.id} value={String(emp.id)}>{emp.name}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Contextual Bulk Action Bar when items are selected */}
@@ -346,9 +553,9 @@ export default function TimeOffView() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <span className="badge badge-primary">{selectedIds.length} Selected</span>
               <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 600 }}>
-                {selectedIds.length === requests.length
-                  ? 'All leave requests selected'
-                  : `${selectedIds.length} of ${requests.length} leave requests selected`}
+                {selectedIds.length === filteredRequests.length
+                  ? 'All filtered requests selected'
+                  : `${selectedIds.length} of ${filteredRequests.length} requests selected`}
               </span>
             </div>
 
@@ -422,14 +629,28 @@ export default function TimeOffView() {
               </tr>
             </thead>
             <tbody>
-              {requests.length === 0 ? (
+              {filteredRequests.length === 0 ? (
                 <tr>
-                  <td colSpan={isHRManager ? 8 : 7} style={{ textAlign: 'center', padding: '32px', color: '#64748B' }}>
-                    No leave requests found.
+                  <td colSpan={isHRManager ? 8 : 7} style={{ textAlign: 'center', padding: '36px', color: '#64748B' }}>
+                    {isFiltered ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                        <span>No leave requests match your active filters.</span>
+                        <button
+                          type="button"
+                          onClick={handleResetFilters}
+                          className="btn btn-secondary btn-sm"
+                          style={{ fontSize: '0.78rem' }}
+                        >
+                          Clear all filters
+                        </button>
+                      </div>
+                    ) : (
+                      'No leave requests found.'
+                    )}
                   </td>
                 </tr>
               ) : (
-                requests.map((r) => {
+                filteredRequests.map((r) => {
                   const isSelected = selectedIds.includes(r.id);
                   return (
                     <tr
