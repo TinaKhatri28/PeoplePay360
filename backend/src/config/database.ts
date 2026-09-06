@@ -5,13 +5,28 @@ declare global {
   var __prisma: PrismaClient | undefined;
 }
 
-export const prisma = global.__prisma || new PrismaClient({
-  log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['error'],
-});
+export const prisma =
+  global.__prisma ||
+  new PrismaClient({
+    log: [
+      { emit: 'event', level: 'query' },
+      { emit: 'stdout', level: 'info' },
+      { emit: 'stdout', level: 'warn' },
+      { emit: 'stdout', level: 'error' },
+    ],
+  });
 
 if (process.env.NODE_ENV !== 'production') {
   global.__prisma = prisma;
 }
+
+// Explicit query logger so database updates and queries are clearly visible in the console
+(prisma as any).$on('query', (e: any) => {
+  // Only log application queries (exclude keepalive pings)
+  if (!e.query.includes('SELECT 1')) {
+    logger.info(`[DB Query] ${e.query} | params: ${e.params} | duration: ${e.duration}ms`);
+  }
+});
 
 // Initial connection with retry
 const connectWithRetry = async (retries = 3, delay = 2000) => {

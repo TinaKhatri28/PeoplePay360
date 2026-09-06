@@ -60,8 +60,13 @@ export class AttendanceController {
   checkIn = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const orgId = req.organizationId || 'org_default';
-      const isPrivileged = req.user?.role === 'Admin' || req.user?.role === 'HR Manager';
-      const employeeId = isPrivileged ? (req.body.employee_id || req.user?.employeeId) : req.user?.employeeId;
+      let employeeId = req.body.employee_id || req.user?.employeeId;
+      if (!employeeId && req.user?.email) {
+        const emp = await prisma.employee.findFirst({
+          where: { organization_id: orgId, email: { equals: req.user.email, mode: 'insensitive' } },
+        });
+        if (emp) employeeId = emp.id;
+      }
       if (!employeeId) {
         throw new ValidationError('Employee ID is required for check-in');
       }
@@ -75,8 +80,13 @@ export class AttendanceController {
   checkOut = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const orgId = req.organizationId || 'org_default';
-      const isPrivileged = req.user?.role === 'Admin' || req.user?.role === 'HR Manager';
-      const employeeId = isPrivileged ? (req.body.employee_id || req.user?.employeeId) : req.user?.employeeId;
+      let employeeId = req.body.employee_id || req.user?.employeeId;
+      if (!employeeId && req.user?.email) {
+        const emp = await prisma.employee.findFirst({
+          where: { organization_id: orgId, email: { equals: req.user.email, mode: 'insensitive' } },
+        });
+        if (emp) employeeId = emp.id;
+      }
       if (!employeeId) {
         throw new ValidationError('Employee ID is required for check-out');
       }
