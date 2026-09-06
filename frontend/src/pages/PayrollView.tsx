@@ -198,7 +198,7 @@ export default function PayrollView() {
   ];
 
   // Selection for Batches Table
-  const [selectedPayrunIds, setSelectedPayrunIds] = useState<number[]>([]);
+  const [selectedPayrunIds, setSelectedPayrunIds] = useState<(string | number)[]>([]);
   const isAllPayrunsSelected = payruns.length > 0 && payruns.every((p) => selectedPayrunIds.includes(p.id));
   const isSomePayrunsSelected = selectedPayrunIds.length > 0 && !isAllPayrunsSelected;
 
@@ -207,7 +207,7 @@ export default function PayrollView() {
     else setSelectedPayrunIds(payruns.map((p) => p.id));
   };
 
-  const handleToggleSelectOnePayrun = (id: number, e?: React.MouseEvent | React.ChangeEvent) => {
+  const handleToggleSelectOnePayrun = (id: string | number, e?: React.MouseEvent | React.ChangeEvent) => {
     if (e) e.stopPropagation();
     setSelectedPayrunIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
@@ -243,7 +243,7 @@ export default function PayrollView() {
   };
 
   // Selection for Payslips Table
-  const [selectedSlipIds, setSelectedSlipIds] = useState<number[]>([]);
+  const [selectedSlipIds, setSelectedSlipIds] = useState<(string | number)[]>([]);
   const slips = payrunDetails?.payslips || [];
   const isAllSlipsSelected = slips.length > 0 && slips.every((s) => selectedSlipIds.includes(s.id));
   const isSomeSlipsSelected = selectedSlipIds.length > 0 && !isAllSlipsSelected;
@@ -253,7 +253,7 @@ export default function PayrollView() {
     else setSelectedSlipIds(slips.map((s) => s.id));
   };
 
-  const handleToggleSelectOneSlip = (id: number, e?: React.MouseEvent | React.ChangeEvent) => {
+  const handleToggleSelectOneSlip = (id: string | number, e?: React.MouseEvent | React.ChangeEvent) => {
     if (e) e.stopPropagation();
     setSelectedSlipIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]

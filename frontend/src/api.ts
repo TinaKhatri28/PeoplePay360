@@ -80,7 +80,7 @@ export async function apiRequest<T = any>(endpoint: string, options: ApiRequestO
   return data as T;
 }
 
-export async function downloadPayslipPdf(payslipId: number, filename = 'payslip.pdf'): Promise<void> {
+export async function downloadPayslipPdf(payslipId: string | number, filename = 'payslip.pdf'): Promise<void> {
   const token = getToken();
   const response = await fetch(`/api/payroll/payslips/${payslipId}/pdf`, {
     headers: {
