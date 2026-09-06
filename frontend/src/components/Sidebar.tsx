@@ -33,7 +33,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
     { id: 'attendance', label: 'Attendance', icon: Clock, allowed: true },
     { id: 'timeoff', label: 'Time Off & Leaves', icon: CalendarOff, allowed: true },
     { id: 'payroll', label: 'Payroll Studio', icon: Coins, highlight: true, allowed: isHRManager || isPayrollStaff },
-    { id: 'salary', label: 'Salary & Schedules', icon: Sliders, allowed: isHRManager || isPayrollStaff },
+    { id: 'salary', label: 'Salary & Schedules', icon: Sliders, allowed: true },
     { id: 'users', label: 'User Governance', icon: UserCheck, allowed: isHRManager },
   ];
 

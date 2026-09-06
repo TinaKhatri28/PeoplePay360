@@ -116,7 +116,7 @@ export default function SalaryStructuresView() {
       r.name,
       r.category,
       r.compute_method,
-      r.compute_method === 'FIXED' ? `Fixed ₹${r.amount || 0}` :
+      r.compute_method === 'FIXED' ? (r.amount != null ? `Fixed ₹${r.amount}` : (r.category === 'Basic' ? 'Contract Basic Wage' : 'Fixed ₹0')) :
       r.compute_method === 'PERCENTAGE' ? `${r.percentage}% of ${r.percentage_of}` :
       `Formula [${r.formula_key}]`,
     ]);
@@ -323,7 +323,7 @@ export default function SalaryStructuresView() {
                                     <span style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)' }}>{r.compute_method}</span>
                                   </td>
                                   <td>
-                                    {r.compute_method === 'FIXED' && `Fixed ₹${r.amount?.toLocaleString('en-IN')}`}
+                                    {r.compute_method === 'FIXED' && (r.amount != null ? `Fixed ₹${Number(r.amount).toLocaleString('en-IN')}` : (r.category === 'Basic' ? 'Contract Basic Wage' : 'Fixed ₹0'))}
                                     {r.compute_method === 'PERCENTAGE' && `${r.percentage}% of ${r.percentage_of}`}
                                     {r.compute_method === 'FORMULA' && `Formula [${r.formula_key}]`}
                                   </td>
