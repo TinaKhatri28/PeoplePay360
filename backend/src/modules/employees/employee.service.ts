@@ -208,6 +208,25 @@ export class EmployeeService {
   async getEmployeeTimeOffAllocations(organizationId: string, employeeId: string) {
     return this.repo.getTimeOffAllocations(organizationId, employeeId);
   }
+
+  async getEmployeePayslips(organizationId: string, employeeId: string) {
+    const slips = await prisma.payslip.findMany({
+      where: { organization_id: organizationId, employee_id: employeeId },
+      include: {
+        payrun: { select: { period_month: true, period_year: true, status: true } },
+      },
+      orderBy: { created_at: 'desc' },
+    });
+    return slips.map((s) => ({
+      ...s,
+      gross: Number(s.gross),
+      deductions: Number(s.deductions),
+      net: Number(s.net),
+      period_month: s.payrun?.period_month,
+      period_year: s.payrun?.period_year,
+      payrun_status: s.payrun?.status,
+    }));
+  }
 }
 
 export const employeeService = new EmployeeService();

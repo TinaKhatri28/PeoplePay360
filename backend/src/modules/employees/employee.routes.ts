@@ -21,6 +21,7 @@ router.get('/:id/contracts', employeeController.getContracts);
 router.get('/:id/attendance', employeeController.getAttendance);
 router.get('/:id/time-off', employeeController.getTimeOff);
 router.get('/:id/allocations', employeeController.getAllocations);
+router.get('/:id/payslips', employeeController.getPayslips);
 
 // Employee CRUD
 router.get('/:id', employeeController.getById);
