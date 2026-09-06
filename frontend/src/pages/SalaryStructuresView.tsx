@@ -22,7 +22,7 @@ export default function SalaryStructuresView() {
   const [loading, setLoading] = useState(true);
 
   const [showRuleModal, setShowRuleModal] = useState(false);
-  const [selectedStructId, setSelectedStructId] = useState<number | null>(null);
+  const [selectedStructId, setSelectedStructId] = useState<string | number | null>(null);
   const [ruleForm, setRuleForm] = useState({
     name: '',
     category: 'Allowance',
@@ -76,7 +76,7 @@ export default function SalaryStructuresView() {
     }
   };
 
-  const handleDeleteRule = async (ruleId: number) => {
+  const handleDeleteRule = async (ruleId: string | number) => {
     if (!confirm('Are you sure you want to remove this salary rule?')) return;
     try {
       await apiRequest(`/api/salary/rules/${ruleId}`, { method: 'DELETE' });
@@ -86,9 +86,9 @@ export default function SalaryStructuresView() {
     }
   };
 
-  const [selectedRuleIds, setSelectedRuleIds] = useState<number[]>([]);
+  const [selectedRuleIds, setSelectedRuleIds] = useState<(string | number)[]>([]);
 
-  const handleToggleSelectAllRules = (rules: Array<{ id: number }>) => {
+  const handleToggleSelectAllRules = (rules: Array<{ id: string | number }>) => {
     const ids = rules.map((r) => r.id);
     const allSelected = ids.length > 0 && ids.every((id) => selectedRuleIds.includes(id));
     if (allSelected) {
@@ -98,7 +98,7 @@ export default function SalaryStructuresView() {
     }
   };
 
-  const handleToggleSelectOneRule = (id: number, e?: React.MouseEvent | React.ChangeEvent) => {
+  const handleToggleSelectOneRule = (id: string | number, e?: React.MouseEvent | React.ChangeEvent) => {
     if (e) e.stopPropagation();
     setSelectedRuleIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
