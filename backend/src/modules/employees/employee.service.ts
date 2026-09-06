@@ -100,6 +100,15 @@ export class EmployeeService {
       const defaultWage = Number(data.wage) || 30000;
       const refCode = `CON-${(firstName || 'EMP').slice(0, 3).toUpperCase()}-${Date.now().toString().slice(-4)}`;
 
+      const defaultStructure = await prisma.salaryStructure.findFirst({
+        where: { organization_id: organizationId },
+        orderBy: { created_at: 'asc' },
+      });
+      const defaultSchedule = await prisma.workingSchedule.findFirst({
+        where: { organization_id: organizationId },
+        orderBy: { created_at: 'asc' },
+      });
+
       await prisma.employmentContract.create({
         data: {
           organization_id: organizationId,
@@ -109,6 +118,8 @@ export class EmployeeService {
           wage: defaultWage,
           status: 'Running',
           position: data.position || 'Staff',
+          salary_structure_id: defaultStructure?.id || null,
+          schedule_id: defaultSchedule?.id || null,
         },
       });
 

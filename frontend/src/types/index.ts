@@ -119,6 +119,8 @@ export interface TimeOffRequest {
 export interface SalaryStructure {
   id: string | number;
   name: string;
+  code?: string | null;
+  description?: string | null;
   rules?: SalaryRule[];
 }
 
@@ -126,13 +128,15 @@ export interface SalaryRule {
   id: string | number;
   structure_id: string | number;
   name: string;
+  code?: string | null;
   category: 'Basic' | 'Allowance' | 'Deduction';
   compute_method: 'FIXED' | 'PERCENTAGE' | 'FORMULA';
-  amount?: number | null;
+  amount?: number | string | null;
   percentage?: number | null;
   percentage_of?: string | null;
   formula_key?: string | null;
   sequence: number;
+  is_active?: boolean;
 }
 
 export interface Payrun {

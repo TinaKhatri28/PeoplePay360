@@ -73,6 +73,25 @@ export class ContractService {
 
     const ref = data.ref || `CON-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
+    let salaryStructureId = data.salary_structure_id || null;
+    let scheduleId = data.schedule_id || null;
+
+    if (!salaryStructureId) {
+      const defaultStructure = await prisma.salaryStructure.findFirst({
+        where: { organization_id: organizationId },
+        orderBy: { created_at: 'asc' },
+      });
+      if (defaultStructure) salaryStructureId = defaultStructure.id;
+    }
+
+    if (!scheduleId) {
+      const defaultSchedule = await prisma.workingSchedule.findFirst({
+        where: { organization_id: organizationId },
+        orderBy: { created_at: 'asc' },
+      });
+      if (defaultSchedule) scheduleId = defaultSchedule.id;
+    }
+
     const created = await this.repo.create({
       organization_id: organizationId,
       employee_id: data.employee_id,
@@ -84,8 +103,8 @@ export class ContractService {
       status: data.status || 'Running',
       department: data.department || null,
       position: data.position || null,
-      schedule_id: data.schedule_id || null,
-      salary_structure_id: data.salary_structure_id || null,
+      schedule_id: scheduleId,
+      salary_structure_id: salaryStructureId,
     });
 
     await this.audit.log({

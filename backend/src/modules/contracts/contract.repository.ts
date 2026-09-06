@@ -9,7 +9,14 @@ export class ContractRepository {
       where,
       include: {
         employee: true,
-        salary_structure: true,
+        salary_structure: {
+          include: {
+            rules: {
+              where: { is_active: true },
+              orderBy: { sequence: 'asc' },
+            },
+          },
+        },
         schedule: true,
       },
       orderBy: { start_date: 'desc' },

@@ -216,6 +216,21 @@ export default function ContractsView({ onNavigate }: ContractsViewProps = {}) {
     }
   };
 
+  const handleStructureChange = async (newStructureId: string | number) => {
+    if (!selectedContract) return;
+    try {
+      const updated = await apiRequest<Contract>(`/api/contracts/${selectedContract.id}`, {
+        method: 'PUT',
+        body: { salary_structure_id: newStructureId },
+      });
+      const refreshed = await apiRequest<Contract>(`/api/contracts/${selectedContract.id}`).catch(() => updated);
+      setSelectedContract(refreshed || { ...selectedContract, salary_structure_id: newStructureId });
+      fetchData();
+    } catch (err: any) {
+      alert(err.message || 'Failed to change salary structure');
+    }
+  };
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const filtered = contracts.filter((c) => {
@@ -315,8 +330,50 @@ export default function ContractsView({ onNavigate }: ContractsViewProps = {}) {
     const deptName = selectedContract.department || selectedContract.employee?.department?.name || 'General';
     const positionName = selectedContract.position || selectedContract.employee?.position || 'Staff';
     const scheduleTitle = selectedContract.schedule_name || selectedContract.schedule?.name || '40 Hours / Week';
-    const structureTitle = selectedContract.salary_structure_name || selectedContract.salary_structure?.name || 'Employee Salary';
-    const rules = selectedContract.salary_structure?.rules || [];
+
+    const activeStructure = (selectedContract.salary_structure && selectedContract.salary_structure.rules && selectedContract.salary_structure.rules.length > 0)
+      ? selectedContract.salary_structure
+      : structures.find((s) => String(s.id) === String(selectedContract.salary_structure_id)) || structures[0] || null;
+
+    const structureTitle = selectedContract.salary_structure_name || activeStructure?.name || 'Standard Employee Salary';
+    const structureCode = activeStructure?.code || 'STD_EMP';
+    const rules = (activeStructure?.rules && activeStructure.rules.length > 0)
+      ? activeStructure.rules
+      : (selectedContract.salary_structure?.rules || []);
+
+    const baseWage = Number(selectedContract.wage || 0);
+    let totalAllowances = 0;
+    let totalDeductions = 0;
+
+    const calculatedRules = rules.map((r: any) => {
+      let amount = 0;
+      let displayRate = '';
+      if (r.category === 'Basic') {
+        amount = baseWage;
+        displayRate = 'Base Monthly Wage';
+      } else if (r.compute_method === 'PERCENTAGE') {
+        const pct = Number(r.percentage || 0);
+        amount = Math.round((baseWage * pct) / 100);
+        displayRate = `${pct}% of ${r.percentage_of || 'BASIC'}`;
+        if (r.category === 'Allowance') totalAllowances += amount;
+        if (r.category === 'Deduction') totalDeductions += amount;
+      } else if (r.compute_method === 'FIXED') {
+        amount = Number(r.amount || 0);
+        displayRate = `Fixed ₹${amount.toLocaleString('en-IN')}`;
+        if (r.category === 'Allowance') totalAllowances += amount;
+        if (r.category === 'Deduction') totalDeductions += amount;
+      } else if (r.compute_method === 'FORMULA') {
+        displayRate = r.formula_key === 'OVERTIME'
+          ? '1.5× Hourly Rate (Overtime Hours)'
+          : r.formula_key === 'UNPAID_LEAVE_DEDUCTION'
+          ? 'Daily Rate × Approved Unpaid Leave Days'
+          : `Formula [${r.formula_key}]`;
+      }
+      return { ...r, calculatedAmount: amount, displayRate };
+    });
+
+    const grossSalary = baseWage + totalAllowances;
+    const estimatedNet = grossSalary - totalDeductions;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -692,61 +749,301 @@ export default function ContractsView({ onNavigate }: ContractsViewProps = {}) {
                   <span>{scheduleTitle}</span>
                 </div>
               </div>
+
+              {/* Field 9: Salary Structure */}
+              <div>
+                <label style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748B', display: 'block', marginBottom: '6px' }}>
+                  Salary Structure
+                </label>
+                <div style={{
+                  padding: '12px 16px',
+                  background: 'rgba(30, 58, 95, 0.04)',
+                  border: '1px solid rgba(30, 58, 95, 0.15)',
+                  borderRadius: 'var(--radius-md)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '10px',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Layers size={18} color="#1E3A5F" />
+                    <div>
+                      <div style={{ fontSize: '0.9rem', color: '#1F2937', fontWeight: 700 }}>
+                        {structureTitle}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                        {rules.length} Configured Rules & Allowances
+                      </div>
+                    </div>
+                  </div>
+                  <span className="badge badge-primary" style={{ fontFamily: 'var(--font-mono)' }}>
+                    {structureCode}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Salary Structure / Notes (Excalidraw Card) */}
+          {/* Salary Structure / Notes (Comprehensive Compensation Breakdown) */}
           <div style={{
-            background: '#F8F9FA',
+            background: '#FFFFFF',
             border: '1px solid #E2E8F0',
             borderRadius: 'var(--radius-md)',
-            padding: '20px',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+            padding: '24px',
             display: 'flex',
             flexDirection: 'column',
-            gap: '12px',
+            gap: '20px',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Layers size={18} color="#1E3A5F" />
-                <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#1E3A5F', margin: 0 }}>
-                  Salary Structure / Notes
-                </h4>
+            {/* Header with Blueprint Title & Structure Switcher */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '12px',
+              paddingBottom: '16px',
+              borderBottom: '1px solid #E2E8F0',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '8px',
+                  background: 'rgba(30, 58, 95, 0.08)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  <Layers size={20} color="#1E3A5F" />
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#1E3A5F', margin: 0 }}>
+                    Salary Structure / Notes
+                  </h4>
+                  <span style={{ fontSize: '0.78rem', color: '#64748B' }}>
+                    Deterministic wage rules, statutory deductions, and gross-to-net computation
+                  </span>
+                </div>
               </div>
-              <span className="badge badge-primary">
-                Structure Type: {structureTitle}
-              </span>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                <span className="badge badge-primary" style={{ fontSize: '0.8rem', padding: '6px 12px' }}>
+                  Structure Type: {structureTitle}
+                </span>
+
+                {isPayrollUser && structures.length > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <label style={{ fontSize: '0.78rem', color: '#64748B', fontWeight: 600 }}>Switch Structure:</label>
+                    <select
+                      value={selectedContract.salary_structure_id || activeStructure?.id || ''}
+                      onChange={(e) => handleStructureChange(e.target.value)}
+                      style={{
+                        padding: '6px 10px',
+                        borderRadius: '6px',
+                        border: '1px solid #CBD5E1',
+                        background: '#FFFFFF',
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        color: '#1E3A5F',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {structures.map((st) => (
+                        <option key={st.id} value={st.id}>{st.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
             </div>
 
-            <p style={{ fontSize: '0.85rem', color: '#1F2937', margin: 0, lineHeight: 1.5 }}>
+            {/* Excalidraw Blueprint Requirement Statement */}
+            <p style={{ fontSize: '0.875rem', color: '#1F2937', margin: 0, lineHeight: 1.5, fontWeight: 500 }}>
               This running contract is the source for payroll calculation in the active period.
             </p>
 
-            {rules.length > 0 && (
-              <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>
-                  Configured Salary Rules & Components ({rules.length}):
+            {/* 4-KPI Compensation Metrics Bar */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: '12px',
+            }}>
+              <div style={{
+                background: '#F8FAFC',
+                border: '1px solid #E2E8F0',
+                borderRadius: '8px',
+                padding: '14px 16px',
+              }}>
+                <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Base Monthly Wage
                 </span>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px' }}>
-                  {rules.map((r: any) => (
-                    <div key={r.id} style={{
-                      background: '#FFFFFF',
-                      padding: '8px 12px',
-                      borderRadius: '6px',
-                      border: '1px solid #E2E8F0',
-                      fontSize: '0.8rem',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}>
-                      <span style={{ fontWeight: 600, color: '#1E3A5F' }}>{r.name}</span>
-                      <span style={{ fontSize: '0.725rem', fontFamily: 'var(--font-mono)', color: r.category === 'Deduction' ? '#B42318' : '#2E7D5B' }}>
-                        {r.code} ({r.category})
-                      </span>
-                    </div>
-                  ))}
+                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E3A5F', fontFamily: 'var(--font-mono)', marginTop: '4px' }}>
+                  ₹{baseWage.toLocaleString('en-IN')}
                 </div>
+                <span style={{ fontSize: '0.72rem', color: '#64748B' }}>Fixed base salary</span>
               </div>
-            )}
+
+              <div style={{
+                background: 'rgba(46, 125, 91, 0.05)',
+                border: '1px solid rgba(46, 125, 91, 0.2)',
+                borderRadius: '8px',
+                padding: '14px 16px',
+              }}>
+                <span style={{ fontSize: '0.72rem', color: '#2E7D5B', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Monthly Allowances
+                </span>
+                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#2E7D5B', fontFamily: 'var(--font-mono)', marginTop: '4px' }}>
+                  +₹{totalAllowances.toLocaleString('en-IN')}
+                </div>
+                <span style={{ fontSize: '0.72rem', color: '#2E7D5B' }}>HRA + Transport allowance</span>
+              </div>
+
+              <div style={{
+                background: 'rgba(180, 35, 24, 0.05)',
+                border: '1px solid rgba(180, 35, 24, 0.2)',
+                borderRadius: '8px',
+                padding: '14px 16px',
+              }}>
+                <span style={{ fontSize: '0.72rem', color: '#B42318', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Statutory Deductions
+                </span>
+                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#B42318', fontFamily: 'var(--font-mono)', marginTop: '4px' }}>
+                  -₹{totalDeductions.toLocaleString('en-IN')}
+                </div>
+                <span style={{ fontSize: '0.72rem', color: '#B42318' }}>PF (12%) + Professional Tax</span>
+              </div>
+
+              <div style={{
+                background: 'rgba(30, 58, 95, 0.06)',
+                border: '1px solid rgba(30, 58, 95, 0.25)',
+                borderRadius: '8px',
+                padding: '14px 16px',
+              }}>
+                <span style={{ fontSize: '0.72rem', color: '#1E3A5F', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Est. Net Take-Home
+                </span>
+                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E3A5F', fontFamily: 'var(--font-mono)', marginTop: '4px' }}>
+                  ₹{estimatedNet.toLocaleString('en-IN')}
+                </div>
+                <span style={{ fontSize: '0.72rem', color: '#64748B' }}>Before overtime & unpaid leave</span>
+              </div>
+            </div>
+
+            {/* Rules Breakdown Table */}
+            <div style={{ marginTop: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#1E3A5F', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Configured Salary Rules & Component Breakdown ({rules.length}):
+                </span>
+                {onNavigate && (
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('salary')}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#1E3A5F',
+                      fontSize: '0.78rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    <span>Manage Salary Structures</span>
+                    <ExternalLink size={13} />
+                  </button>
+                )}
+              </div>
+
+              <div className="table-container" style={{ border: '1px solid #E2E8F0', borderRadius: '8px', overflow: 'hidden' }}>
+                <table className="data-table" style={{ margin: 0 }}>
+                  <thead>
+                    <tr style={{ background: '#F8FAFC' }}>
+                      <th style={{ width: '60px' }}>Seq</th>
+                      <th>Rule / Component</th>
+                      <th>Category</th>
+                      <th>Computation Method</th>
+                      <th>Pay Impact</th>
+                      <th style={{ textAlign: 'right' }}>Monthly Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {calculatedRules.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} style={{ textAlign: 'center', padding: '24px', color: '#64748B' }}>
+                          No salary rules configured.
+                        </td>
+                      </tr>
+                    ) : (
+                      calculatedRules.map((r: any) => (
+                        <tr key={r.id || r.name}>
+                          <td style={{ fontFamily: 'var(--font-mono)', color: '#64748B', fontWeight: 600 }}>
+                            {r.sequence || '—'}
+                          </td>
+                          <td>
+                            <div style={{ fontWeight: 700, color: '#1E3A5F' }}>{r.name}</div>
+                            {r.code && (
+                              <span style={{ fontSize: '0.72rem', color: '#64748B', fontFamily: 'var(--font-mono)' }}>
+                                Code: {r.code}
+                              </span>
+                            )}
+                          </td>
+                          <td>
+                            <span className={`badge ${
+                              r.category === 'Basic' ? 'badge-primary' :
+                              r.category === 'Allowance' ? 'badge-success' : 'badge-warning'
+                            }`}>
+                              <span className="badge-dot" />
+                              {r.category}
+                            </span>
+                          </td>
+                          <td>
+                            <div style={{ fontWeight: 600, color: '#1F2937', fontSize: '0.825rem' }}>
+                              {r.displayRate}
+                            </div>
+                            <span style={{ fontSize: '0.72rem', color: '#64748B' }}>
+                              Method: {r.compute_method}
+                            </span>
+                          </td>
+                          <td>
+                            {r.category === 'Basic' ? (
+                              <span style={{ fontSize: '0.8rem', color: '#1E3A5F', fontWeight: 600 }}>Base Salary</span>
+                            ) : r.category === 'Allowance' ? (
+                              <span style={{ fontSize: '0.8rem', color: '#2E7D5B', fontWeight: 700 }}>+ Addition</span>
+                            ) : (
+                              <span style={{ fontSize: '0.8rem', color: '#B42318', fontWeight: 700 }}>- Deduction</span>
+                            )}
+                          </td>
+                          <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
+                            {r.compute_method === 'FORMULA' ? (
+                              <span style={{ color: '#64748B', fontSize: '0.8rem', fontStyle: 'italic' }}>
+                                Dynamic (Payrun)
+                              </span>
+                            ) : r.category === 'Deduction' ? (
+                              <span style={{ color: '#B42318' }}>
+                                -₹{Number(r.calculatedAmount || 0).toLocaleString('en-IN')}
+                              </span>
+                            ) : r.category === 'Allowance' ? (
+                              <span style={{ color: '#2E7D5B' }}>
+                                +₹{Number(r.calculatedAmount || 0).toLocaleString('en-IN')}
+                              </span>
+                            ) : (
+                              <span style={{ color: '#1E3A5F' }}>
+                                ₹{Number(r.calculatedAmount || 0).toLocaleString('en-IN')}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
 
           {/* Useful Note Box (Matching Excalidraw Blueprint exactly) */}
