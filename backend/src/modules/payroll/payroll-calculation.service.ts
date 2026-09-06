@@ -327,9 +327,10 @@ export class PayrollCalculationService {
           const isPending = ul.status === 'To Approve';
           if (isPending) pendingDays += ul.duration;
           const statusTag = isPending ? ' [Pending Approval]' : '';
+          const rateFormatted = dailyRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
           lines.push({
-            name: `Unpaid Leave Deduction - ${ul.typeName} (${ul.duration} ${ul.duration === 1 ? 'day' : 'days'} @ ₹${dailyRate.toFixed(2)}/day: ${dateStr})${statusTag}`,
+            name: `Unpaid Leave Deduction - ${ul.typeName} (${ul.duration} ${ul.duration === 1 ? 'day' : 'days'} @ ₹${rateFormatted}/day: ${dateStr})${statusTag}`,
             category: 'Deduction',
             amount: itemDeduction,
           });
@@ -348,9 +349,10 @@ export class PayrollCalculationService {
         const formattedDates = attendance.absentDates.map(formatDateStr).join(', ');
         const datesTag = formattedDates ? `: ${formattedDates}` : '';
         const label = prefixName || 'Attendance Absence Deduction';
+        const rateFormatted = dailyRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
         lines.push({
-          name: `${label} (${attendance.absentDays} ${attendance.absentDays === 1 ? 'day' : 'days'} @ ₹${dailyRate.toFixed(2)}/day${datesTag})`,
+          name: `${label} (${attendance.absentDays} ${attendance.absentDays === 1 ? 'day' : 'days'} @ ₹${rateFormatted}/day${datesTag})`,
           category: 'Deduction',
           amount: absenceAmount,
         });

@@ -1147,6 +1147,7 @@ export default function PayrollView() {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
+                        gap: '12px',
                         padding: '10px 14px',
                         background: line.category === 'Deduction' ? 'rgba(239, 68, 68, 0.04)' : '#F8F9FA',
                         borderRadius: 'var(--radius-sm)',
@@ -1154,16 +1155,16 @@ export default function PayrollView() {
                         fontSize: '0.85rem',
                       }}
                     >
-                      <div>
-                        <span style={{ fontWeight: 600, color: '#1F2937' }}>{line.name}</span>
+                      <div style={{ minWidth: 0, flex: 1, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+                        <span style={{ fontWeight: 600, color: '#1F2937', wordBreak: 'break-word' }}>{line.name}</span>
                         <span style={{
-                          marginLeft: '8px',
                           fontSize: '0.7rem',
                           padding: '2px 6px',
                           borderRadius: '4px',
                           background: line.category === 'Deduction' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(30, 58, 95, 0.08)',
                           color: line.category === 'Deduction' ? '#B42318' : '#1E3A5F',
                           fontWeight: 700,
+                          whiteSpace: 'nowrap',
                         }}>
                           {line.category}
                         </span>
@@ -1172,8 +1173,11 @@ export default function PayrollView() {
                         fontFamily: 'var(--font-mono)',
                         fontWeight: 700,
                         color: line.category === 'Deduction' ? '#B42318' : '#1F2937',
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0,
+                        fontSize: '0.9rem',
                       }}>
-                        {line.category === 'Deduction' ? '-' : ''}₹{Math.abs(line.amount).toLocaleString('en-IN')}
+                        {line.category === 'Deduction' ? '-₹' : '₹'}{Math.abs(Number(line.amount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
                   ))
